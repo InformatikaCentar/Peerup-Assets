@@ -186,8 +186,28 @@ const INIT_CLANOVI = [
   { id:8,  ime:"Sara",   prezime:"Petrić",   uloga:"ucenik",  razred:"3.", predmeti:[],                     aktivan:true,  kod:"UCE-3-01", lozinka:"sara2024", avatar:"👧",   bodovi:55  },
   { id:9,  ime:"Mia",    prezime:"Lučić",    uloga:"ucenik",  razred:"6.", predmeti:[],                     aktivan:false, kod:"UCE-6-01", lozinka:"mia2024",  avatar:"👩",   bodovi:74  },
 ];
-const VALJANI_KODOVI_UCENIKA  = ["UCE-7-02","UCE-5-02","UCE-8-02","UCE-3-02","UCE-4-01","UCE-6-02"];
-const VALJANI_KODOVI_UCITELJA = ["UCT-BIO1","UCT-GEO1","UCT-INF1"];
+// ---- POČETNI SKUP PRISTUPNIH KODOVA ----
+function genKod(uloga, razred, n) {
+  if (uloga === "ucenik") return `UCE-${razred.replace(".","")}-${String(n).padStart(2,"0")}`;
+  const predTag = ["MAT","HRV","ENG","FIZ","KEM","BIO","INF","GEO","POV","GLB","LIK","TZK","PRI"][n % 13];
+  return `UCT-${predTag}${n}`;
+}
+const LOZINKE_DEMO = ["znanje24","ucenje1","skolica2","pametan3","peerup5","hrvatska6","marko77","ivana88","split99","zagreb00","kljuc12","biljeska3","razred55","kviz777","tablica8"];
+function initKodovi() {
+  const kodovi = [];
+  let n = 2;
+  for (const r of ["1.","2.","3.","4.","5.","6.","7.","8."]) {
+    for (let i = 0; i < 4; i++) {
+      kodovi.push({ id: n*100+i, kod: genKod("ucenik", r, n*10+i), uloga:"ucenik", razred:r, lozinka: LOZINKE_DEMO[(n*10+i)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR") });
+    }
+    n++;
+  }
+  for (let i = 0; i < 10; i++) {
+    kodovi.push({ id: 9000+i, kod: genKod("ucitelj", null, i+1), uloga:"ucitelj", razred:null, lozinka: LOZINKE_DEMO[(i+5)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR") });
+  }
+  return kodovi;
+}
+const INIT_KODOVI = initKodovi();
 
 const DEMO_PONUDE = [
   { id:101, ime:"Luka M.",  razred:"7.", predmet:"Matematika", lekcija:"Jednadžbe",        opis:"Mogu objasniti linearne jednadžbe korak po korak. Rješavali smo ih ove godine i super mi ide!", avatar:"🧑‍🎓", bodovi:142, tip:"nudi",  ocjena:4.8, termini:[{dan:"Pon",sat:"10:00",slobodan:true},{dan:"Sri",sat:"11:00",slobodan:false},{dan:"Pet",sat:"13:00",slobodan:true}], prijave:["Ana K.","Sara P."] },
@@ -470,67 +490,113 @@ function DetaljiPonudeModal({ ponuda, korisnik, onClose, onRezervacija }) {
 
 // ---- FILE PREVIEW MODAL ----
 function PregledDatotekeModal({ materijal, onClose }) {
+  const [tekstSadrzaj, setTekstSadrzaj] = useState(null);
   const isImage = materijal.datoteka && materijal.datoteka.type && materijal.datoteka.type.startsWith("image/");
-  const isPdf = materijal.datoteka && materijal.datoteka.type === "application/pdf";
+  const isPdf   = materijal.datoteka && materijal.datoteka.type === "application/pdf";
+  const isTekst = materijal.datoteka && (materijal.datoteka.type === "text/plain" || materijal.datoteka.name?.endsWith(".txt"));
+
+  useEffect(() => {
+    if (isTekst) {
+      const reader = new FileReader();
+      reader.onload = e => setTekstSadrzaj(e.target.result);
+      reader.readAsText(materijal.datoteka);
+    }
+  }, [isTekst]);
 
   const handleDownload = () => {
-    if (materijal.datoteka) {
-      const url = URL.createObjectURL(materijal.datoteka);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = materijal.datoteka.name;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+    if (!materijal.datoteka) return;
+    const url = URL.createObjectURL(materijal.datoteka);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = materijal.datoteka.name;
+    a.click();
+    URL.revokeObjectURL(url);
   };
+
+  const boja = materijal.tip === "Umna mapa" ? C.plum : materijal.tip === "Sažetak" ? C.blue : C.teal;
+  const bojaLight = materijal.tip === "Umna mapa" ? C.plumLight : materijal.tip === "Sažetak" ? C.blueLight : C.tealLight;
 
   return (
     <div onClick={onClose} style={{ position:"fixed", inset:0, background:"#1a161299", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"88vh", overflowY:"auto" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"92vh", overflowY:"auto" }}>
+        {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
           <div>
             <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:16 }}>{materijal.ikona} {materijal.lekcija}</h3>
-            <div style={{ color:C.inkMid, fontSize:12 }}>{materijal.tip} · {materijal.predmet}</div>
+            <div style={{ color:C.inkMid, fontSize:12 }}>{materijal.tip} · {materijal.predmet} · {materijal.autor}</div>
           </div>
           <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
         </div>
 
-        <div style={{ background:C.bgDeep, borderRadius:14, padding:14, marginBottom:16 }}>
-          <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, marginBottom:6 }}>OPIS</div>
-          <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.6 }}>{materijal.opis}</div>
+        {/* Tip badge + opis */}
+        <div style={{ background:bojaLight, border:`1.5px solid ${boja}33`, borderRadius:14, padding:14, marginBottom:14 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
+            <span style={{ fontSize:22 }}>{materijal.ikona}</span>
+            <div>
+              <div style={{ fontWeight:800, color:boja, fontSize:13 }}>{materijal.tip}</div>
+              <div style={{ fontSize:11, color:C.inkLight }}>{materijal.predmet}</div>
+            </div>
+          </div>
+          {materijal.opis && (
+            <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.65, whiteSpace:"pre-wrap" }}>{materijal.opis}</div>
+          )}
         </div>
 
+        {/* Pregled datoteke */}
         {materijal.datoteka ? (
           <div>
-            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", marginBottom:10 }}>Pregled datoteke</div>
+            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>👁 Pregled datoteke</div>
             {isImage && (
               <img
                 src={URL.createObjectURL(materijal.datoteka)}
                 alt={materijal.datoteka.name}
-                style={{ width:"100%", borderRadius:12, marginBottom:12, maxHeight:260, objectFit:"contain", background:C.bgDeep }}
+                style={{ width:"100%", borderRadius:12, marginBottom:12, maxHeight:320, objectFit:"contain", background:C.bgDeep }}
               />
             )}
             {isPdf && (
               <iframe
                 src={URL.createObjectURL(materijal.datoteka)}
-                style={{ width:"100%", height:300, borderRadius:12, border:`1.5px solid ${C.cardBorder}`, marginBottom:12 }}
+                style={{ width:"100%", height:340, borderRadius:12, border:`1.5px solid ${C.cardBorder}`, marginBottom:12 }}
                 title="PDF pregled"
               />
             )}
-            {!isImage && !isPdf && (
+            {isTekst && (
+              <div style={{ background:C.bgDeep, borderRadius:12, padding:16, marginBottom:12, maxHeight:280, overflowY:"auto" }}>
+                <pre style={{ margin:0, fontFamily:"monospace", fontSize:12, color:C.ink, lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>
+                  {tekstSadrzaj ?? "Učitavam..."}
+                </pre>
+              </div>
+            )}
+            {!isImage && !isPdf && !isTekst && (
               <div style={{ background:C.bgDeep, borderRadius:12, padding:20, textAlign:"center", marginBottom:12 }}>
-                <div style={{ fontSize:48, marginBottom:8 }}>📁</div>
-                <div style={{ color:C.inkMid, fontSize:13 }}>{materijal.datoteka.name}</div>
+                <div style={{ fontSize:48, marginBottom:8 }}>📄</div>
+                <div style={{ color:C.inkMid, fontSize:13, fontWeight:700 }}>{materijal.datoteka.name}</div>
                 <div style={{ color:C.inkLight, fontSize:11, marginTop:4 }}>({(materijal.datoteka.size/1024).toFixed(1)} KB)</div>
               </div>
             )}
-            <Btn label="⬇ Preuzmi datoteku" color={C.blue} full onClick={handleDownload} />
+            <Btn label="⬇ Preuzmi datoteku" color={boja} full onClick={handleDownload} />
           </div>
         ) : (
-          <div style={{ background:C.amberLight, borderRadius:12, padding:16, textAlign:"center" }}>
-            <div style={{ fontSize:32, marginBottom:6 }}>📤</div>
-            <div style={{ color:C.amber, fontWeight:800, marginBottom:4 }}>Demo materijal</div>
-            <div style={{ color:C.inkMid, fontSize:12 }}>Ova datoteka je demo primjer. Pravi materijali mogu se preuzeti nakon učitavanja.</div>
+          /* Nema priložene datoteke — prikaži strukturirani pregled sadržaja */
+          <div>
+            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>📋 Sadržaj materijala</div>
+            {materijal.tip === "Umna mapa" ? (
+              <div style={{ background:C.plumLight, borderRadius:14, padding:16, border:`1.5px solid ${C.plum}33` }}>
+                <div style={{ fontWeight:900, color:C.plum, fontSize:14, marginBottom:12 }}>🗺️ {materijal.lekcija}</div>
+                {(materijal.opis||"").split(/[,.\n]/).filter(s=>s.trim().length>3).map((g,i)=>(
+                  <div key={i} style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:C.plum, flexShrink:0 }} />
+                    <div style={{ color:C.ink, fontSize:13, fontWeight:700 }}>{g.trim()}</div>
+                  </div>
+                ))}
+                <div style={{ marginTop:10, color:C.inkLight, fontSize:11 }}>Za puni pregled, učitaj datoteku pri objavi materijala.</div>
+              </div>
+            ) : (
+              <div style={{ background:C.bgDeep, borderRadius:14, padding:16 }}>
+                <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.8, whiteSpace:"pre-wrap" }}>{materijal.opis}</div>
+                <div style={{ marginTop:12, color:C.inkLight, fontSize:11 }}>Za preuzimanje, autor treba priložiti datoteku pri objavi.</div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -539,8 +605,8 @@ function PregledDatotekeModal({ materijal, onClose }) {
 }
 
 // ---- QUIZ COMPONENT ----
-function KvizIgra({ predmet, nacin, onZavrsi }) {
-  const svaP = KVIZ_BANKA[predmet] || [];
+function KvizIgra({ predmet, nacin, onZavrsi, pitanjaOverride }) {
+  const svaP = pitanjaOverride || KVIZ_BANKA[predmet] || [];
   const brPitanja = nacin === "kviz" ? 8 : 12;
   const bpPoPitanju = nacin === "kviz" ? 3 : 2;
   const [pitanja] = useState(() => shuffle(svaP).slice(0, Math.min(brPitanja, svaP.length)));
@@ -821,13 +887,22 @@ function KvizModal({ materijal, onClose, addBodovi, onNotifikacija }) {
   const [gotov, setGotov] = useState(false);
   const [nacin, setNacin] = useState(null);
   const [kljuc, setKljuc] = useState(0);
-  const imaBanku = (KVIZ_BANKA[materijal.predmet]||[]).length > 0;
+
+  // Filter questions by subject, then prioritise those matching the lekcija title keywords
+  const svaPredjPitanja = KVIZ_BANKA[materijal.predmet] || [];
+  const keywords = (materijal.lekcija||"").toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  const filtriranaPitanja = keywords.length > 0
+    ? svaPredjPitanja.filter(p => keywords.some(kw => p.pitanje.toLowerCase().includes(kw)))
+    : svaPredjPitanja;
+  const pitanjaZaKviz = filtriranaPitanja.length >= 4 ? filtriranaPitanja : svaPredjPitanja;
+  const imaBanku = pitanjaZaKviz.length > 0;
+  const generiranoIzMaterijala = filtriranaPitanja.length >= 4;
 
   const zavrsi = (bodovi, ponoviIsto) => {
     addBodovi(bodovi);
-    onNotifikacija({ tekst:`🧠 Kviz iz ${materijal.predmet} završen! +${bodovi} bodova`, boja:C.plum });
+    onNotifikacija({ tekst:`🧠 Kviz "${materijal.lekcija}" završen! +${bodovi} bodova`, boja:C.plum });
     if (ponoviIsto) { setKljuc(k=>k+1); }
-    else { setGotov(true); setTimeout(onClose, 1200); }
+    else { setGotov(true); setTimeout(onClose, 1400); }
   };
 
   return (
@@ -850,15 +925,27 @@ function KvizModal({ materijal, onClose, addBodovi, onNotifikacija }) {
         ) : gotov ? (
           <div style={{ padding:24, textAlign:"center" }}>
             <div style={{ fontSize:56 }}>🎉</div>
-            <div style={{ color:C.teal, fontWeight:900, fontFamily:"'Nunito', sans-serif", fontSize:18, marginTop:8 }}>Odlično!</div>
+            <div style={{ color:C.teal, fontWeight:900, fontFamily:"'Nunito', sans-serif", fontSize:18, marginTop:8 }}>Odlično! Kviz završen.</div>
           </div>
         ) : !nacin ? (
           <div style={{ padding:20 }}>
-            <div style={{ background:C.plumLight, borderRadius:14, padding:14, marginBottom:20 }}>
-              <div style={{ fontSize:13, color:C.plum, fontWeight:700, marginBottom:4 }}>📋 Na temelju materijala:</div>
-              <div style={{ color:C.ink, fontWeight:800 }}>{materijal.lekcija}</div>
-              <div style={{ color:C.inkMid, fontSize:12, marginTop:2, lineHeight:1.5 }}>{materijal.opis?.slice(0,100)}{materijal.opis?.length>100?"...":""}</div>
+            {/* Material study card */}
+            <div style={{ background:C.plumLight, border:`1.5px solid ${C.plum}33`, borderRadius:14, padding:14, marginBottom:16 }}>
+              <div style={{ fontSize:12, color:C.plum, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 }}>
+                {generiranoIzMaterijala ? "✅ Kviz generiran iz ovog materijala" : "📚 Kviz za predmet"}
+              </div>
+              <div style={{ fontWeight:900, color:C.ink, fontSize:15, marginBottom:4 }}>{materijal.ikona} {materijal.lekcija}</div>
+              {materijal.opis && (
+                <div style={{ color:C.inkMid, fontSize:12, lineHeight:1.65, marginBottom:6, whiteSpace:"pre-wrap" }}>
+                  {materijal.opis.slice(0,160)}{materijal.opis.length>160?"…":""}
+                </div>
+              )}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:4 }}>
+                <span style={{ background:C.card, borderRadius:99, padding:"3px 10px", fontSize:11, fontWeight:700, color:C.plum }}>{materijal.predmet}</span>
+                <span style={{ background:C.card, borderRadius:99, padding:"3px 10px", fontSize:11, fontWeight:700, color:C.inkMid }}>{pitanjaZaKviz.length} pitanja dostupno</span>
+              </div>
             </div>
+
             <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Odaberi način ponavljanja</div>
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
               <button onClick={()=>setNacin("kviz")} style={{ background:C.plum, color:C.card, border:"none", borderRadius:14, padding:"16px 18px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:14, cursor:"pointer", textAlign:"left" }}>
@@ -875,7 +962,7 @@ function KvizModal({ materijal, onClose, addBodovi, onNotifikacija }) {
           </div>
         ) : (
           <div key={kljuc}>
-            <KvizIgra predmet={materijal.predmet} nacin={nacin} onZavrsi={zavrsi} />
+            <KvizIgra predmet={materijal.predmet} nacin={nacin} onZavrsi={zavrsi} pitanjaOverride={pitanjaZaKviz} />
           </div>
         )}
       </div>
@@ -1540,60 +1627,123 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
 }
 
 // ---- ADMIN DASHBOARD ----
-function AdminDashboard({ clanovi, setClanovi, onOdjava }) {
+function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
   const [tab, setTab] = useState("pregled");
   const [noviModal, setNoviModal] = useState(false);
   const [noviKor, setNoviKor] = useState({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", lozinka:"", avatar:"🧑‍🎓" });
+  const [genUloga, setGenUloga] = useState("ucenik");
+  const [genRazred, setGenRazred] = useState("5.");
+  const [genBroj, setGenBroj] = useState(5);
+  const [filterKodovi, setFilterKodovi] = useState("svi");
+  const [kopiran, setKopiran] = useState(null);
+
   const ukupnoUcenika = clanovi.filter(c=>c.uloga==="ucenik").length;
   const ukupnoUcitelja = clanovi.filter(c=>c.uloga==="ucitelj").length;
-  const aktivnih = clanovi.filter(c=>c.aktivan).length;
+  const slobodniKodovi = kodovi.filter(k=>!k.koristen).length;
+  const koristeniKodovi = kodovi.filter(k=>k.koristen).length;
 
-  const dodaj = () => {
+  const dodajKorisnika = () => {
     const prefix = noviKor.uloga==="ucenik"?"UCE":noviKor.uloga==="ucitelj"?"UCT":"ADM";
-    const novi = { id:Date.now(), ...noviKor, kod:`${prefix}-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[] };
+    const novi = { id:Date.now(), ...noviKor, kod:`${prefix}-MAN-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[] };
     setClanovi(prev=>[...prev,novi]);
     setNoviModal(false);
     setNoviKor({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", lozinka:"", avatar:"🧑‍🎓" });
   };
 
+  const generirajKodove = () => {
+    const noviKodovi = [];
+    const timestamp = Date.now();
+    for (let i = 0; i < genBroj; i++) {
+      const n = timestamp + i;
+      const loz = LOZINKE_DEMO[n % LOZINKE_DEMO.length] + Math.floor(Math.random()*90+10);
+      const suf = String(Math.floor(Math.random()*99)+1).padStart(2,"0");
+      const kod = genUloga === "ucenik"
+        ? `UCE-${genRazred.replace(".","")}-${suf}`
+        : `UCT-${["MAT","HRV","ENG","FIZ","KEM","BIO","INF","GEO"][i%8]}${suf}`;
+      noviKodovi.push({ id:n, kod, uloga:genUloga, razred:genUloga==="ucenik"?genRazred:null, lozinka:loz, koristen:false, datum:new Date().toLocaleDateString("hr-HR") });
+    }
+    setKodovi(prev=>[...noviKodovi,...prev]);
+  };
+
+  const kopirajKod = (unos) => {
+    const tekst = `Kod: ${unos.kod}  Lozinka: ${unos.lozinka}`;
+    navigator.clipboard?.writeText(tekst).catch(()=>{});
+    setKopiran(unos.id);
+    setTimeout(()=>setKopiran(null), 2000);
+  };
+
+  const obrisiKod = (id) => setKodovi(prev=>prev.filter(k=>k.id!==id));
+
+  const prikazaniKodovi = kodovi.filter(k=>{
+    if (filterKodovi === "slobodni") return !k.koristen;
+    if (filterKodovi === "koristeni") return k.koristen;
+    if (filterKodovi === "ucenik") return k.uloga==="ucenik";
+    if (filterKodovi === "ucitelj") return k.uloga==="ucitelj";
+    return true;
+  });
+
   return (
     <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif" }}>
-      <div style={{ background:C.plum, padding:"20px 16px 14px" }}>
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,${C.plum},#5b21b6)`, padding:"22px 16px 16px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <h2 style={{ margin:0, color:C.card, fontWeight:900, fontSize:18 }}>⚙️ Admin Panel</h2>
+            <h2 style={{ margin:0, color:C.card, fontWeight:900, fontSize:20, fontFamily:"'Nunito', sans-serif" }}>⚙️ Admin Panel</h2>
             <div style={{ color:"rgba(255,255,255,0.7)", fontSize:12, marginTop:2 }}>PeerUp upravljačka ploča</div>
           </div>
           <Btn label="Odjava" small color={C.card} textColor={C.plum} onClick={onOdjava} />
         </div>
       </div>
-      <div style={{ display:"flex", borderBottom:`1.5px solid ${C.cardBorder}`, background:C.card }}>
-        {[["pregled","📊"],["korisnici","👥"],["pristupni","🔑"]].map(([k,ic])=>(
-          <button key={k} onClick={()=>setTab(k)} style={{ flex:1, padding:"12px 0", background:"none", border:"none", borderBottom:`3px solid ${tab===k?C.plum:"transparent"}`, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, color:tab===k?C.plum:C.inkMid, cursor:"pointer" }}>{ic} {k.charAt(0).toUpperCase()+k.slice(1)}</button>
+
+      {/* Tabs */}
+      <div style={{ display:"flex", borderBottom:`1.5px solid ${C.cardBorder}`, background:C.card, overflowX:"auto" }}>
+        {[["pregled","📊 Pregled"],["korisnici","👥 Korisnici"],["kodovi","🔑 Kodovi"],["generator","⚡ Generator"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{ flex:"0 0 auto", padding:"12px 14px", background:"none", border:"none", borderBottom:`3px solid ${tab===k?C.plum:"transparent"}`, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:12, color:tab===k?C.plum:C.inkMid, cursor:"pointer", whiteSpace:"nowrap" }}>{l}</button>
         ))}
       </div>
-      <div style={{ padding:16 }}>
+
+      <div style={{ padding:16, paddingBottom:40 }}>
+
+        {/* ── PREGLED ── */}
         {tab==="pregled" && (
           <>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-              {[{label:"Učenika",v:ukupnoUcenika,c:C.teal,bg:C.tealLight,ic:"🧑‍🎓"},{label:"Učitelja",v:ukupnoUcitelja,c:C.blue,bg:C.blueLight,ic:"👩‍🏫"},{label:"Aktivnih",v:aktivnih,c:C.green,bg:C.greenLight,ic:"✅"},{label:"Ukupno",v:clanovi.length,c:C.plum,bg:C.plumLight,ic:"👥"}].map(s=>(
+              {[
+                {label:"Učenika",    v:ukupnoUcenika,   c:C.teal,  bg:C.tealLight,  ic:"🧑‍🎓"},
+                {label:"Učitelja",   v:ukupnoUcitelja,  c:C.blue,  bg:C.blueLight,  ic:"👩‍🏫"},
+                {label:"Slobodnih",  v:slobodniKodovi,  c:C.green, bg:C.greenLight, ic:"🔑"},
+                {label:"Iskorišt.",  v:koristeniKodovi, c:C.amber, bg:C.amberLight, ic:"✅"},
+              ].map(s=>(
                 <div key={s.label} style={{ background:s.bg, border:`1.5px solid ${s.c}33`, borderRadius:14, padding:16, textAlign:"center" }}>
-                  <div style={{ fontSize:32, marginBottom:4 }}>{s.ic}</div>
+                  <div style={{ fontSize:28, marginBottom:4 }}>{s.ic}</div>
                   <div style={{ fontWeight:900, fontSize:26, color:s.c }}>{s.v}</div>
                   <div style={{ fontSize:12, color:C.inkMid }}>{s.label}</div>
                 </div>
               ))}
             </div>
+            <div style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:14, padding:14 }}>
+              <div style={{ fontWeight:900, color:C.ink, marginBottom:8 }}>📊 Statistika škole</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {[["Ukupno korisnika", clanovi.length,"👥"],["Aktivnih korisnika", clanovi.filter(c=>c.aktivan).length,"✅"],["Ukupno kodova u bazi", kodovi.length,"🗄️"],["Slobodnih kodova", slobodniKodovi,"🔓"]].map(([l,v,ic])=>(
+                  <div key={l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid ${C.bgDeep}` }}>
+                    <span style={{ color:C.inkMid, fontSize:13 }}>{ic} {l}</span>
+                    <span style={{ fontWeight:900, color:C.ink, fontSize:14 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </>
         )}
+
+        {/* ── KORISNICI ── */}
         {tab==="korisnici" && (
           <>
-            <Btn label="+ Novi korisnik" color={C.plum} full onClick={()=>setNoviModal(true)} style={{ marginBottom:12 }} />
+            <Btn label="+ Dodaj korisnika ručno" color={C.plum} full onClick={()=>setNoviModal(true)} />
             {noviModal && (
               <div onClick={()=>setNoviModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
                 <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"88vh", overflowY:"auto" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
-                    <h3 style={{ margin:0, color:C.ink, fontWeight:900 }}>👤 Novi korisnik</h3>
+                    <h3 style={{ margin:0, color:C.ink, fontWeight:900, fontFamily:"'Nunito', sans-serif" }}>👤 Novi korisnik</h3>
                     <button onClick={()=>setNoviModal(false)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
                   </div>
                   <FInp label="Ime" value={noviKor.ime} onChange={e=>setNoviKor(p=>({...p,ime:e.target.value}))} />
@@ -1605,39 +1755,103 @@ function AdminDashboard({ clanovi, setClanovi, onOdjava }) {
                     ))}
                   </div>
                   <FInp label="Lozinka" type="password" value={noviKor.lozinka} onChange={e=>setNoviKor(p=>({...p,lozinka:e.target.value}))} />
-                  <Btn label="✅ Dodaj korisnika" color={C.plum} full disabled={!noviKor.ime||!noviKor.prezime||!noviKor.lozinka} onClick={dodaj} />
+                  <Btn label="✅ Dodaj korisnika" color={C.plum} full disabled={!noviKor.ime||!noviKor.prezime||!noviKor.lozinka} onClick={dodajKorisnika} />
                 </div>
               </div>
             )}
-            {clanovi.map(c=>{
-              const ub = ulogaBoja(c.uloga);
-              return (
-                <div key={c.id} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
-                  <div style={{ fontSize:28 }}>{c.avatar}</div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:800, color:C.ink }}>{c.ime} {c.prezime}</div>
-                    <div style={{ fontSize:11, color:C.inkLight }}>Kod: {c.kod}</div>
+            <div style={{ marginTop:12 }}>
+              {clanovi.map(c=>{
+                const ub = ulogaBoja(c.uloga);
+                return (
+                  <div key={c.id} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
+                    <div style={{ fontSize:28 }}>{c.avatar}</div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{c.ime} {c.prezime}</div>
+                      <div style={{ fontSize:11, color:C.inkLight, fontFamily:"monospace" }}>{c.kod}</div>
+                      {c.razred && <div style={{ fontSize:11, color:C.inkMid }}>{c.razred} razred</div>}
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
+                      <Pill label={ub.label} color={ub.color} bg={ub.bg} />
+                      <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,aktivan:!cc.aktivan}:cc))} style={{ fontSize:10, background:c.aktivan?C.greenLight:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:c.aktivan?C.green:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>{c.aktivan?"✅ Aktivan":"❌ Neaktivan"}</button>
+                    </div>
                   </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
-                    <Pill label={ub.label} color={ub.color} bg={ub.bg} />
-                    <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,aktivan:!cc.aktivan}:cc))} style={{ fontSize:10, background:c.aktivan?C.greenLight:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:c.aktivan?C.green:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>{c.aktivan?"Aktivan":"Neaktivan"}</button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </>
         )}
-        {tab==="pristupni" && (
+
+        {/* ── BAZA KODOVA ── */}
+        {tab==="kodovi" && (
           <>
-            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:12, padding:14, marginBottom:14 }}>
-              <div style={{ fontWeight:800, color:C.amber, marginBottom:4 }}>🔑 Pristupni kodovi za registraciju</div>
-              <div style={{ fontSize:12, color:C.inkMid }}>Dijeli ove kodove s novim korisnicima za registraciju.</div>
+            <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:14, paddingBottom:2 }}>
+              {[["svi","Svi"],["slobodni","Slobodni"],["koristeni","Iskorišteni"],["ucenik","Učenici"],["ucitelj","Učitelji"]].map(([k,l])=>(
+                <button key={k} onClick={()=>setFilterKodovi(k)} style={{ flexShrink:0, padding:"5px 12px", borderRadius:99, background:filterKodovi===k?C.plum:C.bgDeep, color:filterKodovi===k?C.card:C.inkMid, border:`1.5px solid ${filterKodovi===k?C.plum:C.cardBorder}`, fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{l}</button>
+              ))}
             </div>
-            <div>
-              <div style={{ fontWeight:700, color:C.inkMid, fontSize:13, marginBottom:6 }}>Slobodni kodovi učenika:</div>
-              {VALJANI_KODOVI_UCENIKA.map(k=><div key={k} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 12px", marginBottom:4, fontWeight:700, color:C.teal, fontSize:13 }}>🧑‍🎓 {k}</div>)}
-              <div style={{ fontWeight:700, color:C.inkMid, fontSize:13, margin:"12px 0 6px" }}>Slobodni kodovi učitelja:</div>
-              {VALJANI_KODOVI_UCITELJA.map(k=><div key={k} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 12px", marginBottom:4, fontWeight:700, color:C.blue, fontSize:13 }}>👩‍🏫 {k}</div>)}
+            <div style={{ color:C.inkLight, fontSize:12, marginBottom:10 }}>{prikazaniKodovi.length} kod(ova)</div>
+            {prikazaniKodovi.map(k=>(
+              <div key={k.id} style={{ background:C.card, border:`1.5px solid ${k.koristen?C.cardBorder:C.green}33`, borderRadius:12, padding:"10px 12px", marginBottom:6, display:"flex", gap:8, alignItems:"center" }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:3 }}>
+                    <span style={{ fontFamily:"monospace", fontWeight:900, fontSize:13, color:k.koristen?C.inkMid:C.ink }}>{k.kod}</span>
+                    <span style={{ background:k.koristen?C.bgDeep:C.greenLight, color:k.koristen?C.inkLight:C.green, fontSize:10, fontWeight:700, borderRadius:6, padding:"1px 7px" }}>{k.koristen?"Korišten":"Slobodan"}</span>
+                  </div>
+                  <div style={{ fontSize:11, color:C.inkLight }}>
+                    {k.uloga==="ucenik"?"🧑‍🎓":"👩‍🏫"} {k.uloga==="ucenik"?`${k.razred} razred`:"Učitelj"} · Lozinka: <span style={{ fontFamily:"monospace", color:C.inkMid }}>{k.lozinka}</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:5 }}>
+                  <button onClick={()=>kopirajKod(k)} style={{ background:kopiran===k.id?C.greenLight:C.bgDeep, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:kopiran===k.id?C.green:C.inkMid }}>{kopiran===k.id?"✅":"📋"}</button>
+                  {!k.koristen && <button onClick={()=>obrisiKod(k.id)} style={{ background:C.roseLight, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:C.rose }}>🗑</button>}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* ── GENERATOR KODOVA ── */}
+        {tab==="generator" && (
+          <>
+            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:12, padding:14, marginBottom:20 }}>
+              <div style={{ fontWeight:900, color:C.amber, marginBottom:4 }}>⚡ Generator pristupnih kodova</div>
+              <div style={{ fontSize:13, color:C.inkMid }}>Generiraj batch kodova za učenike ili učitelje. Svaki učenik/učitelj dobiva kod i lozinku za prvu prijavu.</div>
+            </div>
+
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Uloga</p>
+            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+              {["ucenik","ucitelj"].map(u=>(
+                <button key={u} onClick={()=>setGenUloga(u)} style={{ flex:1, padding:"12px 0", borderRadius:12, border:`2px solid ${genUloga===u?C.plum:C.cardBorder}`, background:genUloga===u?C.plumLight:C.bg, color:genUloga===u?C.plum:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer" }}>{u==="ucenik"?"🧑‍🎓 Učenici":"👩‍🏫 Učitelji"}</button>
+              ))}
+            </div>
+
+            {genUloga === "ucenik" && (
+              <>
+                <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Razred</p>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+                  {RAZREDI.map(r=>(
+                    <button key={r} onClick={()=>setGenRazred(r)} style={{ padding:"7px 14px", borderRadius:10, border:`2px solid ${genRazred===r?C.teal:C.cardBorder}`, background:genRazred===r?C.tealLight:C.bg, color:genRazred===r?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{r}</button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Broj kodova</p>
+            <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+              {[5,10,20,30].map(n=>(
+                <button key={n} onClick={()=>setGenBroj(n)} style={{ flex:1, padding:"10px 0", borderRadius:10, border:`2px solid ${genBroj===n?C.blue:C.cardBorder}`, background:genBroj===n?C.blueLight:C.bg, color:genBroj===n?C.blue:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:15, cursor:"pointer" }}>{n}</button>
+              ))}
+            </div>
+
+            <div style={{ background:C.bgDeep, borderRadius:12, padding:14, marginBottom:16 }}>
+              <div style={{ fontSize:13, color:C.inkMid }}>
+                Generirat će se <strong style={{ color:C.ink }}>{genBroj} novih kodova</strong> za <strong style={{ color:C.ink }}>{genUloga==="ucenik"?`učenike ${genRazred} razreda`:"učitelje"}</strong> s nasumičnim lozinkama.
+              </div>
+            </div>
+
+            <Btn label={`⚡ Generiraj ${genBroj} kodova`} color={C.plum} full onClick={generirajKodove} />
+            <div style={{ marginTop:10, textAlign:"center" }}>
+              <button onClick={()=>setTab("kodovi")} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:13, cursor:"pointer" }}>→ Pogledaj sve kodove</button>
             </div>
           </>
         )}
@@ -1647,82 +1861,216 @@ function AdminDashboard({ clanovi, setClanovi, onOdjava }) {
 }
 
 // ---- AUTH ----
-function PrijavaSustav({ clanovi, setClanovi, onPrijava }) {
-  const [ekran, setEkran] = useState("prijava");
+function PrijavaSustav({ clanovi, setClanovi, kodovi, setKodovi, onPrijava }) {
+  const [ekran, setEkran] = useState("dobrodoslica"); // dobrodoslica | prijava | registracija | demo
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif" }}>
+      {ekran==="dobrodoslica" && <EkranDobrodoslica onLogin={()=>setEkran("prijava")} onRegister={()=>setEkran("registracija")} onDemo={()=>setEkran("demo")} />}
+      {ekran==="prijava"      && <EkranPrijava clanovi={clanovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
+      {ekran==="registracija" && <EkranRegistracija clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
+      {ekran==="demo"         && <EkranDemo clanovi={clanovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
+    </div>
+  );
+}
+
+function EkranDobrodoslica({ onLogin, onRegister, onDemo }) {
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ width:"100%", maxWidth:400, textAlign:"center" }}>
+        <div style={{ fontSize:72, lineHeight:1, marginBottom:12 }}>🤝</div>
+        <h1 style={{ margin:0, fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:40, color:C.ink, letterSpacing:-1 }}>
+          Peer<span style={{ color:C.teal }}>Up</span>
+        </h1>
+        <p style={{ margin:"6px 0 28px", color:C.inkLight, fontSize:14, fontWeight:600 }}>Školska platforma za međuvršnjačku pomoć</p>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center", marginBottom:36 }}>
+          {["📖 Učimo zajedno","🗺️ Bilješke i mape","🔄 Školski buvljak","🏆 Bodovi i nagrade"].map(f=>(
+            <span key={f} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:999, padding:"5px 12px", fontSize:12, fontWeight:700, color:C.inkMid }}>{f}</span>
+          ))}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <Btn label="🔑 Prijava" color={C.teal} full onClick={onLogin} />
+          <Btn label="✏️ Registracija" color={C.ink} full onClick={onRegister} />
+          <div style={{ display:"flex", alignItems:"center", gap:10, margin:"2px 0" }}>
+            <div style={{ flex:1, height:1, background:C.cardBorder }} />
+            <span style={{ color:C.inkLight, fontSize:12, fontWeight:700 }}>ili</span>
+            <div style={{ flex:1, height:1, background:C.cardBorder }} />
+          </div>
+          <button onClick={onDemo} style={{ width:"100%", background:`linear-gradient(135deg,${C.amber},#f59e0b)`, color:C.card, border:"none", borderRadius:12, padding:"13px 20px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:15, cursor:"pointer", boxShadow:`0 4px 16px ${C.amber}44` }}>
+            🎭 Demo prikaz (bez prijave)
+          </button>
+        </div>
+        <p style={{ marginTop:20, fontSize:11, color:C.inkLight, lineHeight:1.6 }}>Za prijavu trebaš kod koji ti daje učitelj/ica ili administrator.</p>
+      </div>
+    </div>
+  );
+}
+
+function EkranPrijava({ clanovi, onUspjeh, onNatrag }) {
   const [kod, setKod] = useState("");
-  const [lozinka, setLozinka] = useState("");
+  const [loz, setLoz] = useState("");
   const [greska, setGreska] = useState("");
-  const [regKod, setRegKod] = useState("");
-  const [regIme, setRegIme] = useState("");
-  const [regPrezime, setRegPrezime] = useState("");
-  const [regLozinka, setRegLozinka] = useState("");
-  const [regRazred, setRegRazred] = useState("5.");
-  const [regGreska, setRegGreska] = useState("");
+  const [ucitavam, setUcitavam] = useState(false);
 
   const prijava = () => {
-    setGreska("");
-    const k = clanovi.find(c=>c.kod===kod.trim()&&c.lozinka===lozinka&&c.aktivan);
-    if (k) { onPrijava(k); return; }
-    setGreska("Pogrešan kod ili lozinka.");
-  };
-
-  const registracija = () => {
-    setRegGreska("");
-    const kodUcenik = VALJANI_KODOVI_UCENIKA.includes(regKod.trim());
-    const kodUcitelj = VALJANI_KODOVI_UCITELJA.includes(regKod.trim());
-    if (!kodUcenik && !kodUcitelj) { setRegGreska("Nevažeći pozivni kod."); return; }
-    if (!regIme||!regPrezime||!regLozinka) { setRegGreska("Popuni sva polja."); return; }
-    const uloga = kodUcenik ? "ucenik" : "ucitelj";
-    const noviK = { id:Date.now(), ime:regIme.trim(), prezime:regPrezime.trim(), uloga, razred:uloga==="ucenik"?regRazred:null, predmeti:[], aktivan:true, kod:regKod.trim(), lozinka:regLozinka, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0 };
-    setClanovi(prev=>[...prev,noviK]);
-    onPrijava(noviK);
+    setGreska(""); setUcitavam(true);
+    setTimeout(() => {
+      const clan = clanovi.find(c => c.kod === kod.trim().toUpperCase() && c.lozinka === loz.trim());
+      if (!clan) { setGreska("Neispravan kod ili lozinka."); setUcitavam(false); return; }
+      if (!clan.aktivan) { setGreska("Račun je deaktiviran. Obrati se administratoru."); setUcitavam(false); return; }
+      onUspjeh(clan);
+    }, 600);
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, fontFamily:"'Nunito', sans-serif" }}>
-      <div style={{ width:"100%", maxWidth:380 }}>
-        <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ fontSize:64, marginBottom:8 }}>🎓</div>
-          <h1 style={{ margin:0, color:C.ink, fontWeight:900, fontSize:28, fontFamily:"'Nunito', sans-serif" }}>PeerUp</h1>
-          <p style={{ margin:"6px 0 0", color:C.inkMid, fontSize:14 }}>Školska platforma za uzajamno učenje</p>
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ width:"100%", maxWidth:400 }}>
+        <button onClick={onNatrag} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:24 }}>← Natrag</button>
+        <div style={{ textAlign:"center", marginBottom:28 }}>
+          <div style={{ fontSize:48 }}>🔑</div>
+          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Prijava</h2>
+          <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Upiši kod i lozinku</p>
         </div>
-        <div style={{ display:"flex", background:C.bgDeep, borderRadius:12, padding:4, marginBottom:24 }}>
-          {[["prijava","Prijava"],["registracija","Registracija"],["demo","Demo"]].map(([k,l])=>(
-            <button key={k} onClick={()=>setEkran(k)} style={{ flex:1, padding:"9px 0", borderRadius:9, background:ekran===k?C.card:"transparent", border:"none", fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, color:ekran===k?C.ink:C.inkMid, cursor:"pointer", boxShadow:ekran===k?"0 2px 6px #1a16121a":"none" }}>{l}</button>
+        <Card>
+          <FInp label="Tvoj kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-7-01" icon="🪪" />
+          <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Tvoja lozinka" icon="🔒" />
+          {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
+          <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.teal} full disabled={!kod||!loz||ucitavam} onClick={prijava} />
+        </Card>
+        <div style={{ background:C.bgDeep, border:`1.5px solid ${C.cardBorder}`, borderRadius:14, padding:14, marginTop:16 }}>
+          <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Testni podaci</p>
+          {[{lbl:"Admin",kod:"ADMIN001",loz:"admin123"},{lbl:"Učiteljica",kod:"UCT-MAT1",loz:"ucit123"},{lbl:"Učenik (Luka)",kod:"UCE-7-01",loz:"luka2024"}].map(t=>(
+            <button key={t.kod} onClick={()=>{setKod(t.kod);setLoz(t.loz);}} style={{ display:"block", width:"100%", textAlign:"left", background:C.card, border:`1px solid ${C.cardBorder}`, borderRadius:8, padding:"7px 10px", marginBottom:6, cursor:"pointer", fontFamily:"'Nunito', sans-serif", fontSize:12, fontWeight:700, color:C.ink }}>
+              {t.lbl}: <span style={{ fontFamily:"monospace", color:C.teal }}>{t.kod}</span> / <span style={{ color:C.inkMid }}>{t.loz}</span>
+            </button>
           ))}
         </div>
-        {ekran==="prijava" && (
-          <div style={{ background:C.card, borderRadius:20, padding:24, boxShadow:"0 4px 24px #1a16120e" }}>
-            <FInp label="Pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-7-01" icon="🔑" error={greska} />
-            <FInp label="Lozinka" type="password" value={lozinka} onChange={e=>setLozinka(e.target.value)} placeholder="Tvoja lozinka" icon="🔒" />
-            <Btn label="Prijavi se →" color={C.teal} full onClick={prijava} />
+      </div>
+    </div>
+  );
+}
+
+function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, onNatrag }) {
+  const [korak, setKorak]       = useState(1);
+  const [kod, setKod]           = useState("");
+  const [uloga, setUloga]       = useState(null);
+  const [ime, setIme]           = useState("");
+  const [prezime, setPrezime]   = useState("");
+  const [razred, setRazred]     = useState("");
+  const [predmeti, setPredmeti] = useState([]);
+  const [loz, setLoz]           = useState("");
+  const [loz2, setLoz2]         = useState("");
+  const [greska, setGreska]     = useState("");
+  const [gotovo, setGotovo]     = useState(false);
+
+  const provjeriKod = () => {
+    setGreska("");
+    const kodT = kod.trim().toUpperCase();
+    if (clanovi.find(c => c.kod === kodT)) { setGreska("Ovaj kod je već iskorišten."); return; }
+    const unos = kodovi.find(k => k.kod === kodT && !k.koristen);
+    if (!unos) { setGreska("Kod nije valjan ili je već iskorišten. Provjeri s administratorom."); return; }
+    setUloga(unos.uloga);
+    if (unos.razred) setRazred(unos.razred);
+    setKorak(2);
+  };
+
+  const registriraj = () => {
+    setGreska("");
+    if (!ime.trim() || !prezime.trim()) { setGreska("Upiši ime i prezime."); return; }
+    if (uloga === "ucenik" && !razred) { setGreska("Odaberi razred."); return; }
+    if (uloga === "ucitelj" && predmeti.length === 0) { setGreska("Odaberi barem jedan predmet."); return; }
+    if (loz.length < 6) { setGreska("Lozinka mora imati barem 6 znakova."); return; }
+    if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
+    const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:loz, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0 };
+    setClanovi(c => [...c, noviClan]);
+    setKodovi(prev => prev.map(k => k.kod === kod.trim().toUpperCase() ? {...k, koristen:true} : k));
+    setGotovo(true);
+    setTimeout(() => onUspjeh(noviClan), 1800);
+  };
+
+  if (gotovo) return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize:72 }}>🎉</div>
+        <h2 style={{ fontFamily:"'Nunito', sans-serif", fontWeight:900, color:C.teal, margin:"12px 0 8px" }}>Dobrodošao/la, {ime}!</h2>
+        <p style={{ color:C.inkMid }}>Račun je kreiran. Prijavljujem te...</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ width:"100%", maxWidth:400 }}>
+        <button onClick={korak===1?onNatrag:()=>setKorak(1)} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:24 }}>← Natrag</button>
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ fontSize:48 }}>{korak===1?"✏️":"📋"}</div>
+          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Registracija</h2>
+          {korak===2 && <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Registracija kao: <strong style={{ color:uloga==="ucenik"?C.teal:C.blue }}>{uloga==="ucenik"?"Učenik":"Učitelj"}</strong></p>}
+        </div>
+        <div style={{ display:"flex", gap:6, marginBottom:20 }}>
+          {[1,2].map(k=><div key={k} style={{ flex:1, height:4, borderRadius:99, background:k<=korak?C.teal:C.cardBorder, transition:"background 0.3s" }} />)}
+        </div>
+        <Card>
+          {korak===1 && (
+            <>
+              <FInp label="Jednokratni pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-5-01" icon="🪪" />
+              <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}>
+                <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>💡 Kod dobivaš od učitelja/ice ili administratora. Svaki kod se može koristiti samo jednom.</p>
+              </div>
+              {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
+              <Btn label="Provjeri kod →" color={C.teal} full disabled={!kod} onClick={provjeriKod} />
+            </>
+          )}
+          {korak===2 && (
+            <>
+              <div style={{ display:"flex", gap:10 }}>
+                <div style={{ flex:1 }}><FInp label="Ime" value={ime} onChange={e=>setIme(e.target.value)} placeholder="Ime" /></div>
+                <div style={{ flex:1 }}><FInp label="Prezime" value={prezime} onChange={e=>setPrezime(e.target.value)} placeholder="Prezime" /></div>
+              </div>
+              {uloga==="ucenik" && (
+                <><p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Razred</p>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
+                  {RAZREDI.map(r=><button key={r} onClick={()=>setRazred(r)} style={{ padding:"7px 12px", borderRadius:9, border:`2px solid ${razred===r?C.teal:C.cardBorder}`, background:razred===r?C.tealLight:C.bg, color:razred===r?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{r} r.</button>)}
+                </div></>
+              )}
+              {uloga==="ucitelj" && (
+                <><p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Predmeti</p>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
+                  {PREDMETI.map(p=>{const sel=predmeti.includes(p);return <button key={p} onClick={()=>setPredmeti(prev=>sel?prev.filter(x=>x!==p):[...prev,p])} style={{ padding:"5px 10px", borderRadius:8, border:`2px solid ${sel?C.blue:C.cardBorder}`, background:sel?C.blueLight:C.bg, color:sel?C.blue:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:11, cursor:"pointer" }}>{p}</button>;})}
+                </div></>
+              )}
+              <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 6 znakova" icon="🔒" />
+              <FInp label="Ponovi lozinku" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
+              {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
+              <Btn label="Registriraj se →" color={C.teal} full disabled={!ime||!prezime||loz.length<6||loz!==loz2} onClick={registriraj} />
+            </>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function EkranDemo({ clanovi, onUspjeh, onNatrag }) {
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ width:"100%", maxWidth:400 }}>
+        <button onClick={onNatrag} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:24 }}>← Natrag</button>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
+          <div style={{ fontSize:48 }}>🎭</div>
+          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Demo prikaz</h2>
+          <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Isprobaj aplikaciju bez registracije</p>
+        </div>
+        <Card>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {[{id:5,label:"🧑‍🎓 Učenik – Luka Marić",sub:"7. razred · 142 boda"},{id:2,label:"👩‍🏫 Učiteljica – Ivana Kovač",sub:"Matematika · Fizika"},{id:1,label:"👨‍💼 Administrator – Marko Horvat",sub:"Upravljačka ploča"}].map(d=>(
+              <button key={d.id} onClick={()=>onUspjeh(clanovi.find(c=>c.id===d.id))} style={{ width:"100%", padding:"13px 16px", borderRadius:12, border:`1.5px solid ${C.cardBorder}`, background:C.bg, fontFamily:"'Nunito', sans-serif", cursor:"pointer", textAlign:"left" }}>
+                <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{d.label}</div>
+                <div style={{ fontWeight:600, color:C.inkLight, fontSize:12, marginTop:2 }}>{d.sub}</div>
+              </button>
+            ))}
           </div>
-        )}
-        {ekran==="registracija" && (
-          <div style={{ background:C.card, borderRadius:20, padding:24, boxShadow:"0 4px 24px #1a16120e" }}>
-            <FInp label="Pozivni kod" value={regKod} onChange={e=>setRegKod(e.target.value)} placeholder="Kod od učitelja/škole" icon="🔑" error={regGreska} />
-            <FInp label="Ime" value={regIme} onChange={e=>setRegIme(e.target.value)} placeholder="Tvoje ime" />
-            <FInp label="Prezime" value={regPrezime} onChange={e=>setRegPrezime(e.target.value)} placeholder="Tvoje prezime" />
-            <FInp label="Lozinka" type="password" value={regLozinka} onChange={e=>setRegLozinka(e.target.value)} placeholder="Odaberi lozinku" icon="🔒" />
-            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Razred (za učenike)</p>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-              {RAZREDI.map(r=>(
-                <button key={r} onClick={()=>setRegRazred(r)} style={{ padding:"6px 12px", borderRadius:9, border:`2px solid ${regRazred===r?C.blue:C.cardBorder}`, background:regRazred===r?C.blueLight:C.bg, color:regRazred===r?C.blue:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:12, cursor:"pointer" }}>{r}</button>
-              ))}
-            </div>
-            <Btn label="Registriraj se →" color={C.teal} full onClick={registracija} />
-          </div>
-        )}
-        {ekran==="demo" && (
-          <div style={{ background:C.card, borderRadius:20, padding:24, boxShadow:"0 4px 24px #1a16120e" }}>
-            <p style={{ color:C.inkMid, fontSize:13, textAlign:"center", marginBottom:16 }}>Isprobaj aplikaciju bez registracije</p>
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              {[{id:5,label:"🧑‍🎓 Učenik – Luka Marić (7. razred)"},{id:2,label:"👩‍🏫 Učiteljica – Ivana Kovač"},{id:1,label:"👨‍💼 Administrator – Marko Horvat"}].map(d=>(
-                <button key={d.id} onClick={()=>onPrijava(clanovi.find(c=>c.id===d.id))} style={{ width:"100%", padding:"12px 16px", borderRadius:12, border:`1.5px solid ${C.cardBorder}`, background:C.bg, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, cursor:"pointer", textAlign:"left" }}>{d.label}</button>
-              ))}
-            </div>
-          </div>
-        )}
+        </Card>
       </div>
     </div>
   );
@@ -1810,9 +2158,12 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
 // ---- ROOT ----
 export default function App() {
   const [clanovi, setClanovi] = useState(INIT_CLANOVI);
+  const [kodovi, setKodovi]   = useState(INIT_KODOVI);
   const [korisnik, setKorisnik] = useState(null);
 
-  if (!korisnik) return <PrijavaSustav clanovi={clanovi} setClanovi={setClanovi} onPrijava={setKorisnik} />;
-  if (korisnik.uloga === "admin") return <AdminDashboard clanovi={clanovi} setClanovi={setClanovi} onOdjava={()=>setKorisnik(null)} />;
-  return <GlavnaAplikacija korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} onOdjava={()=>setKorisnik(null)} />;
+  const odjava = () => setKorisnik(null);
+
+  if (!korisnik) return <PrijavaSustav clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onPrijava={setKorisnik} />;
+  if (korisnik.uloga === "admin") return <AdminDashboard clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onOdjava={odjava} />;
+  return <GlavnaAplikacija korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} onOdjava={odjava} />;
 }
