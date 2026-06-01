@@ -817,11 +817,78 @@ function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi }
   );
 }
 
+function KvizModal({ materijal, onClose, addBodovi, onNotifikacija }) {
+  const [gotov, setGotov] = useState(false);
+  const [nacin, setNacin] = useState(null);
+  const [kljuc, setKljuc] = useState(0);
+  const imaBanku = (KVIZ_BANKA[materijal.predmet]||[]).length > 0;
+
+  const zavrsi = (bodovi, ponoviIsto) => {
+    addBodovi(bodovi);
+    onNotifikacija({ tekst:`🧠 Kviz iz ${materijal.predmet} završen! +${bodovi} bodova`, boja:C.plum });
+    if (ponoviIsto) { setKljuc(k=>k+1); }
+    else { setGotov(true); setTimeout(onClose, 1200); }
+  };
+
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"#1a161299", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", width:"100%", maxWidth:430, maxHeight:"92vh", overflowY:"auto" }}>
+        {/* Header */}
+        <div style={{ padding:"16px 20px 10px", borderBottom:`1px solid ${C.cardBorder}`, display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, background:C.card, zIndex:10 }}>
+          <div>
+            <div style={{ fontWeight:900, fontSize:15, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>🧠 Kviz za ponavljanje</div>
+            <div style={{ fontSize:12, color:C.inkMid }}>{materijal.ikona} {materijal.lekcija} · {materijal.predmet}</div>
+          </div>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:C.inkLight }}>✕</button>
+        </div>
+
+        {!imaBanku ? (
+          <div style={{ padding:24, textAlign:"center" }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🚧</div>
+            <div style={{ color:C.inkMid, fontSize:14 }}>Za ovaj predmet još nema pitanja u banci kvizova.</div>
+          </div>
+        ) : gotov ? (
+          <div style={{ padding:24, textAlign:"center" }}>
+            <div style={{ fontSize:56 }}>🎉</div>
+            <div style={{ color:C.teal, fontWeight:900, fontFamily:"'Nunito', sans-serif", fontSize:18, marginTop:8 }}>Odlično!</div>
+          </div>
+        ) : !nacin ? (
+          <div style={{ padding:20 }}>
+            <div style={{ background:C.plumLight, borderRadius:14, padding:14, marginBottom:20 }}>
+              <div style={{ fontSize:13, color:C.plum, fontWeight:700, marginBottom:4 }}>📋 Na temelju materijala:</div>
+              <div style={{ color:C.ink, fontWeight:800 }}>{materijal.lekcija}</div>
+              <div style={{ color:C.inkMid, fontSize:12, marginTop:2, lineHeight:1.5 }}>{materijal.opis?.slice(0,100)}{materijal.opis?.length>100?"...":""}</div>
+            </div>
+            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Odaberi način ponavljanja</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <button onClick={()=>setNacin("kviz")} style={{ background:C.plum, color:C.card, border:"none", borderRadius:14, padding:"16px 18px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:14, cursor:"pointer", textAlign:"left" }}>
+                <div style={{ fontSize:22, marginBottom:4 }}>⚡ Brzi kviz</div>
+                <div style={{ fontWeight:700, opacity:0.85 }}>8 nasumičnih pitanja · 3 boda/točno</div>
+                <div style={{ fontSize:11, opacity:0.7, marginTop:2 }}>Provjeri jesi li razumio gradivo</div>
+              </button>
+              <button onClick={()=>setNacin("vjezba")} style={{ background:C.blue, color:C.card, border:"none", borderRadius:14, padding:"16px 18px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:14, cursor:"pointer", textAlign:"left" }}>
+                <div style={{ fontSize:22, marginBottom:4 }}>📚 Temeljita vježba</div>
+                <div style={{ fontWeight:700, opacity:0.85 }}>12 nasumičnih pitanja · 2 boda/točno</div>
+                <div style={{ fontSize:11, opacity:0.7, marginTop:2 }}>Dublje ponovi sve što si naučio/la</div>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div key={kljuc}>
+            <KvizIgra predmet={materijal.predmet} nacin={nacin} onZavrsi={zavrsi} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikacija }) {
   const [predFilter, setPredFilter] = useState("Svi");
   const [tipFilter, setTipFilter] = useState("Svi");
   const [modal, setModal] = useState(false);
   const [pregled, setPregled] = useState(null);
+  const [kvizMaterijal, setKvizMaterijal] = useState(null);
   const [noviBiljezak, setNoviBiljezak] = useState({ predmet:"Matematika", lekcija:"", tip:"Bilješke", opis:"", datoteka:null });
   const tipovi = ["Svi","Bilješke","Sažetak","Umna mapa"];
   const filtered = materijali.filter(m=>(predFilter==="Svi"||m.predmet===predFilter)&&(tipFilter==="Svi"||m.tip===tipFilter));
@@ -846,6 +913,7 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
   return (
     <div>
       {pregled && <PregledDatotekeModal materijal={pregled} onClose={()=>setPregled(null)} />}
+      {kvizMaterijal && <KvizModal materijal={kvizMaterijal} onClose={()=>setKvizMaterijal(null)} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
       {modal && (
         <div onClick={()=>setModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
           <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto" }}>
@@ -900,10 +968,13 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
                   <Pill label={m.tip} color={C.plum} bg={C.plumLight} />
                 </div>
                 {m.opis && <div style={{ marginTop:6, color:C.inkMid, fontSize:12, lineHeight:1.5 }}>{m.opis.slice(0,80)}{m.opis.length>80?"...":""}</div>}
-                <div style={{ marginTop:10, display:"flex", gap:8, alignItems:"center" }}>
+                <div style={{ marginTop:10, display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
                   <span style={{ color:C.inkLight, fontSize:12 }}>⬇ {m.preuzimanja}</span>
                   <span style={{ color:C.inkLight, fontSize:12 }}>📅 {m.datum}</span>
-                  <Btn label={m.datoteka?"👁 Pregled":"📥 Info"} small color={m.datoteka?C.teal:C.blue} onClick={()=>setPregled(m)} style={{ marginLeft:"auto" }} />
+                  <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
+                    <Btn label={m.datoteka?"👁 Pregled":"📥 Info"} small color={m.datoteka?C.teal:C.blue} onClick={()=>setPregled(m)} />
+                    <Btn label="🧠 Kviz" small color={C.plum} onClick={()=>setKvizMaterijal(m)} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1679,7 +1750,6 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
     { id:"biljeske",    label:"Bilješke",   ikona:"📝" },
     { id:"buvljak",     label:"Buvljak",    ikona:"🎒" },
     { id:"price",       label:"Priče",      ikona:"💬" },
-    { id:"kvizovi",     label:"Kvizovi",    ikona:"🧠" },
     { id:"volontiranje",label:"Volonti.",   ikona:"🤲" },
     { id:"bodovi",      label:"Bodovi",     ikona:"⭐" },
     { id:"profil",      label:"Profil",     ikona:"👤" },
@@ -1716,7 +1786,6 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
         {aktTab==="biljeske"    && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="buvljak"     && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="price"       && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
-        {aktTab==="kvizovi"     && <Kvizovi korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="volontiranje" && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="bodovi"      && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={DEMO_LJESTVICA} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="profil"      && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} />}
