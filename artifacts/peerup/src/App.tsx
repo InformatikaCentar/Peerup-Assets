@@ -19,8 +19,8 @@ const RAZREDI  = ["1.","2.","3.","4.","5.","6.","7.","8."];
 const DANI     = ["Pon","Uto","Sri","Čet","Pet"];
 const SATI     = ["8:00","9:00","10:00","11:00","12:00","13:00","14:00"];
 
-const SKOLA_NAZIV = "OŠ Nikola Tesla";
-const SKOLA_GRAD  = "Zagreb";
+const SKOLA_NAZIV = "OŠ Centar";
+const SKOLA_GRAD  = "Rijeka";
 
 const RAZINE = [
   { naziv:"Početnik",   min:0,    max:49,   ikona:"🌱", boja:C.inkLight },
