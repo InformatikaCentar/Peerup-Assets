@@ -226,11 +226,11 @@ const DEMO_MATERIJALI = [
 ];
 
 const DEMO_RAZMJENA = [
-  { id:301, korisnik:"Mia L.",  tip:"Donacija", predmet:"Harry Potter 1-3", kat:"Knjige",  ikona:"📚", svjezina:null,         opis:"Sve tri knjige u odličnom stanju, čitane jednom. Donacija za ljubitelje čitanja!", slike:[] },
-  { id:302, korisnik:"Ivo R.",  tip:"Razmjena", predmet:"Zimska jakna, vel. 146", kat:"Odjeća", ikona:"🧥", svjezina:null,   opis:"Tražim u zamjenu sportsku opremu, vel. 146-152. Jakna korištena jednu sezonu.", slike:[] },
-  { id:303, korisnik:"Ela T.",  tip:"Donacija", predmet:"Domaći kolačići 🍪", kat:"Hrana",  ikona:"🍪", svjezina:"2 dana",   opis:"Mama napravila previše za školski ručak. Tko želi, slobodno uzme do četvrtka!", slike:[] },
-  { id:304, korisnik:"Noa S.",  tip:"Razmjena", predmet:"Lego City set (komplet)", kat:"Igračke", ikona:"🧩", svjezina:null, opis:"Kompletirani Lego City sa svim dijelovima i uputama. Tražim u zamjenu Lego Technic.", slike:[] },
-  { id:305, korisnik:"Karlo D.",tip:"Donacija", predmet:"Geografski atlas 2024", kat:"Knjige", ikona:"🗺️", svjezina:null,    opis:"Novo izdanje atlasa, potpuno nov, nisam stigao koristiti jer sam dobio digitalni.", slike:[] },
+  { id:301, korisnik:"Mia L.",  tip:"Donacija", predmet:"Harry Potter 1-3", kat:"Knjige",  ikona:"📚", svjezina:null,         opis:"Sve tri knjige u odličnom stanju, čitane jednom. Donacija za ljubitelje čitanja!", slike:[], rezerviran:null },
+  { id:302, korisnik:"Ivo R.",  tip:"Razmjena", predmet:"Zimska jakna, vel. 146", kat:"Odjeća", ikona:"🧥", svjezina:null,   opis:"Tražim u zamjenu sportsku opremu, vel. 146-152. Jakna korištena jednu sezonu.", slike:[], rezerviran:null },
+  { id:303, korisnik:"Ela T.",  tip:"Donacija", predmet:"Domaći kolačići 🍪", kat:"Hrana",  ikona:"🍪", svjezina:"2 dana",   opis:"Mama napravila previše za školski ručak. Tko želi, slobodno uzme do četvrtka!", slike:[], rezerviran:null },
+  { id:304, korisnik:"Noa S.",  tip:"Razmjena", predmet:"Lego City set (komplet)", kat:"Igračke", ikona:"🧩", svjezina:null, opis:"Kompletirani Lego City sa svim dijelovima i uputama. Tražim u zamjenu Lego Technic.", slike:[], rezerviran:null },
+  { id:305, korisnik:"Karlo D.",tip:"Donacija", predmet:"Geografski atlas 2024", kat:"Knjige", ikona:"🗺️", svjezina:null,    opis:"Novo izdanje atlasa, potpuno nov, nisam stigao koristiti jer sam dobio digitalni.", slike:[], rezerviran:null },
 ];
 
 const DEMO_PRICE = [
@@ -836,8 +836,14 @@ function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi }
       {novaModal && <NovaPonudaModal korisnik={korisnik} onClose={()=>setNovaModal(false)} onDodaj={nova=>{setPonude(prev=>[nova,...prev]);addBodovi(8);onNotifikacija({tekst:"🎉 Objava je objavljena! +8 bodova",boja:C.teal});}} />}
       {detaljiModal && <DetaljiPonudeModal ponuda={detaljiModal} korisnik={korisnik} onClose={()=>setDetaljiModal(null)} onRezervacija={rezerviraj} />}
       <div style={{ padding:"0 16px 12px", display:"flex", gap:8 }}>
-        <Btn label="➕ Objavi ponudu" color={C.teal} onClick={()=>setNovaModal(true)} />
-        <Btn label="🔍 Traži pomoć" color={C.rose} onClick={()=>setNovaModal(true)} />
+        {korisnik.uloga === "ucitelj" ? (
+          <Btn label="📚 Ponudi poduku" color={C.teal} onClick={()=>setNovaModal(true)} />
+        ) : (
+          <>
+            <Btn label="🙋 Nudim pomoć" color={C.teal} onClick={()=>setNovaModal(true)} />
+            <Btn label="🤔 Tražim pomoć" color={C.rose} onClick={()=>setNovaModal(true)} />
+          </>
+        )}
       </div>
       <div style={{ padding:"0 16px 6px", overflowX:"auto", display:"flex", gap:6, paddingBottom:8 }}>
         {["Svi",...PREDMETI.slice(0,7)].map(p=>(
@@ -1075,29 +1081,28 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
 function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifikacija }) {
   const [filter, setFilter] = useState("Svi");
   const [modal, setModal] = useState(false);
+  const [zamjenaZa, setZamjenaZa] = useState(null);
   const [novaStvar, setNovaStvar] = useState({ tip:"Donacija", predmet:"", kat:"Knjige", opis:"", slike:[] });
   const [slika_urls, setSlika_urls] = useState([]);
-  const [pendingUpload, setPendingUpload] = useState(false);
   const fileRef = useRef(null);
   const kategFiltri = ["Svi","Knjige","Odjeća","Igračke","Hrana","Ostalo"];
   const filtered = razmjena.filter(r=>filter==="Svi"||r.kat===filter);
+  const mojeIme = `${korisnik.ime} ${korisnik.prezime[0]}.`;
 
   const handleSlikeChange = (e) => {
     const files = Array.from(e.target.files);
-    const urls = files.map(f => URL.createObjectURL(f));
     setNovaStvar(p=>({...p, slike:files}));
-    setSlika_urls(urls);
-    setPendingUpload(true);
+    setSlika_urls(files.map(f => URL.createObjectURL(f)));
   };
 
   const potvrdiDonaciju = () => {
     const ikone = {"Knjige":"📚","Odjeća":"👕","Igračke":"🧩","Hrana":"🍎","Ostalo":"📦"};
     const nova = {
-      id:Date.now(), korisnik:`${korisnik.ime} ${korisnik.prezime[0]}.`,
+      id:Date.now(), korisnik:mojeIme,
       tip:novaStvar.tip, predmet:novaStvar.predmet||"Predmet",
       kat:novaStvar.kat, ikona:ikone[novaStvar.kat]||"📦",
       svjezina:novaStvar.kat==="Hrana"?"3 dana":null,
-      opis:novaStvar.opis||"Nema opisa.", slike:novaStvar.slike
+      opis:novaStvar.opis||"Nema opisa.", slike:novaStvar.slike, rezerviran:null
     };
     setRazmjena(prev=>[nova,...prev]);
     addBodovi(10);
@@ -1105,11 +1110,22 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
     setModal(false);
     setNovaStvar({ tip:"Donacija", predmet:"", kat:"Knjige", opis:"", slike:[] });
     setSlika_urls([]);
-    setPendingUpload(false);
   };
+
+  const rezerviraj = (r) => {
+    if (r.rezerviran || r.korisnik === mojeIme) return;
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 3);
+    const expStr = expiry.toLocaleDateString("hr-HR");
+    setRazmjena(prev=>prev.map(item=>item.id===r.id ? {...item, rezerviran:{ korisnik:mojeIme, do:expStr }} : item));
+    onNotifikacija({ tekst:`🔒 Rezervirali ste "${r.predmet}" od @${r.korisnik}. Ističe ${expStr}.`, boja:C.blue });
+  };
+
+  const slobodneZaZamjenu = razmjena.filter(r => r.tip==="Razmjena" && !r.rezerviran && r.korisnik !== mojeIme && zamjenaZa && r.id !== zamjenaZa.id);
 
   return (
     <div>
+      {/* Nova objava modal */}
       {modal && (
         <div onClick={()=>setModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
           <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto" }}>
@@ -1132,22 +1148,48 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
               ))}
             </div>
             <FInp label="Opis" value={novaStvar.opis} onChange={e=>setNovaStvar(p=>({...p,opis:e.target.value}))} placeholder="Kratki opis stanja i detalja..." />
-            {/* Photo Upload */}
             <input ref={fileRef} type="file" accept="image/*" multiple style={{ display:"none" }} onChange={handleSlikeChange} />
             <button onClick={()=>fileRef.current?.click()} style={{ width:"100%", padding:12, borderRadius:12, border:`2px dashed ${slika_urls.length>0?C.teal:C.blue}`, background:slika_urls.length>0?C.tealLight:C.blueLight, color:slika_urls.length>0?C.teal:C.blue, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", marginBottom:slika_urls.length>0?10:14 }}>
               {slika_urls.length>0 ? `📸 ${slika_urls.length} fotografija odabrano` : "📸 Dodaj fotografije"}
             </button>
             {slika_urls.length > 0 && (
               <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:14 }}>
-                {slika_urls.map((url,i)=>(
-                  <img key={i} src={url} alt="" style={{ width:"100%", aspectRatio:"1", objectFit:"cover", borderRadius:10, border:`2px solid ${C.teal}` }} />
-                ))}
+                {slika_urls.map((url,i)=><img key={i} src={url} alt="" style={{ width:"100%", aspectRatio:"1", objectFit:"cover", borderRadius:10, border:`2px solid ${C.teal}` }} />)}
               </div>
             )}
-            <Btn label={`✅ Potvrdi i objavi (+10 bodova)`} color={C.teal} full onClick={potvrdiDonaciju} disabled={!novaStvar.predmet.trim()} />
+            <Btn label="✅ Potvrdi i objavi (+10 bodova)" color={C.teal} full onClick={potvrdiDonaciju} disabled={!novaStvar.predmet.trim()} />
           </div>
         </div>
       )}
+
+      {/* Predloži zamjenu modal */}
+      {zamjenaZa && (
+        <div onClick={()=>setZamjenaZa(null)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>🔄 Predloži zamjenu</h3>
+              <button onClick={()=>setZamjenaZa(null)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
+            </div>
+            <div style={{ background:C.blueLight, border:`1.5px solid ${C.blue}33`, borderRadius:12, padding:"10px 14px", marginBottom:16, fontSize:13, color:C.inkMid }}>
+              Odaberi što nudiš u zamjenu za <strong style={{ color:C.ink }}>{zamjenaZa.predmet}</strong> (@{zamjenaZa.korisnik}):
+            </div>
+            {slobodneZaZamjenu.length === 0
+              ? <div style={{ textAlign:"center", padding:24, color:C.inkLight, fontSize:13 }}>Nema slobodnih predmeta za razmjenu.</div>
+              : slobodneZaZamjenu.map(r=>(
+                <div key={r.id} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
+                  <div style={{ fontSize:28 }}>{r.ikona}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{r.predmet}</div>
+                    <div style={{ fontSize:12, color:C.inkMid }}>@{r.korisnik} · {r.kat}</div>
+                  </div>
+                  <Btn label="Predloži" small color={C.blue} onClick={()=>{ onNotifikacija({ tekst:`🔄 Poslali ste prijedlog zamjene za "${r.predmet}"`, boja:C.blue }); setZamjenaZa(null); }} />
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
+
       <div style={{ padding:"0 16px 12px" }}>
         <Btn label="➕ Dodaj predmet" color={C.amber} textColor={C.ink} onClick={()=>setModal(true)} />
       </div>
@@ -1157,38 +1199,66 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
         ))}
       </div>
       <div style={{ padding:"0 16px" }}>
-        {filtered.map(r=>(
-          <Card key={r.id} accent={r.tip==="Donacija"?C.teal:C.blue}>
-            {r.slike && r.slike.length > 0 && (
-              <div style={{ display:"flex", gap:6, marginBottom:10, overflowX:"auto" }}>
-                {r.slike.map((f,i)=>(
-                  <img key={i} src={URL.createObjectURL(f)} alt="" style={{ width:80, height:80, objectFit:"cover", borderRadius:10, flexShrink:0 }} />
-                ))}
-              </div>
-            )}
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <div style={{ display:"flex", gap:10, flex:1 }}>
-                <div style={{ fontSize:32 }}>{r.ikona}</div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:800, fontSize:15, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>{r.predmet}</div>
-                  <div style={{ color:C.inkMid, fontSize:12 }}>@{r.korisnik}</div>
+        {filtered.map(r=>{
+          const jeVlasnik = r.korisnik === mojeIme;
+          const jeRezerviranMnom = r.rezerviran?.korisnik === mojeIme;
+          return (
+            <Card key={r.id} accent={r.rezerviran ? C.inkLight : r.tip==="Donacija"?C.teal:C.blue}>
+              {r.slike && r.slike.length > 0 && (
+                <div style={{ display:"flex", gap:6, marginBottom:10, overflowX:"auto" }}>
+                  {r.slike.map((f,i)=>(
+                    <img key={i} src={URL.createObjectURL(f)} alt="" style={{ width:80, height:80, objectFit:"cover", borderRadius:10, flexShrink:0 }} />
+                  ))}
+                </div>
+              )}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                <div style={{ display:"flex", gap:10, flex:1 }}>
+                  <div style={{ fontSize:32, opacity:r.rezerviran?0.5:1 }}>{r.ikona}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:800, fontSize:15, color:r.rezerviran?C.inkMid:C.ink, fontFamily:"'Nunito', sans-serif" }}>{r.predmet}</div>
+                    <div style={{ color:C.inkMid, fontSize:12 }}>@{r.korisnik}</div>
+                  </div>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+                  <Pill label={r.tip} color={r.rezerviran?C.inkLight:r.tip==="Donacija"?C.teal:C.blue} bg={r.rezerviran?C.bgDeep:r.tip==="Donacija"?C.tealLight:C.blueLight} />
+                  <Pill label={r.kat} color={C.amber} bg={C.amberLight} />
                 </div>
               </div>
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                <Pill label={r.tip} color={r.tip==="Donacija"?C.teal:C.blue} bg={r.tip==="Donacija"?C.tealLight:C.blueLight} />
-                <Pill label={r.kat} color={C.amber} bg={C.amberLight} />
-              </div>
-            </div>
-            {r.svjezina && (
-              <div style={{ marginTop:6 }}><Pill label={`Svježe do: ${r.svjezina}`} color={C.orange} bg={C.orangeLight} /></div>
-            )}
-            {r.opis && <div style={{ marginTop:8, color:C.inkMid, fontSize:12, lineHeight:1.5 }}>{r.opis}</div>}
-            <div style={{ marginTop:10, display:"flex", gap:8 }}>
-              <Btn label="💬 Kontakt" small color={C.teal} onClick={()=>{}} />
-              {r.tip==="Razmjena" && <Btn label="🔄 Predloži zamjenu" small color={C.blue} onClick={()=>{}} />}
-            </div>
-          </Card>
-        ))}
+              {r.svjezina && (
+                <div style={{ marginTop:6 }}><Pill label={`Svježe do: ${r.svjezina}`} color={C.orange} bg={C.orangeLight} /></div>
+              )}
+              {r.rezerviran && (
+                <div style={{ marginTop:8, background:C.bgDeep, borderRadius:10, padding:"8px 12px", display:"flex", gap:8, alignItems:"center" }}>
+                  <span style={{ fontSize:16 }}>🔒</span>
+                  <div style={{ fontSize:12, color:C.inkMid }}>
+                    Rezervirano — <strong style={{ color:C.ink }}>{r.rezerviran.korisnik}</strong>
+                    <span style={{ color:C.inkLight }}> · ističe {r.rezerviran.do}</span>
+                  </div>
+                </div>
+              )}
+              {r.opis && <div style={{ marginTop:8, color:C.inkMid, fontSize:12, lineHeight:1.5 }}>{r.opis}</div>}
+              {!jeVlasnik && (
+                <div style={{ marginTop:10, display:"flex", gap:8 }}>
+                  {jeRezerviranMnom ? (
+                    <Pill label="✅ Rezervirano od tebe" color={C.green} bg={C.greenLight} />
+                  ) : r.rezerviran ? (
+                    <Pill label="Nije dostupno" color={C.inkLight} bg={C.bgDeep} />
+                  ) : (
+                    <Btn label="🔒 REZERVIRAJ" small color={C.teal} onClick={()=>rezerviraj(r)} />
+                  )}
+                  {r.tip==="Razmjena" && !r.rezerviran && (
+                    <Btn label="🔄 Predloži zamjenu" small color={C.blue} onClick={()=>setZamjenaZa(r)} />
+                  )}
+                </div>
+              )}
+              {jeVlasnik && r.rezerviran && (
+                <div style={{ marginTop:10 }}>
+                  <Pill label={`📩 Rezervirano od ${r.rezerviran.korisnik}`} color={C.teal} bg={C.tealLight} />
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
@@ -1349,27 +1419,84 @@ function Kvizovi({ korisnik, addBodovi, onNotifikacija }) {
 function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
   const [projekti, setProjekti] = useState(VOLONT_PROJEKTI);
   const [prijavljen, setPrijavljen] = useState({});
+  const [noviModal, setNoviModal] = useState(false);
+  const [noviProjekt, setNoviProjekt] = useState({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20 });
+  const jeUcitelj = korisnik.uloga === "ucitelj" || korisnik.uloga === "admin";
+  const mojeIme = `${korisnik.ime} ${korisnik.prezime[0]}.`;
 
   const prijavi = (id) => {
     const p = projekti.find(pp=>pp.id===id);
     if (!p) return;
-    setProjekti(prev=>prev.map(pp=>pp.id===id?{...pp,prijavljeni:[...pp.prijavljeni,`${korisnik.ime} ${korisnik.prezime[0]}.`]}:pp));
+    setProjekti(prev=>prev.map(pp=>pp.id===id?{...pp,prijavljeni:[...pp.prijavljeni,mojeIme]}:pp));
     setPrijavljen(prev=>({...prev,[id]:true}));
     addBodovi(p.bodovi);
-    onNotifikacija({ tekst:`🤝 Prijavili ste se na volonterski projekt! +${p.bodovi} bodova`, boja:C.orange });
+    onNotifikacija({ tekst:`🤝 Prijavili ste se: "${p.naslov}"! +${p.bodovi} bodova`, boja:C.orange });
   };
 
-  const mojePrijave = projekti.filter(p=>p.prijavljeni.includes(`${korisnik.ime} ${korisnik.prezime[0]}.`) || prijavljen[p.id]);
+  const dodajProjekt = () => {
+    const novi = { id:Date.now(), naslov:noviProjekt.naslov, opis:noviProjekt.opis, ikona:noviProjekt.ikona, mjesta:noviProjekt.mjesta, prijavljeni:[], bodovi:noviProjekt.bodovi, organizator:`${korisnik.ime} ${korisnik.prezime}` };
+    setProjekti(prev=>[novi,...prev]);
+    onNotifikacija({ tekst:`📢 Objavili ste volonterski projekt "${noviProjekt.naslov}"`, boja:C.orange });
+    setNoviModal(false);
+    setNoviProjekt({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20 });
+  };
+
+  const mojePrijave = projekti.filter(p=>p.prijavljeni.includes(mojeIme) || prijavljen[p.id]);
 
   return (
     <div style={{ padding:"0 16px 20px" }}>
+      {noviModal && (
+        <div onClick={()=>setNoviModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>📢 Novi volonterski projekt</h3>
+              <button onClick={()=>setNoviModal(false)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
+            </div>
+            <FInp label="Naziv projekta" value={noviProjekt.naslov} onChange={e=>setNoviProjekt(p=>({...p,naslov:e.target.value}))} placeholder="npr. Pomoć u knjižnici..." />
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Opis</p>
+            <textarea rows={3} value={noviProjekt.opis} onChange={e=>setNoviProjekt(p=>({...p,opis:e.target.value}))} placeholder="Što učenici rade, kada, koliko dugo..." style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontSize:13, resize:"none", boxSizing:"border-box", marginBottom:14, outline:"none" }} />
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Ikona</p>
+            <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+              {["🤝","📖","🌱","💻","📰","🧸","🎨","🏫"].map(ik=>(
+                <button key={ik} onClick={()=>setNoviProjekt(p=>({...p,ikona:ik}))} style={{ padding:"8px 10px", borderRadius:10, border:`2px solid ${noviProjekt.ikona===ik?C.orange:C.cardBorder}`, background:noviProjekt.ikona===ik?C.orangeLight:C.bg, fontSize:20, cursor:"pointer" }}>{ik}</button>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:10, marginBottom:14 }}>
+              <div style={{ flex:1 }}>
+                <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Mjesta</p>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {[2,3,5,8,10].map(n=>(
+                    <button key={n} onClick={()=>setNoviProjekt(p=>({...p,mjesta:n}))} style={{ padding:"7px 12px", borderRadius:9, border:`2px solid ${noviProjekt.mjesta===n?C.teal:C.cardBorder}`, background:noviProjekt.mjesta===n?C.tealLight:C.bg, color:noviProjekt.mjesta===n?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{n}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flex:1 }}>
+                <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Bodovi</p>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {[10,15,20,25,30].map(b=>(
+                    <button key={b} onClick={()=>setNoviProjekt(p=>({...p,bodovi:b}))} style={{ padding:"7px 12px", borderRadius:9, border:`2px solid ${noviProjekt.bodovi===b?C.amber:C.cardBorder}`, background:noviProjekt.bodovi===b?C.amberLight:C.bg, color:noviProjekt.bodovi===b?C.amber:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{b}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <Btn label="📢 Objavi projekt" color={C.orange} textColor={C.card} full disabled={!noviProjekt.naslov.trim()||!noviProjekt.opis.trim()} onClick={dodajProjekt} />
+          </div>
+        </div>
+      )}
+
       <div style={{ background:`linear-gradient(135deg, ${C.orange}, #c2410c)`, borderRadius:16, padding:20, marginBottom:20, color:C.card }}>
         <div style={{ fontSize:32, marginBottom:6 }}>🤝</div>
         <h2 style={{ margin:0, fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:20, marginBottom:6 }}>Volontiranje</h2>
         <p style={{ margin:0, opacity:0.85, fontSize:13 }}>Pomozi školi, zaradi bodove i postani pravi školski heroj!</p>
       </div>
 
-      {mojePrijave.length > 0 && (
+      {jeUcitelj && (
+        <div style={{ marginBottom:20 }}>
+          <Btn label="📢 Dodaj volonterski projekt" color={C.orange} textColor={C.card} full onClick={()=>setNoviModal(true)} />
+        </div>
+      )}
+
+      {!jeUcitelj && mojePrijave.length > 0 && (
         <div style={{ marginBottom:20 }}>
           <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Moje volonterske aktivnosti</div>
           {mojePrijave.map(p=>(
@@ -1388,7 +1515,7 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
       <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Dostupni projekti</div>
       {projekti.map(p=>{
         const slobodnoMjesta = p.mjesta - p.prijavljeni.length;
-        const vecPrijavljen = p.prijavljeni.includes(`${korisnik.ime} ${korisnik.prezime[0]}.`) || prijavljen[p.id];
+        const vecPrijavljen = p.prijavljeni.includes(mojeIme) || prijavljen[p.id];
         return (
           <Card key={p.id} accent={vecPrijavljen?C.green:C.orange}>
             <div style={{ display:"flex", gap:10 }}>
@@ -1407,7 +1534,11 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
                       <div style={{ height:"100%", width:`${(p.prijavljeni.length/p.mjesta)*100}%`, background:slobodnoMjesta===0?C.rose:C.orange, borderRadius:99 }} />
                     </div>
                   </div>
-                  {vecPrijavljen ? (
+                  {jeUcitelj ? (
+                    p.prijavljeni.length > 0
+                      ? <Pill label={`${p.prijavljeni.length} prijav.`} color={C.teal} bg={C.tealLight} />
+                      : <Pill label="Nema prijava" color={C.inkLight} bg={C.bgDeep} />
+                  ) : vecPrijavljen ? (
                     <Pill label="✅ Prijavljen/a" color={C.green} bg={C.greenLight} />
                   ) : slobodnoMjesta > 0 ? (
                     <Btn label="Prijavi se" small color={C.orange} textColor={C.card} onClick={()=>prijavi(p.id)} />
@@ -1415,6 +1546,18 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
                     <Pill label="Popunjeno" color={C.rose} bg={C.roseLight} />
                   )}
                 </div>
+                {p.prijavljeni.length > 0 && (
+                  <div style={{ marginTop:10, paddingTop:8, borderTop:`1px solid ${C.cardBorder}` }}>
+                    <div style={{ fontSize:11, color:C.inkLight, marginBottom:6, fontWeight:700, textTransform:"uppercase" }}>
+                      {jeUcitelj ? "Prijavljeni učenici" : "Prijavljeni"}:
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                      {p.prijavljeni.map((ime,i)=>(
+                        <span key={i} style={{ background:C.orangeLight, color:C.orange, borderRadius:99, padding:"2px 10px", fontSize:11, fontWeight:700 }}>{ime}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -1563,6 +1706,11 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
   const razina = getRazina(korisnik.bodovi);
   const sljedeca = getSljedecaRazina(korisnik.bodovi);
   const posto = sljedeca ? Math.round(((korisnik.bodovi - razina.min) / (sljedeca.min - razina.min)) * 100) : 100;
+  const [inboxTab, setInboxTab] = useState("sve");
+
+  const rezervacije = notifikacije.filter(n=>n.tekst.includes("Rezervira") || n.tekst.includes("rezervira") || n.tekst.includes("🔒"));
+  const aktivnosti  = notifikacije.filter(n=>!n.tekst.includes("Rezervira") && !n.tekst.includes("rezervira") && !n.tekst.includes("🔒"));
+  const prikazane = inboxTab==="rezervacije" ? rezervacije : inboxTab==="aktivnosti" ? aktivnosti : notifikacije;
 
   return (
     <div style={{ padding:"0 16px 20px" }}>
@@ -1587,18 +1735,29 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
         )}
       </div>
 
-      {/* Notifikacije */}
+      {/* Inbox */}
       <div style={{ marginBottom:20 }}>
-        <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>
-          🔔 Obavijesti {notifikacije.length > 0 && <span style={{ background:C.rose, color:C.card, borderRadius:99, padding:"1px 7px", fontSize:10, marginLeft:6 }}>{notifikacije.length}</span>}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>
+            📬 Inbox
+            {notifikacije.length > 0 && <span style={{ background:C.rose, color:C.card, borderRadius:99, padding:"1px 7px", fontSize:10, marginLeft:6 }}>{notifikacije.length}</span>}
+          </div>
         </div>
-        {notifikacije.length === 0 ? (
-          <div style={{ background:C.bgDeep, borderRadius:12, padding:16, textAlign:"center", color:C.inkLight, fontSize:13 }}>Nema novih obavijesti.</div>
+        <div style={{ display:"flex", gap:6, marginBottom:12 }}>
+          {[["sve","Sve",notifikacije.length],["rezervacije","🔒 Rezervacije",rezervacije.length],["aktivnosti","⭐ Aktivnosti",aktivnosti.length]].map(([id,label,count])=>(
+            <button key={id} onClick={()=>setInboxTab(id)} style={{ flex:1, padding:"6px 4px", borderRadius:10, border:`2px solid ${inboxTab===id?C.teal:C.cardBorder}`, background:inboxTab===id?C.tealLight:C.bg, color:inboxTab===id?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:11, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+              <span>{label}</span>
+              {count>0 && <span style={{ background:inboxTab===id?C.teal:C.bgDeep, color:inboxTab===id?C.card:C.inkLight, borderRadius:99, padding:"0 6px", fontSize:10, fontWeight:900 }}>{count}</span>}
+            </button>
+          ))}
+        </div>
+        {prikazane.length === 0 ? (
+          <div style={{ background:C.bgDeep, borderRadius:12, padding:16, textAlign:"center", color:C.inkLight, fontSize:13 }}>Nema {inboxTab==="rezervacije"?"rezervacija":inboxTab==="aktivnosti"?"aktivnosti":"obavijesti"}.</div>
         ) : (
-          notifikacije.slice().reverse().map((n, i) => (
-            <div key={i} style={{ background:n.boja+"18", border:`1.5px solid ${n.boja}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", alignItems:"center", gap:10 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:n.boja, flexShrink:0 }} />
-              <div style={{ color:C.ink, fontSize:13, fontWeight:700 }}>{n.tekst}</div>
+          prikazane.slice().reverse().map((n, i) => (
+            <div key={i} style={{ background:n.boja+"18", border:`1.5px solid ${n.boja}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", gap:10 }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:n.boja, flexShrink:0, marginTop:4 }} />
+              <div style={{ color:C.ink, fontSize:13, fontWeight:700, lineHeight:1.5 }}>{n.tekst}</div>
             </div>
           ))
         )}
@@ -1611,7 +1770,7 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
           { label:"Ukupno bodova", v:korisnik.bodovi, ikona:"⭐" },
           { label:"Razina", v:razina.naziv, ikona:razina.ikona },
           { label:"Predmeti", v:korisnik.predmeti?.length||"—", ikona:"📚" },
-          { label:"Razred", v:korisnik.razred||"—", ikona:"🏫" },
+          { label:korisnik.uloga==="ucenik"?"Razred":"Uloga", v:korisnik.razred||korisnik.uloga, ikona:"🏫" },
         ].map((s,i)=>(
           <div key={i} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:14, padding:14, textAlign:"center" }}>
             <div style={{ fontSize:28, marginBottom:4 }}>{s.ikona}</div>
@@ -1634,6 +1793,7 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
   const [genUloga, setGenUloga] = useState("ucenik");
   const [genRazred, setGenRazred] = useState("5.");
   const [genBroj, setGenBroj] = useState(5);
+  const [genIdentifikator, setGenIdentifikator] = useState("");
   const [filterKodovi, setFilterKodovi] = useState("svi");
   const [kopiran, setKopiran] = useState(null);
 
@@ -1660,9 +1820,10 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
       const kod = genUloga === "ucenik"
         ? `UCE-${genRazred.replace(".","")}-${suf}`
         : `UCT-${["MAT","HRV","ENG","FIZ","KEM","BIO","INF","GEO"][i%8]}${suf}`;
-      noviKodovi.push({ id:n, kod, uloga:genUloga, razred:genUloga==="ucenik"?genRazred:null, lozinka:loz, koristen:false, datum:new Date().toLocaleDateString("hr-HR") });
+      noviKodovi.push({ id:n, kod, uloga:genUloga, razred:genUloga==="ucenik"?genRazred:null, lozinka:loz, koristen:false, datum:new Date().toLocaleDateString("hr-HR"), identifikator:genIdentifikator.trim()||null });
     }
     setKodovi(prev=>[...noviKodovi,...prev]);
+    setGenIdentifikator("");
   };
 
   const kopirajKod = (unos) => {
@@ -1773,6 +1934,9 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
                     <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
                       <Pill label={ub.label} color={ub.color} bg={ub.bg} />
                       <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,aktivan:!cc.aktivan}:cc))} style={{ fontSize:10, background:c.aktivan?C.greenLight:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:c.aktivan?C.green:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>{c.aktivan?"✅ Aktivan":"❌ Neaktivan"}</button>
+                      {c.uloga !== "admin" && (
+                        <button onClick={()=>{ if(window.confirm(`Ukloniti ${c.ime} ${c.prezime}?`)) setClanovi(prev=>prev.filter(cc=>cc.id!==c.id)); }} style={{ fontSize:10, background:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>🗑 Ukloni</button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1800,6 +1964,9 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
                   <div style={{ fontSize:11, color:C.inkLight }}>
                     {k.uloga==="ucenik"?"🧑‍🎓":"👩‍🏫"} {k.uloga==="ucenik"?`${k.razred} razred`:"Učitelj"} · Lozinka: <span style={{ fontFamily:"monospace", color:C.inkMid }}>{k.lozinka}</span>
                   </div>
+                  {k.identifikator && (
+                    <div style={{ fontSize:11, color:C.plum, fontWeight:700, marginTop:2 }}>🏷 {k.identifikator}</div>
+                  )}
                 </div>
                 <div style={{ display:"flex", gap:5 }}>
                   <button onClick={()=>kopirajKod(k)} style={{ background:kopiran===k.id?C.greenLight:C.bgDeep, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:kopiran===k.id?C.green:C.inkMid }}>{kopiran===k.id?"✅":"📋"}</button>
@@ -1815,7 +1982,7 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
           <>
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:12, padding:14, marginBottom:20 }}>
               <div style={{ fontWeight:900, color:C.amber, marginBottom:4 }}>⚡ Generator pristupnih kodova</div>
-              <div style={{ fontSize:13, color:C.inkMid }}>Generiraj batch kodova za učenike ili učitelje. Svaki učenik/učitelj dobiva kod i lozinku za prvu prijavu.</div>
+              <div style={{ fontSize:13, color:C.inkMid }}>Generiraj kodove za učenike ili učitelje. Svaki korisnik dobiva kod i lozinku za prvu prijavu. Vezani su isključivo uz ovu školu.</div>
             </div>
 
             <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Uloga</p>
@@ -1836,6 +2003,8 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
               </>
             )}
 
+            <FInp label="Identifikator (nije obavezan)" value={genIdentifikator} onChange={e=>setGenIdentifikator(e.target.value)} placeholder="npr. Ana K., 5.b razred..." />
+
             <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Broj kodova</p>
             <div style={{ display:"flex", gap:8, marginBottom:20 }}>
               {[5,10,20,30].map(n=>(
@@ -1845,7 +2014,8 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
 
             <div style={{ background:C.bgDeep, borderRadius:12, padding:14, marginBottom:16 }}>
               <div style={{ fontSize:13, color:C.inkMid }}>
-                Generirat će se <strong style={{ color:C.ink }}>{genBroj} novih kodova</strong> za <strong style={{ color:C.ink }}>{genUloga==="ucenik"?`učenike ${genRazred} razreda`:"učitelje"}</strong> s nasumičnim lozinkama.
+                Generirat će se <strong style={{ color:C.ink }}>{genBroj} novih kodova</strong> za <strong style={{ color:C.ink }}>{genUloga==="ucenik"?`učenike ${genRazred} razreda`:"učitelje"}</strong>.
+                {genIdentifikator.trim() && <> Identifikator: <strong style={{ color:C.plum }}>{genIdentifikator.trim()}</strong>.</>}
               </div>
             </div>
 
