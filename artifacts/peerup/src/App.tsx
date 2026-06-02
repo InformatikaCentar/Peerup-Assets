@@ -19,6 +19,9 @@ const RAZREDI  = ["1.","2.","3.","4.","5.","6.","7.","8."];
 const DANI     = ["Pon","Uto","Sri","Čet","Pet"];
 const SATI     = ["8:00","9:00","10:00","11:00","12:00","13:00","14:00"];
 
+const SKOLA_NAZIV = "OŠ Nikola Tesla";
+const SKOLA_GRAD  = "Zagreb";
+
 const RAZINE = [
   { naziv:"Početnik",   min:0,    max:49,   ikona:"🌱", boja:C.inkLight },
   { naziv:"Istraživač", min:50,   max:149,  ikona:"🔍", boja:C.blue },
@@ -198,12 +201,12 @@ function initKodovi() {
   let n = 2;
   for (const r of ["1.","2.","3.","4.","5.","6.","7.","8."]) {
     for (let i = 0; i < 4; i++) {
-      kodovi.push({ id: n*100+i, kod: genKod("ucenik", r, n*10+i), uloga:"ucenik", razred:r, lozinka: LOZINKE_DEMO[(n*10+i)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR") });
+      kodovi.push({ id: n*100+i, kod: genKod("ucenik", r, n*10+i), uloga:"ucenik", razred:r, lozinka: LOZINKE_DEMO[(n*10+i)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR"), skola:SKOLA_NAZIV });
     }
     n++;
   }
   for (let i = 0; i < 10; i++) {
-    kodovi.push({ id: 9000+i, kod: genKod("ucitelj", null, i+1), uloga:"ucitelj", razred:null, lozinka: LOZINKE_DEMO[(i+5)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR") });
+    kodovi.push({ id: 9000+i, kod: genKod("ucitelj", null, i+1), uloga:"ucitelj", razred:null, lozinka: LOZINKE_DEMO[(i+5)%LOZINKE_DEMO.length], koristen:false, datum: new Date().toLocaleDateString("hr-HR"), skola:SKOLA_NAZIV });
   }
   return kodovi;
 }
@@ -477,11 +480,11 @@ function DetaljiPonudeModal({ ponuda, korisnik, onClose, onRezervacija }) {
         {rezervirano ? (
           <div style={{ background:C.greenLight, border:`1.5px solid ${C.green}44`, borderRadius:12, padding:14, textAlign:"center" }}>
             <div style={{ fontSize:32 }}>✅</div>
-            <div style={{ color:C.green, fontWeight:900, fontFamily:"'Nunito', sans-serif" }}>Rezervirano!</div>
+            <div style={{ color:C.green, fontWeight:900, fontFamily:"'Nunito', sans-serif" }}>{ponuda.tip==="nudi"?"Rezervirano!":"Termin predložen!"}</div>
             <div style={{ color:C.inkMid, fontSize:13, marginTop:4 }}>Termin: <strong>{rezervirano}</strong></div>
           </div>
         ) : slobodniTermini.length > 0 && (
-          <Btn label="📅 Rezerviraj termin" color={ponuda.tip==="nudi"?C.teal:C.rose} full onClick={()=>setKalModal(true)} />
+          <Btn label={ponuda.tip==="nudi"?"📅 Rezerviraj termin":"🙋 Predloži termin pomoći"} color={ponuda.tip==="nudi"?C.teal:C.rose} full onClick={()=>setKalModal(true)} />
         )}
       </div>
     </div>
@@ -1820,7 +1823,7 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
       const kod = genUloga === "ucenik"
         ? `UCE-${genRazred.replace(".","")}-${suf}`
         : `UCT-${["MAT","HRV","ENG","FIZ","KEM","BIO","INF","GEO"][i%8]}${suf}`;
-      noviKodovi.push({ id:n, kod, uloga:genUloga, razred:genUloga==="ucenik"?genRazred:null, lozinka:loz, koristen:false, datum:new Date().toLocaleDateString("hr-HR"), identifikator:genIdentifikator.trim()||null });
+      noviKodovi.push({ id:n, kod, uloga:genUloga, razred:genUloga==="ucenik"?genRazred:null, lozinka:loz, koristen:false, datum:new Date().toLocaleDateString("hr-HR"), identifikator:genIdentifikator.trim()||null, skola:SKOLA_NAZIV });
     }
     setKodovi(prev=>[...noviKodovi,...prev]);
     setGenIdentifikator("");
@@ -1850,7 +1853,7 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
             <h2 style={{ margin:0, color:C.card, fontWeight:900, fontSize:20, fontFamily:"'Nunito', sans-serif" }}>⚙️ Admin Panel</h2>
-            <div style={{ color:"rgba(255,255,255,0.7)", fontSize:12, marginTop:2 }}>PeerUp upravljačka ploča</div>
+            <div style={{ color:"rgba(255,255,255,0.7)", fontSize:12, marginTop:2 }}>🏫 {SKOLA_NAZIV}, {SKOLA_GRAD}</div>
           </div>
           <Btn label="Odjava" small color={C.card} textColor={C.plum} onClick={onOdjava} />
         </div>
@@ -1964,9 +1967,14 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
                   <div style={{ fontSize:11, color:C.inkLight }}>
                     {k.uloga==="ucenik"?"🧑‍🎓":"👩‍🏫"} {k.uloga==="ucenik"?`${k.razred} razred`:"Učitelj"} · Lozinka: <span style={{ fontFamily:"monospace", color:C.inkMid }}>{k.lozinka}</span>
                   </div>
-                  {k.identifikator && (
-                    <div style={{ fontSize:11, color:C.plum, fontWeight:700, marginTop:2 }}>🏷 {k.identifikator}</div>
-                  )}
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:2 }}>
+                    {k.identifikator && (
+                      <span style={{ fontSize:11, color:C.plum, fontWeight:700 }}>🏷 {k.identifikator}</span>
+                    )}
+                    {k.skola && (
+                      <span style={{ fontSize:10, color:C.inkLight, fontWeight:700 }}>🏫 {k.skola}</span>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display:"flex", gap:5 }}>
                   <button onClick={()=>kopirajKod(k)} style={{ background:kopiran===k.id?C.greenLight:C.bgDeep, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:kopiran===k.id?C.green:C.inkMid }}>{kopiran===k.id?"✅":"📋"}</button>
@@ -2133,6 +2141,8 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
   const [greska, setGreska]     = useState("");
   const [gotovo, setGotovo]     = useState(false);
 
+  const [skolaKoda, setSkolaKoda] = useState(null);
+
   const provjeriKod = () => {
     setGreska("");
     const kodT = kod.trim().toUpperCase();
@@ -2141,6 +2151,7 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
     if (!unos) { setGreska("Kod nije valjan ili je već iskorišten. Provjeri s administratorom."); return; }
     setUloga(unos.uloga);
     if (unos.razred) setRazred(unos.razred);
+    setSkolaKoda(unos.skola || null);
     setKorak(2);
   };
 
@@ -2175,7 +2186,12 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
         <div style={{ textAlign:"center", marginBottom:20 }}>
           <div style={{ fontSize:48 }}>{korak===1?"✏️":"📋"}</div>
           <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Registracija</h2>
-          {korak===2 && <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Registracija kao: <strong style={{ color:uloga==="ucenik"?C.teal:C.blue }}>{uloga==="ucenik"?"Učenik":"Učitelj"}</strong></p>}
+          {korak===2 && (
+            <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"center" }}>
+              <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Registracija kao: <strong style={{ color:uloga==="ucenik"?C.teal:C.blue }}>{uloga==="ucenik"?"Učenik":"Učitelj"}</strong></p>
+              {skolaKoda && <p style={{ margin:0, fontSize:12, color:C.plum, fontWeight:700 }}>🏫 {skolaKoda}</p>}
+            </div>
+          )}
         </div>
         <div style={{ display:"flex", gap:6, marginBottom:20 }}>
           {[1,2].map(k=><div key={k} style={{ flex:1, height:4, borderRadius:99, background:k<=korak?C.teal:C.cardBorder, transition:"background 0.3s" }} />)}
