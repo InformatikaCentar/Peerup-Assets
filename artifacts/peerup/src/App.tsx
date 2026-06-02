@@ -1270,9 +1270,13 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
 function Price({ korisnik, price, setPrice, addBodovi }) {
   const [filter, setFilter] = useState("Svi");
   const [novaModal, setNovaModal] = useState(false);
+  const [otvorenaId, setOtvorenaId] = useState(null);
   const [novaPrica, setNovaPrica] = useState({ naslov:"", tag:"Uspjeh", sadrzaj:"" });
+  const [komentarTekst, setKomentarTekst] = useState({});
   const tagovi = ["Svi","Sport","Kreativno","Uspjeh","Humor","Ostalo"];
   const filtered = price.filter(p=>filter==="Svi"||p.tag===filter);
+  const lajkao = useState(new Set())[0];
+
   const objavi = () => {
     const nova = { id:Date.now(), korisnik:`${korisnik.ime} ${korisnik.prezime[0]}.`, razred:korisnik.razred||"?.", avatar:korisnik.avatar||"😊", tag:novaPrica.tag, naslov:novaPrica.naslov, sadrzaj:novaPrica.sadrzaj, lajkovi:0, komentari:[], vrijeme:"upravo" };
     setPrice(prev=>[nova,...prev]);
@@ -1280,6 +1284,20 @@ function Price({ korisnik, price, setPrice, addBodovi }) {
     setNovaModal(false);
     setNovaPrica({ naslov:"", tag:"Uspjeh", sadrzaj:"" });
   };
+
+  const dodajKomentar = (id) => {
+    const tekst = komentarTekst[id]?.trim();
+    if (!tekst) return;
+    setPrice(prev=>prev.map(p=>p.id===id ? {...p, komentari:[...p.komentari, `${korisnik.ime} ${korisnik.prezime[0]}.: ${tekst}`]} : p));
+    setKomentarTekst(prev=>({...prev,[id]:""}));
+  };
+
+  const toggleLajk = (id) => {
+    const vec = lajkao.has(id);
+    if (vec) { lajkao.delete(id); setPrice(prev=>prev.map(p=>p.id===id?{...p,lajkovi:Math.max(0,p.lajkovi-1)}:p)); }
+    else      { lajkao.add(id);    setPrice(prev=>prev.map(p=>p.id===id?{...p,lajkovi:p.lajkovi+1}:p)); }
+  };
+
   return (
     <div>
       {novaModal && (
@@ -1305,32 +1323,67 @@ function Price({ korisnik, price, setPrice, addBodovi }) {
       <div style={{ padding:"0 16px 12px" }}>
         <Btn label="✏️ Podijeli priču" color={C.rose} onClick={()=>setNovaModal(true)} />
       </div>
-      <div style={{ padding:"0 16px 8px", display:"flex", gap:6, overflowX:"auto" }}>
+      <div style={{ padding:"0 16px 8px", display:"flex", gap:6, overflowX:"auto", paddingBottom:10 }}>
         {tagovi.map(t=>(
           <button key={t} onClick={()=>setFilter(t)} style={{ background:filter===t?C.rose:C.bgDeep, color:filter===t?C.card:C.inkMid, border:`1.5px solid ${filter===t?C.rose:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{t}</button>
         ))}
       </div>
       <div style={{ padding:"0 16px" }}>
-        {filtered.map(p=>(
-          <Card key={p.id} accent={C.rose}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
-              <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-                <div style={{ fontSize:32 }}>{p.avatar}</div>
-                <div>
-                  <div style={{ fontWeight:800, fontSize:14, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>{p.korisnik}</div>
-                  <div style={{ color:C.inkMid, fontSize:11 }}>{p.razred} razred · {p.vrijeme}</div>
+        {filtered.map(p=>{
+          const otvoren = otvorenaId === p.id;
+          const jeLajkao = lajkao.has(p.id);
+          return (
+            <Card key={p.id} accent={C.rose}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                  <div style={{ fontSize:32 }}>{p.avatar}</div>
+                  <div>
+                    <div style={{ fontWeight:800, fontSize:14, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>{p.korisnik}</div>
+                    <div style={{ color:C.inkMid, fontSize:11 }}>{p.razred} razred · {p.vrijeme}</div>
+                  </div>
                 </div>
+                <Pill label={p.tag} color={C.rose} bg={C.roseLight} />
               </div>
-              <Pill label={p.tag} color={C.rose} bg={C.roseLight} />
-            </div>
-            <div style={{ fontWeight:900, fontSize:16, color:C.ink, fontFamily:"'Nunito', sans-serif", marginBottom:6 }}>{p.naslov}</div>
-            <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.6, marginBottom:10 }}>{p.sadrzaj.slice(0,150)}{p.sadrzaj.length>150?"...":""}</div>
-            <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-              <button onClick={()=>setPrice(prev=>prev.map(pp=>pp.id===p.id?{...pp,lajkovi:pp.lajkovi+1}:pp))} style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, color:C.rose, fontWeight:700, fontFamily:"'Nunito', sans-serif" }}>❤️ {p.lajkovi}</button>
-              <span style={{ color:C.inkLight, fontSize:13 }}>💬 {p.komentari.length}</span>
-            </div>
-          </Card>
-        ))}
+              <div style={{ fontWeight:900, fontSize:16, color:C.ink, fontFamily:"'Nunito', sans-serif", marginBottom:6 }}>{p.naslov}</div>
+              <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.6, marginBottom:10 }}>
+                {otvoren ? p.sadrzaj : p.sadrzaj.slice(0,150)}
+                {!otvoren && p.sadrzaj.length>150 && <button onClick={()=>setOtvorenaId(p.id)} style={{ background:"none", border:"none", color:C.rose, fontWeight:700, fontSize:12, cursor:"pointer", padding:0 }}> ... čitaj više</button>}
+              </div>
+              <div style={{ display:"flex", gap:14, alignItems:"center", marginBottom: otvoren ? 12 : 0 }}>
+                <button onClick={()=>toggleLajk(p.id)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, color:jeLajkao?C.rose:C.inkLight, fontWeight:700, fontFamily:"'Nunito', sans-serif", transition:"color 0.15s" }}>❤️ {p.lajkovi}</button>
+                <button onClick={()=>setOtvorenaId(otvoren?null:p.id)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, color:C.inkMid, fontWeight:700, fontFamily:"'Nunito', sans-serif" }}>💬 {p.komentari.length} {otvoren?"▲":"▼"}</button>
+              </div>
+              {otvoren && (
+                <div style={{ borderTop:`1.5px solid ${C.cardBorder}`, paddingTop:12 }}>
+                  {p.komentari.length === 0 && (
+                    <div style={{ color:C.inkLight, fontSize:12, fontStyle:"italic", marginBottom:10 }}>Budi prvi koji komentira!</div>
+                  )}
+                  {p.komentari.map((k,i)=>(
+                    <div key={i} style={{ background:C.bgDeep, borderRadius:10, padding:"8px 11px", marginBottom:7, fontSize:13, color:C.ink, lineHeight:1.5 }}>
+                      {typeof k === "string" && k.includes(": ") ? (
+                        <>
+                          <span style={{ fontWeight:800, color:C.inkMid }}>{k.split(": ")[0]}</span>
+                          <span style={{ color:C.inkLight }}>{" • "}</span>
+                          <span>{k.split(": ").slice(1).join(": ")}</span>
+                        </>
+                      ) : k}
+                    </div>
+                  ))}
+                  <div style={{ display:"flex", gap:8, marginTop:8 }}>
+                    <input
+                      value={komentarTekst[p.id]||""}
+                      onChange={e=>setKomentarTekst(prev=>({...prev,[p.id]:e.target.value}))}
+                      onKeyDown={e=>e.key==="Enter"&&dodajKomentar(p.id)}
+                      placeholder="Napiši komentar..."
+                      style={{ flex:1, background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"8px 11px", fontFamily:"'Nunito', sans-serif", fontSize:13, outline:"none" }}
+                    />
+                    <button onClick={()=>dodajKomentar(p.id)} disabled={!komentarTekst[p.id]?.trim()} style={{ background:C.rose, color:C.card, border:"none", borderRadius:10, padding:"8px 13px", fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer", opacity:komentarTekst[p.id]?.trim()?1:0.4 }}>→</button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
@@ -1686,21 +1739,27 @@ function Bodovi({ korisnik, izazovi, setIzazovi, ljestvica, addBodovi, onNotifik
       </div>
 
       {/* Ljestvica */}
-      <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>🏆 Ljestvica</div>
-      {ljestvica.map(l=>(
-        <div key={l.r} style={{ display:"flex", gap:12, alignItems:"center", background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8 }}>
-          <div style={{ fontWeight:900, fontSize:18, color:l.r<=3?C.amber:C.inkLight, width:28, textAlign:"center" }}>{l.bed||l.r}</div>
-          <div style={{ fontSize:28 }}>{l.avatar}</div>
-          <div style={{ flex:1 }}>
-            <div style={{ fontWeight:800, fontSize:14, color:C.ink }}>{l.ime}</div>
-            <div style={{ color:C.inkMid, fontSize:12 }}>{l.razred} razred</div>
+      <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>🏆 Ljestvica škole</div>
+      {ljestvica.map(l=>{
+        const jaMojIme = korisnik.ime === l.ime.split(" ")[0];
+        return (
+          <div key={l.r} style={{ display:"flex", gap:10, alignItems:"center", background:jaMojIme?`${C.teal}18`:C.card, border:`1.5px solid ${jaMojIme?C.teal:C.cardBorder}`, borderRadius:12, padding:"11px 12px", marginBottom:8 }}>
+            <div style={{ fontWeight:900, fontSize:18, color:l.r<=3?C.amber:C.inkLight, width:26, textAlign:"center" }}>{l.bed||l.r}</div>
+            <div style={{ fontSize:26 }}>{l.avatar}</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontWeight:800, fontSize:14, color:jaMojIme?C.teal:C.ink, display:"flex", alignItems:"center", gap:6 }}>
+                {l.ime}
+                {jaMojIme && <span style={{ fontSize:10, background:C.teal, color:C.card, borderRadius:99, padding:"1px 7px", fontWeight:900 }}>Ti</span>}
+              </div>
+              <div style={{ color:C.inkLight, fontSize:11, marginTop:1 }}>⏱ {l.sati}h · 🎁 {l.donacije} donacija</div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontWeight:900, fontSize:17, color:jaMojIme?C.teal:C.ink, fontFamily:"'Nunito', sans-serif" }}>{l.bodovi}</div>
+              <div style={{ fontSize:10, color:C.inkLight }}>bodova</div>
+            </div>
           </div>
-          <div style={{ textAlign:"right" }}>
-            <div style={{ fontWeight:900, fontSize:18, color:C.teal, fontFamily:"'Nunito', sans-serif" }}>{l.bodovi}</div>
-            <div style={{ fontSize:10, color:C.inkLight }}>bodova</div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -2298,7 +2357,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
           <div style={{ fontSize:24 }}>🎓</div>
           <div>
             <div style={{ fontWeight:900, fontSize:16, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>PeerUp</div>
-            <div style={{ fontSize:10, color:C.inkLight }}>Dobrodošao/la, {korisnik.ime}!</div>
+            <div style={{ fontSize:10, color:C.inkLight }}>🏫 {SKOLA_NAZIV} · {korisnik.ime}</div>
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
