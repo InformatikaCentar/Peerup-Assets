@@ -29,7 +29,7 @@ export function Scene3() {
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
       >
         Razmijeni. Dijeli.<br/>
-        <span className="text-[#7c3aed]">Raste svi.</span>
+        <span className="text-[#7c3aed]">Rastu svi.</span>
       </motion.h2>
 
       <div className="flex gap-[4vw]">
