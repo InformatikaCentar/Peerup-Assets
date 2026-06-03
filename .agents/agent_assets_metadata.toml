@@ -1,0 +1,19 @@
+uploads = []
+
+[[generated]]
+id = "Me50yZi_LyVqWaseLGeuc"
+uri = "file://artifacts/peerup-video/public/images/bg-warm.png"
+type = "image"
+title = "warm abstract shapes"
+
+[[generated]]
+id = "W-9v8AcQ0MEjpDtCa8wH1"
+uri = "file://artifacts/peerup-video/public/images/bg-gradient.png"
+type = "image"
+title = "teal amber gradient"
+
+[[outputs]]
+id = "pCmDD7uxtC3ReWBk4tBJ4"
+uri = "file://artifacts/peerup-video/public/audio/bg_music.mp3"
+type = "audio"
+title = "upbeat lo-fi background music for PeerUp promo"

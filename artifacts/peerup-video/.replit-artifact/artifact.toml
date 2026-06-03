@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/peerup-video/"
+title = "PeerUp — Prezentacijski klip"
+version = "1.0.0"
+id = "artifacts/peerup-video"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/peerup-video/" ]
+localPort = 22370
+
+[services.development]
+run = "pnpm --filter @workspace/peerup-video run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/peerup-video", "run", "build" ]
+publicDir = "artifacts/peerup-video/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22370"
+BASE_PATH = "/peerup-video/"
