@@ -293,38 +293,128 @@ const ulogaBoja = (u) => ({ admin:{color:C.plum,bg:C.plumLight,label:"Admin"}, u
 
 // ---- MODALS ----
 function KalendarModal({ naslov="📅 Odaberi termin", dostupniTermini=undefined, onClose, onPotvrdi }) {
-  const [dan, setDan]   = useState(null);
-  const [sat, setSat]   = useState(null);
-  const filterDani = dostupniTermini ? [...new Set(dostupniTermini.filter(t=>t.slobodan).map(t=>t.dan))] : DANI;
-  const filterSati = dan && dostupniTermini
-    ? dostupniTermini.filter(t=>t.dan===dan && t.slobodan).map(t=>t.sat)
-    : SATI;
+  const MJES_HR = ["Siječanj","Veljača","Ožujak","Travanj","Svibanj","Lipanj","Srpanj","Kolovoz","Rujan","Listopad","Studeni","Prosinac"];
+  const DOW_SHORT = ["Ne","Pon","Uto","Sri","Čet","Pet","Sub"]; // 0=Sun
+  const DOW_HEADER = ["Po","Ut","Sr","Če","Pe","Su","Ne"];
+  const today = new Date();
+  const [year, setYear]   = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [day, setDay]     = useState(null);
+  const [sat, setSat]     = useState(null);
+
+  const slobodniTermini = dostupniTermini ? dostupniTermini.filter(t=>t.slobodan) : null;
+  const slobodniDanSlugs = slobodniTermini ? [...new Set(slobodniTermini.map(t=>t.dan))] : null;
+
+  const getDanSlug = d => DOW_SHORT[new Date(year, month, d).getDay()];
+
+  const isDayAvailable = d => {
+    const date = new Date(year, month, d);
+    const dow  = date.getDay();
+    if (dow === 0 || dow === 6) return false;            // no weekends
+    if (date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) return false; // no past
+    if (slobodniDanSlugs) return slobodniDanSlugs.includes(DOW_SHORT[dow]);
+    return true;
+  };
+
+  const availableHours = (() => {
+    if (!day) return SATI;
+    if (!slobodniTermini) return SATI;
+    const slug = getDanSlug(day);
+    return slobodniTermini.filter(t=>t.dan===slug).map(t=>t.sat);
+  })();
+
+  const daysInMonth  = new Date(year, month + 1, 0).getDate();
+  const startOffset  = (new Date(year, month, 1).getDay() + 6) % 7; // Mon-first
+
+  const prevMonth = () => {
+    const prev = new Date(year, month - 1, 1);
+    const lim  = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (prev < lim) return;
+    setMonth(prev.getMonth()); setYear(prev.getFullYear()); setDay(null); setSat(null);
+  };
+  const nextMonth = () => {
+    const next = new Date(year, month + 1, 1);
+    setMonth(next.getMonth()); setYear(next.getFullYear()); setDay(null); setSat(null);
+  };
+
+  const isToday = d => d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+
+  const danLabel  = day ? `${getDanSlug(day)} ${day}.${month+1}.${year}.` : null;
+  const potvrdiLabel = day && sat ? `✓ Potvrdi — ${danLabel} u ${sat}` : "Odaberi datum i sat";
+
+  const arrowSt = { background:"none", border:`1.5px solid ${C.cardBorder}`, borderRadius:8, width:34, height:34, cursor:"pointer", color:C.ink, fontSize:18, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Nunito',sans-serif" };
+
   return (
-    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, border:`1.5px solid ${C.cardBorder}` }}>
-        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
-          <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>{naslov}</h3>
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:20, padding:22, width:"100%", maxWidth:400, border:`1.5px solid ${C.cardBorder}`, boxShadow:"0 12px 48px #1a161230", maxHeight:"92vh", overflowY:"auto" }}>
+
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:16 }}>{naslov}</h3>
           <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
         </div>
-        <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>
-          {dostupniTermini ? "Slobodni termini ponuditelja" : "Dan"}
-        </p>
-        <div style={{ display:"flex", gap:6, marginBottom:14, flexWrap:"wrap" }}>
-          {filterDani.map(d=>(
-            <button key={d} onClick={()=>{setDan(d);setSat(null);}} style={{ flex:"0 0 auto", padding:"8px 14px", borderRadius:10, border:`2px solid ${dan===d?C.teal:C.cardBorder}`, background:dan===d?C.tealLight:C.bg, color:dan===d?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{d}</button>
+
+        {/* Month/Year navigation */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+          <button onClick={prevMonth} style={arrowSt}>‹</button>
+          <span style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:15, color:C.ink }}>
+            {MJES_HR[month]} {year}
+          </span>
+          <button onClick={nextMonth} style={arrowSt}>›</button>
+        </div>
+
+        {/* Day-of-week headers */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:3, marginBottom:4 }}>
+          {DOW_HEADER.map(d=>(
+            <div key={d} style={{ textAlign:"center", fontSize:11, fontWeight:800, color:C.inkLight, fontFamily:"'Nunito',sans-serif", padding:"4px 0" }}>{d}</div>
           ))}
         </div>
-        {dan && (
+
+        {/* Calendar grid */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:3, marginBottom:16 }}>
+          {Array.from({length:startOffset}).map((_,i)=><div key={`e${i}`} />)}
+          {Array.from({length:daysInMonth},(_,i)=>i+1).map(d=>{
+            const avail   = isDayAvailable(d);
+            const sel     = d===day;
+            const todayMk = isToday(d);
+            return (
+              <button key={d} onClick={()=>{if(!avail)return; setDay(d); setSat(null);}} style={{
+                padding:"9px 2px", borderRadius:10, border: sel ? `2px solid ${C.teal}` : todayMk ? `2px solid ${C.teal}66` : "2px solid transparent",
+                background: sel ? C.teal : "transparent",
+                color: sel ? "#fff" : avail ? C.ink : C.inkLight,
+                fontFamily:"'Nunito',sans-serif", fontWeight: todayMk ? 900 : 700, fontSize:13,
+                cursor: avail ? "pointer" : "default", opacity: avail ? 1 : 0.28,
+                transition:"background .15s",
+              }}>{d}</button>
+            );
+          })}
+        </div>
+
+        {/* Selected date chip */}
+        {day && (
+          <div style={{ background:C.tealLight, borderRadius:12, padding:"10px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:16 }}>📅</span>
+            <span style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, color:C.teal, fontSize:14 }}>{danLabel}</span>
+            <button onClick={()=>{setDay(null);setSat(null);}} style={{ marginLeft:"auto", background:"none", border:"none", color:C.teal, cursor:"pointer", fontSize:18, lineHeight:1 }}>✕</button>
+          </div>
+        )}
+
+        {/* Hour picker */}
+        {day && (
           <>
-            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Sat</p>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:18 }}>
-              {filterSati.map(s=>(
-                <button key={s} onClick={()=>setSat(s)} style={{ padding:"10px 0", borderRadius:10, border:`2px solid ${sat===s?C.blue:C.cardBorder}`, background:sat===s?C.blueLight:C.bg, color:sat===s?C.blue:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{s}</button>
-              ))}
-            </div>
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Odaberi sat</p>
+            {availableHours.length === 0
+              ? <p style={{ color:C.inkLight, fontSize:13, fontStyle:"italic", marginBottom:14 }}>Nema slobodnih termina ovaj dan.</p>
+              : <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:18 }}>
+                  {availableHours.map(s=>(
+                    <button key={s} onClick={()=>setSat(s)} style={{ padding:"10px 0", borderRadius:10, border:`2px solid ${sat===s?C.blue:C.cardBorder}`, background:sat===s?C.blueLight:C.bg, color:sat===s?C.blue:C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{s}</button>
+                  ))}
+                </div>
+            }
           </>
         )}
-        <Btn label={dan&&sat?`✓ Potvrdi — ${dan} u ${sat}`:"Odaberi dan i sat"} color={C.teal} full disabled={!dan||!sat} onClick={()=>dan&&sat&&onPotvrdi(dan,sat)} />
+
+        <Btn label={potvrdiLabel} color={C.teal} full disabled={!day||!sat} onClick={()=>day&&sat&&onPotvrdi(danLabel,sat)} />
       </div>
     </div>
   );
@@ -829,8 +919,9 @@ function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi }
   const [detaljiModal, setDetaljiModal] = useState(null);
   const filtered = ponude.filter(p=>(predFilter==="Svi"||p.predmet===predFilter)&&(razFilter==="Svi"||p.razred===razFilter));
   const rezerviraj = (ponudaId, dan, sat) => {
-    setPonude(prev=>prev.map(p=>p.id===ponudaId?{...p,termini:p.termini.map(t=>t.dan===dan&&t.sat===sat?{...t,slobodan:false}:t),prijave:[...(p.prijave||[]),`${korisnik.ime} ${korisnik.prezime[0]}.`]}:p));
-    setDetaljiModal(prev=>prev?{...prev,termini:prev.termini.map(t=>t.dan===dan&&t.sat===sat?{...t,slobodan:false}:t),prijave:[...(prev.prijave||[]),`${korisnik.ime} ${korisnik.prezime[0]}.`]}:null);
+    const danSlug = dan.split(' ')[0]; // "Pon 9.6.2025." → "Pon"
+    setPonude(prev=>prev.map(p=>p.id===ponudaId?{...p,termini:p.termini.map(t=>t.dan===danSlug&&t.sat===sat?{...t,slobodan:false}:t),prijave:[...(p.prijave||[]),`${korisnik.ime} ${korisnik.prezime[0]}.`]}:p));
+    setDetaljiModal(prev=>prev?{...prev,termini:prev.termini.map(t=>t.dan===danSlug&&t.sat===sat?{...t,slobodan:false}:t),prijave:[...(prev.prijave||[]),`${korisnik.ime} ${korisnik.prezime[0]}.`]}:null);
     onNotifikacija({ tekst:`📅 Rezervirali ste termin za ${dan} u ${sat}. +5 bodova!`, boja:C.teal });
     addBodovi(5);
   };
