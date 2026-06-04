@@ -2360,11 +2360,10 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
 
   const dodajKorisnika = () => {
     const prefix = noviKor.uloga==="ucenik"?"UCE":noviKor.uloga==="ucitelj"?"UCT":"ADM";
-    const lozinka = noviKor.lozinka.trim() || genLozinku();
-    const novi = { id:Date.now(), ...noviKor, lozinka, kod:`${prefix}-MAN-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[], pokusaji:0, zakljucan:false };
+    const novi = { id:Date.now(), ...noviKor, lozinka:"", kod:`${prefix}-MAN-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[], pokusaji:0, zakljucan:false };
     setClanovi(prev=>[...prev,novi]);
     setNoviModal(false);
-    setNoviKor({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", lozinka:"", avatar:"🧑‍🎓" });
+    setNoviKor({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", avatar:"🧑‍🎓" });
   };
 
   const odblokujKorisnika = (id) => {
@@ -2478,16 +2477,9 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
                       <button key={u} onClick={()=>setNoviKor(p=>({...p,uloga:u}))} style={{ flex:1, padding:"9px 0", borderRadius:10, border:`2px solid ${noviKor.uloga===u?C.plum:C.cardBorder}`, background:noviKor.uloga===u?C.plumLight:C.bg, color:noviKor.uloga===u?C.plum:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{u==="ucenik"?"🧑‍🎓 Učenik":"👩‍🏫 Učitelj"}</button>
                     ))}
                   </div>
-                  <p style={{ margin:"0 0 6px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Lozinka (pristupni kod)</p>
-                  <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-                    <input value={noviKor.lozinka} onChange={e=>setNoviKor(p=>({...p,lozinka:e.target.value}))} placeholder="Ostavi prazno za automatsku generaciju" style={{ flex:1, background:C.bg, color:C.ink, border:`1.5px solid ${noviKor.lozinka?C.plum:C.cardBorder}`, borderRadius:10, padding:"10px 12px", fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:13, outline:"none", boxSizing:"border-box" }} />
-                    <button onClick={()=>setNoviKor(p=>({...p,lozinka:genLozinku()}))} style={{ flexShrink:0, background:C.plumLight, border:`1.5px solid ${C.plum}44`, borderRadius:10, padding:"8px 12px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, color:C.plum, cursor:"pointer" }}>🎲 Generiraj</button>
+                  <div style={{ background:C.tealLight, border:`1.5px solid ${C.teal}33`, borderRadius:10, padding:"9px 12px", marginBottom:14, fontSize:12, color:C.teal, fontWeight:700 }}>
+                    💡 Korisnik će se prijaviti s pristupnim kodom koji mu dodijeli sustav — bez lozinke.
                   </div>
-                  {noviKor.lozinka && (
-                    <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"8px 12px", marginBottom:14, fontSize:12, color:C.ink }}>
-                      🔑 Pristupni kod: <strong style={{ fontFamily:"monospace", color:C.plum }}>{noviKor.lozinka}</strong> — zabilježi i priopći korisniku!
-                    </div>
-                  )}
                   <Btn label="✅ Dodaj korisnika" color={C.plum} full disabled={!noviKor.ime||!noviKor.prezime} onClick={dodajKorisnika} />
                 </div>
               </div>
@@ -2514,11 +2506,9 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
                         )}
                       </div>
                     </div>
-                    {/* Credentials row */}
+                    {/* Actions row */}
                     <div style={{ marginTop:8, paddingTop:8, borderTop:`1px dashed ${c.zakljucan?C.rose+"44":C.cardBorder}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center", justifyContent:"space-between" }}>
-                      <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                        <span style={{ fontSize:11, color:C.inkLight }}>🔑 Lozinka: <span style={{ fontFamily:"monospace", color:C.ink, fontWeight:800 }}>{c.lozinka}</span></span>
-                        {c.pokusaji > 0 && !c.zakljucan && <span style={{ fontSize:10, color:C.rose, fontWeight:700 }}>⚠ {c.pokusaji}/5 pokušaja</span>}
+                      <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                         {c.opomene > 0 && <span style={{ fontSize:10, color:C.amber, fontWeight:700 }}>⚠ {c.opomene} opomena</span>}
                         {c.banan && <span style={{ fontSize:10, background:C.rose, color:C.card, borderRadius:6, padding:"2px 7px", fontWeight:800 }}>🚫 BANAN</span>}
                       </div>
@@ -2817,9 +2807,8 @@ function EkranDobrodoslica({ onLogin, onRegister, onDemo, onRegistracijaSkole })
   );
 }
 
-function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
+function EkranPrijava({ clanovi, onUspjeh, onNatrag }) {
   const [kod, setKod] = useState("");
-  const [loz, setLoz] = useState("");
   const [greska, setGreska] = useState("");
   const [ucitavam, setUcitavam] = useState(false);
 
@@ -2829,30 +2818,15 @@ function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
       const kodNorm = kod.trim().toUpperCase();
       const clan = clanovi.find(c => c.kod === kodNorm);
 
-      if (!clan) { setGreska("Neispravan pristupni kod. Provjeri kod i pokušaj ponovo."); setUcitavam(false); return; }
-      if (clan.zakljucan) { setGreska("🔒 Račun je zaključan zbog 5 neuspjelih pokušaja. Obrati se administratoru škole."); setUcitavam(false); return; }
-      if (clan.banan) { setGreska("🚫 Račun je baniran zbog neprimjerenog ponašanja. Obrati se administratoru škole."); setUcitavam(false); return; }
+      if (!clan) { setGreska("Neispravan pristupni kod. Provjeri kod koji si dobio/la od administratora."); setUcitavam(false); return; }
+      if (clan.banan) { setGreska("🚫 Pristup je onemogućen. Obrati se administratoru škole."); setUcitavam(false); return; }
       if (!clan.aktivan) { setGreska("Račun je deaktiviran. Obrati se administratoru."); setUcitavam(false); return; }
 
-      if (clan.lozinka !== loz.trim()) {
-        const noviPokusaji = (clan.pokusaji || 0) + 1;
-        const zakljucan = noviPokusaji >= 5;
-        setClanovi(prev => prev.map(c => c.id === clan.id ? {...c, pokusaji: noviPokusaji, zakljucan} : c));
-        if (zakljucan) {
-          setGreska("🔒 Račun je zaključan! Previše neuspjelih pokušaja prijave (5/5). Obrati se administratoru škole koji će ti dodijeliti novu lozinku.");
-        } else {
-          const preostalo = 5 - noviPokusaji;
-          setGreska(`Pogrešna lozinka. Preostalo pokušaja: ${preostalo}/5. Nakon ${preostalo} neuspjelih pokušaja račun će biti zaključan.`);
-        }
-        setUcitavam(false); return;
-      }
-
-      /* Uspješna prijava — resetiraj brojač, spremi sesiju */
-      setClanovi(prev => prev.map(c => c.id === clan.id ? {...c, pokusaji: 0} : c));
+      /* Uspješna prijava — spremi sesiju */
       const token = genSessionToken();
       const schoolYear = getSchoolYear();
       try { localStorage.setItem('peerup_session', JSON.stringify({ userId: clan.id, token, schoolYear })); } catch {}
-      onUspjeh({ ...clan, pokusaji: 0, sessionToken: token, sessionYear: schoolYear });
+      onUspjeh({ ...clan, sessionToken: token, sessionYear: schoolYear });
     }, 600);
   };
 
@@ -2863,19 +2837,18 @@ function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
         <div style={{ textAlign:"center", marginBottom:28 }}>
           <div style={{ fontSize:48 }}>🔑</div>
           <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Prijava</h2>
-          <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Upiši kod i lozinku</p>
+          <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Upiši pristupni kod koji si dobio/la od administratora</p>
         </div>
         <Card>
-          <FInp label="Tvoj kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-7-01" icon="🪪" />
-          <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Tvoja lozinka" icon="🔒" />
+          <FInp label="Tvoj pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-7-01" icon="🪪" onKeyDown={e=>e.key==="Enter"&&prijava()} />
           {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
-          <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.teal} full disabled={!kod||!loz||ucitavam} onClick={prijava} />
+          <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.teal} full disabled={!kod||ucitavam} onClick={prijava} />
         </Card>
         <div style={{ background:C.bgDeep, border:`1.5px solid ${C.cardBorder}`, borderRadius:14, padding:14, marginTop:16 }}>
-          <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Testni podaci</p>
-          {[{lbl:"Admin",kod:"ADMIN001",loz:"admin123"},{lbl:"Učiteljica",kod:"UCT-MAT1",loz:"ucit123"},{lbl:"Učenik (Luka)",kod:"UCE-7-01",loz:"luka2024"}].map(t=>(
-            <button key={t.kod} onClick={()=>{setKod(t.kod);setLoz(t.loz);}} style={{ display:"block", width:"100%", textAlign:"left", background:C.card, border:`1px solid ${C.cardBorder}`, borderRadius:8, padding:"7px 10px", marginBottom:6, cursor:"pointer", fontFamily:"'Nunito', sans-serif", fontSize:12, fontWeight:700, color:C.ink }}>
-              {t.lbl}: <span style={{ fontFamily:"monospace", color:C.teal }}>{t.kod}</span> / <span style={{ color:C.inkMid }}>{t.loz}</span>
+          <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Testni pristupni kodovi</p>
+          {[{lbl:"Admin",kod:"ADMIN001"},{lbl:"Učiteljica Ivana",kod:"UCT-MAT1"},{lbl:"Učenik Luka",kod:"UCE-7-01"}].map(t=>(
+            <button key={t.kod} onClick={()=>setKod(t.kod)} style={{ display:"block", width:"100%", textAlign:"left", background:C.card, border:`1px solid ${C.cardBorder}`, borderRadius:8, padding:"7px 10px", marginBottom:6, cursor:"pointer", fontFamily:"'Nunito', sans-serif", fontSize:12, fontWeight:700, color:C.ink }}>
+              {t.lbl}: <span style={{ fontFamily:"monospace", color:C.teal }}>{t.kod}</span>
             </button>
           ))}
         </div>
@@ -2892,8 +2865,6 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
   const [prezime, setPrezime]   = useState("");
   const [razred, setRazred]     = useState("");
   const [predmeti, setPredmeti] = useState([]);
-  const [loz, setLoz]           = useState("");
-  const [loz2, setLoz2]         = useState("");
   const [greska, setGreska]     = useState("");
   const [gotovo, setGotovo]     = useState(false);
 
@@ -2917,10 +2888,8 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
     if (!ime.trim() || !prezime.trim()) { setGreska("Upiši ime i prezime."); return; }
     if (uloga === "ucenik" && !razred) { setGreska("Odaberi razred."); return; }
     if (uloga === "ucitelj" && predmeti.length === 0) { setGreska("Odaberi barem jedan predmet."); return; }
-    if (loz.length < 6) { setGreska("Lozinka mora imati barem 6 znakova."); return; }
-    if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     const token = genSessionToken(); const schoolYear = getSchoolYear();
-    const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:loz, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0, pokusaji:0, zakljucan:false, banan:false, opomene:0, sessionToken:token, sessionYear:schoolYear };
+    const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:"", avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0, pokusaji:0, zakljucan:false, banan:false, opomene:0, sessionToken:token, sessionYear:schoolYear };
     setClanovi(c => [...c, noviClan]);
     setKodovi(prev => prev.map(k => k.kod === kod.trim().toUpperCase() ? {...k, koristen:true, koristenGodina:schoolYear} : k));
     try { localStorage.setItem('peerup_session', JSON.stringify({ userId: noviClan.id, token, schoolYear })); } catch {}
@@ -2984,10 +2953,8 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
                   {PREDMETI.map(p=>{const sel=predmeti.includes(p);return <button key={p} onClick={()=>setPredmeti(prev=>sel?prev.filter(x=>x!==p):[...prev,p])} style={{ padding:"5px 10px", borderRadius:8, border:`2px solid ${sel?C.blue:C.cardBorder}`, background:sel?C.blueLight:C.bg, color:sel?C.blue:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:11, cursor:"pointer" }}>{p}</button>;})}
                 </div></>
               )}
-              <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 6 znakova" icon="🔒" />
-              <FInp label="Ponovi lozinku" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
               {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
-              <Btn label="Registriraj se →" color={C.teal} full disabled={!ime||!prezime||loz.length<6||loz!==loz2} onClick={registriraj} />
+              <Btn label="Registriraj se →" color={C.teal} full disabled={!ime||!prezime} onClick={registriraj} />
             </>
           )}
         </Card>
