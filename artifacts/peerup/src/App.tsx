@@ -2653,8 +2653,8 @@ function EkranRegistracijaSkole({ setClanovi, setKodovi, setSkola, onUspjeh, onN
 
   const provjeriSkolu = () => {
     setGreska("");
-    if (!naziv.trim()) { setGreska("Upiši naziv ustanove."); return; }
-    if (!grad.trim()) { setGreska("Upiši grad / mjesto škole."); return; }
+    if (!naziv.trim()) { setGreska("Upiši naziv i grad ustanove (npr. OŠ Centar, Rijeka)."); return; }
+    if (!naziv.includes(",")) { setGreska("Upiši naziv i grad odvojene zarezom (npr. OŠ Centar, Rijeka)."); return; }
     if (!/^\d{5,10}$/.test(mzoKod.trim())) { setGreska("Šifra MZOM mora biti broj od 5 do 10 znamenki."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
     setProvjeravam(true);
@@ -2669,7 +2669,10 @@ function EkranRegistracijaSkole({ setClanovi, setKodovi, setSkola, onUspjeh, onN
     const kod = `ADM-${mzoKod.trim().slice(0,6)}`;
     const token = genSessionToken(); const schoolYear = getSchoolYear();
     const noviAdmin = { id: Date.now(), ime: ime.trim(), prezime: prezime.trim(), uloga: "admin", razred: null, predmeti: [], aktivan: true, kod, lozinka: loz, avatar: uloga === "ucitelj" ? "👩‍🏫" : "👤", bodovi: 0, pokusaji: 0, zakljucan: false, banan: false, opomene: 0, sessionToken: token, sessionYear: schoolYear };
-    const novaSkola = { naziv: naziv.trim(), grad: grad.trim(), mzoKod: mzoKod.trim(), oib: oib.trim() };
+    const dijelovi = naziv.trim().split(",");
+    const parsiraniGrad = dijelovi.length > 1 ? dijelovi[dijelovi.length - 1].trim() : "";
+    const parsiraniNaziv = dijelovi.slice(0, -1).join(",").trim();
+    const novaSkola = { naziv: parsiraniNaziv || naziv.trim(), grad: parsiraniGrad, mzoKod: mzoKod.trim(), oib: oib.trim() };
     setClanovi([noviAdmin]);
     setKodovi([]);
     setSkola(novaSkola);
@@ -2713,8 +2716,7 @@ function EkranRegistracijaSkole({ setClanovi, setKodovi, setSkola, onUspjeh, onN
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 Podaci moraju biti usklađeni s MZOM registrom ustanova. Registraciju može izvršiti samo djelatnik škole.</p>
             </div>
-            <FInp label="Naziv ustanove" value={naziv} onChange={e=>setNaziv(e.target.value)} placeholder="npr. OŠ Centar" icon="🏫" />
-            <FInp label="Grad / Mjesto" value={grad} onChange={e=>setGrad(e.target.value)} placeholder="npr. Rijeka" icon="📍" />
+            <FInp label="Naziv i grad ustanove" value={naziv} onChange={e=>setNaziv(e.target.value)} placeholder="npr. OŠ Centar, Rijeka" icon="🏫" />
             <FInp label="Šifra škole (MZOM)" value={mzoKod} onChange={e=>setMzoKod(e.target.value.replace(/\D/g,""))} placeholder="npr. 0317059 (7 znamenki)" icon="🔢" />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" />
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
