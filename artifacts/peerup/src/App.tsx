@@ -1580,7 +1580,10 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
               {!jeVlasnik && (
                 <div style={{ marginTop:10, display:"flex", gap:8 }}>
                   {jeRezerviranMnom ? (
-                    <Pill label="✅ Rezervirano od tebe" color={C.green} bg={C.greenLight} />
+                    <div style={{ display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
+                      <Pill label="✅ Rezervirano od tebe" color={C.green} bg={C.greenLight} />
+                      <Btn label="✖ Otkaži" small color={C.rose} onClick={()=>{ setRazmjena(prev=>prev.map(item=>item.id===r.id?{...item,rezerviran:null}:item)); onNotifikacija({ tekst:`❌ Otkazali ste rezervaciju za "${r.predmet}"`, boja:C.rose }); }} />
+                    </div>
                   ) : r.rezerviran ? (
                     <Pill label="Nije dostupno" color={C.inkLight} bg={C.bgDeep} />
                   ) : (
