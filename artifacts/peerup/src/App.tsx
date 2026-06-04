@@ -221,11 +221,73 @@ const DEMO_PONUDE = [
 ];
 
 const DEMO_MATERIJALI = [
-  { id:201, autor:"Luka M.",  predmet:"Matematika", lekcija:"Jednadžbe",        tip:"Umna mapa", ikona:"🗺️", preuzimanja:23, avatar:"🧑‍🎓", datum:"28.5.2026", opis:"Vizualni prikaz svih koraka rješavanja linearnih jednadžbi s jednom nepoznanicom.", datoteka:null },
-  { id:202, autor:"Ana K.",   predmet:"Engleski",   lekcija:"Present Perfect",  tip:"Sažetak",   ikona:"📄", preuzimanja:41, avatar:"👩‍🎓", datum:"27.5.2026", opis:"Tablica s primjerima, signal words i usporedbom s Past Simple.", datoteka:null },
-  { id:203, autor:"Tin B.",   predmet:"Fizika",     lekcija:"Sila i gibanje",   tip:"Bilješke",  ikona:"📝", preuzimanja:18, avatar:"🧑",   datum:"25.5.2026", opis:"Zapisao sam sve formule i riješene zadatke s kojima smo se susreli na natjecanju.", datoteka:null },
-  { id:204, autor:"Ela T.",   predmet:"Biologija",  lekcija:"Stanica",          tip:"Umna mapa", ikona:"🗺️", preuzimanja:9,  avatar:"👩",   datum:"24.5.2026", opis:"Dijelovi stanice, razlika biljne i životinjske – idealno za pripremu ispita.", datoteka:null },
-  { id:205, autor:"Noa B.",   predmet:"Hrvatski",   lekcija:"Lektira",          tip:"Sažetak",   ikona:"📄", preuzimanja:34, avatar:"🧒",   datum:"22.5.2026", opis:"Kratki sažetak Kiklopa s likovima, temama i citatima.", datoteka:null },
+  {
+    id:201, autor:"Luka M.", predmet:"Matematika", lekcija:"Jednadžbe", tip:"Umna mapa", ikona:"🗺️",
+    preuzimanja:23, avatar:"🧑‍🎓", datum:"28.5.2026",
+    opis:"Vizualni prikaz svih koraka rješavanja linearnih jednadžbi s jednom nepoznanicom.", datoteka:null,
+    sadrzajRich:{
+      tip:"umnamapa", centar:"Jednadžbe",
+      grane:[
+        { boja:"#1a8a72", naslov:"Linearne", listice:["ax + b = 0","Izolirati x na jednu stranu","x = −b/a","Primjer: 2x + 4 = 0 → x = −2","Provjera: 2·(−2)+4 = 0 ✓"] },
+        { boja:"#7c3aed", naslov:"Kvadratne", listice:["ax² + bx + c = 0","D = b² − 4ac","x = (−b ± √D) / 2a","D > 0 → dva rješenja","D = 0 → jedno rješenje","D < 0 → nema rješenja"] },
+        { boja:"#d97706", naslov:"Provjera", listice:["Uvrstiti x natrag u jednadžbu","Lijeva strana = Desna strana","Zaključak je točan ✓"] },
+      ]
+    }
+  },
+  {
+    id:202, autor:"Ana K.", predmet:"Engleski", lekcija:"Present Perfect", tip:"Sažetak", ikona:"📄",
+    preuzimanja:41, avatar:"👩‍🎓", datum:"27.5.2026",
+    opis:"Signal words, tvorba i usporedba s Past Simple.", datoteka:null,
+    sadrzajRich:{
+      tip:"sazetak",
+      uvod:"Present Perfect tvori se s have/has + 3. oblik glagola (past participle). Koristimo ga za radnje koje su se dogodile u prošlosti, ali imaju vezu sa sadašnjošću ili je vrijeme neodređeno.",
+      sekcije:[
+        { naslov:"✅ Signal words", stavke:["already (već) — She has already finished.","yet (još / još uvijek) — I haven't eaten yet.","ever (ikad) — Have you ever been to London?","never (nikad) — He has never tried sushi.","just (upravo) — They have just arrived.","for/since (od/za) — I've known her for 5 years."] },
+        { naslov:"📊 Usporedba s Past Simple", stavke:["Present Perfect: I have seen that film. (ima vezu sa sadašnjošću)","Past Simple: I saw that film yesterday. (konkretno prošlo vrijeme, završeno)","Ključ: ako je dan/sat/godina poznata → Past Simple!"] },
+        { naslov:"📝 Primjeri rečenica", stavke:["✔ She has already done her homework.","✔ Have you ever eaten ćevapi?","✔ I haven't called him yet.","✔ We've lived here since 2010."] },
+      ]
+    }
+  },
+  {
+    id:203, autor:"Tin B.", predmet:"Fizika", lekcija:"Sila i gibanje", tip:"Bilješke", ikona:"📝",
+    preuzimanja:18, avatar:"🧑", datum:"25.5.2026",
+    opis:"Sve formule i riješeni zadaci s natjecanja — Newtonovi zakoni.", datoteka:null,
+    sadrzajRich:{
+      tip:"biljeske",
+      blokovi:[
+        { naslov:"🔬 Newtonovi zakoni", tekst:"1. Zakon inercije — tijelo ostaje u mirovanju ili se giba jednoliko pravocrtno ako na njega ne djeluje ukupna vanjska sila.\n\n2. Drugi zakon — rezultantna sila jednaka je umnošku mase i ubrzanja (F = m·a).\n\n3. Treći zakon — svaka sila akcije ima jednaku, suprotno usmjerenu silu reakcije." },
+        { naslov:"📐 Formule", formule:["F = m · a  [N = kg·m/s²]","a = F / m  [m/s²]","v = s / t  [m/s]","s = v · t  [m]","W = F · s  [J]","Ep = m · g · h  [J]","Ek = ½mv²  [J]"] },
+        { naslov:"💡 Riješeni zadatak s natjecanja", tekst:"Tijelo mase 4 kg kreće se ubrzanjem 3 m/s².\nKolika sila djeluje na tijelo?\n\nRješenje:\nF = m · a = 4 kg · 3 m/s² = 12 N\n\nOdgovor: Na tijelo djeluje sila od 12 N." },
+      ]
+    }
+  },
+  {
+    id:204, autor:"Ela T.", predmet:"Biologija", lekcija:"Stanična građa", tip:"Umna mapa", ikona:"🗺️",
+    preuzimanja:9, avatar:"👩", datum:"24.5.2026",
+    opis:"Dijelovi stanice, razlika biljne i životinjske – idealno za pripremu ispita.", datoteka:null,
+    sadrzajRich:{
+      tip:"umnamapa", centar:"Stanica",
+      grane:[
+        { boja:"#1a8a72", naslov:"Zajednički dijelovi", listice:["Stanična membrana (selekt. propusnost)","Citoplazma (tekuća osnova)","Jezgra — nosi DNA","Ribosomi (sinteza bjelančevina)","Mitohondriji (ATP energija)"] },
+        { boja:"#7c3aed", naslov:"Samo biljne 🌱", listice:["Stanična stijenka (celuloza, čvrstoća)","Kloroplasti (fotosinteza, klorofil)","Centralna vakuola (velika, pohranjuje vodu)"] },
+        { boja:"#e03e5c", naslov:"Samo životinjske 🐾", listice:["Centrioli (deoba stanice)","Lizosomi (razgradnja)","Mnoge male vakuole"] },
+      ]
+    }
+  },
+  {
+    id:205, autor:"Noa B.", predmet:"Hrvatski", lekcija:"Kiklop — lektira", tip:"Sažetak", ikona:"📄",
+    preuzimanja:34, avatar:"🧒", datum:"22.5.2026",
+    opis:"Kratki sažetak Kiklopa s likovima, temama i citatima.", datoteka:null,
+    sadrzajRich:{
+      tip:"sazetak",
+      uvod:"Kiklop je roman Ranka Marinkovića (1965.), smješten u Zagreb za Drugoga svjetskog rata. Protagonist Melkior Tresić, intelektualac i glumac, suočava se s egzistencijalnim strahom, besmisom rata i vlastitom kukavičlukom.",
+      sekcije:[
+        { naslov:"👤 Likovi", stavke:["Melkior Tresić — protagonist; prestrašen, intelektualan, moralno nesiguran","Kiklop — metafora za rat i totalitarni sustav koji 'proždire' ljude","Maestro — prijatelj, veseo, kontrast Melkioru","Vivijana — ženska protagonistica, Melkiorova ljubavna čežnja"] },
+        { naslov:"🎭 Teme", stavke:["Strah od smrti i rata — osnovna pokretačka sila priče","Moralna odgovornost — može li pojedinac ostati human u ratu?","Groteska i crni humor — Marinković ismijava kukavičluk i apsurd","Alijenacija — Melkior je otuđen od društva i samog sebe"] },
+        { naslov:"✏️ Ključni citati", stavke:['"Smijeh je jedino oružje slabih."','"Strah nije sramota, sramota je ne признati ga."','Kiklop = sve što je monstruozno, neljudsko, ratno'] },
+      ]
+    }
+  },
 ];
 
 const DEMO_RAZMJENA = [
@@ -581,6 +643,102 @@ function DetaljiPonudeModal({ ponuda, korisnik, onClose, onRezervacija }) {
   );
 }
 
+// ---- RICH CONTENT RENDERER ----
+function SadrzajRichPregled({ sadrzajRich, boja, bojaLight }) {
+  if (!sadrzajRich) return null;
+  const { tip } = sadrzajRich;
+
+  if (tip === "umnamapa") {
+    return (
+      <div>
+        <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>🗺️ Umna mapa</div>
+        {/* Centar */}
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:16 }}>
+          <div style={{ background:boja, color:"#fff", borderRadius:16, padding:"10px 24px", fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:15, boxShadow:"0 4px 16px #1a161220" }}>
+            {sadrzajRich.centar}
+          </div>
+        </div>
+        {/* Vertical line */}
+        <div style={{ width:2, height:16, background:`${boja}44`, margin:"0 auto 8px" }} />
+        {/* Grane */}
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {(sadrzajRich.grane||[]).map((grana, gi) => (
+            <div key={gi} style={{ borderRadius:14, border:`2px solid ${grana.boja}44`, overflow:"hidden" }}>
+              <div style={{ background:grana.boja, padding:"8px 14px", display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:"#fff", opacity:0.8 }} />
+                <span style={{ color:"#fff", fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:13 }}>{grana.naslov}</span>
+              </div>
+              <div style={{ background:`${grana.boja}0d`, padding:"10px 14px", display:"flex", flexDirection:"column", gap:6 }}>
+                {(grana.listice||[]).map((l, li) => (
+                  <div key={li} style={{ display:"flex", gap:8, alignItems:"flex-start" }}>
+                    <div style={{ width:6, height:6, borderRadius:"50%", background:grana.boja, marginTop:5, flexShrink:0 }} />
+                    <span style={{ color:C.ink, fontSize:13, fontFamily:"'Nunito',sans-serif", lineHeight:1.5 }}>{l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (tip === "sazetak") {
+    return (
+      <div>
+        <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>📄 Sažetak</div>
+        {sadrzajRich.uvod && (
+          <div style={{ background:bojaLight, border:`1.5px solid ${boja}33`, borderRadius:12, padding:14, marginBottom:14, color:C.inkMid, fontSize:13, lineHeight:1.7 }}>
+            {sadrzajRich.uvod}
+          </div>
+        )}
+        {(sadrzajRich.sekcije||[]).map((sek, si) => (
+          <div key={si} style={{ marginBottom:12 }}>
+            <div style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, color:boja, fontSize:13, marginBottom:8 }}>{sek.naslov}</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {(sek.stavke||[]).map((s, i) => (
+                <div key={i} style={{ display:"flex", gap:8, alignItems:"flex-start", background:C.bgDeep, borderRadius:8, padding:"7px 10px" }}>
+                  <div style={{ width:6, height:6, borderRadius:"50%", background:boja, marginTop:5, flexShrink:0 }} />
+                  <span style={{ color:C.ink, fontSize:13, fontFamily:"'Nunito',sans-serif", lineHeight:1.5 }}>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tip === "biljeske") {
+    return (
+      <div>
+        <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>📝 Bilješke</div>
+        {(sadrzajRich.blokovi||[]).map((blok, bi) => (
+          <div key={bi} style={{ marginBottom:14, background:C.bgDeep, borderRadius:14, overflow:"hidden", border:`1.5px solid ${C.cardBorder}` }}>
+            <div style={{ background:boja, padding:"8px 14px" }}>
+              <span style={{ color:"#fff", fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:13 }}>{blok.naslov}</span>
+            </div>
+            <div style={{ padding:"12px 14px" }}>
+              {blok.tekst && (
+                <pre style={{ margin:0, fontFamily:"'Nunito',sans-serif", fontSize:13, color:C.ink, lineHeight:1.75, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{blok.tekst}</pre>
+              )}
+              {blok.formule && (
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:blok.tekst?10:0 }}>
+                  {blok.formule.map((f, fi) => (
+                    <div key={fi} style={{ background:C.card, border:`1.5px solid ${boja}44`, borderRadius:8, padding:"5px 12px", fontFamily:"monospace", fontSize:13, color:boja, fontWeight:700 }}>{f}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 // ---- FILE PREVIEW MODAL ----
 function PregledDatotekeModal({ materijal, onClose }) {
   const [tekstSadrzaj, setTekstSadrzaj] = useState(null);
@@ -635,7 +793,7 @@ function PregledDatotekeModal({ materijal, onClose }) {
           )}
         </div>
 
-        {/* Pregled datoteke */}
+        {/* Pregled datoteke ili sadrzajRich */}
         {materijal.datoteka ? (
           <div>
             <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>👁 Pregled datoteke</div>
@@ -669,27 +827,20 @@ function PregledDatotekeModal({ materijal, onClose }) {
             )}
             <Btn label="⬇ Preuzmi datoteku" color={boja} full onClick={handleDownload} />
           </div>
-        ) : (
-          /* Nema priložene datoteke — prikaži strukturirani pregled sadržaja */
+        ) : materijal.sadrzajRich ? (
+          /* Strukturirani sadrzaj (demo ili učenički unos) */
+          <SadrzajRichPregled sadrzajRich={materijal.sadrzajRich} boja={boja} bojaLight={bojaLight} />
+        ) : materijal.sadrzaj ? (
+          /* Slobodni tekst koji je učenik upisao pri dodavanju */
           <div>
-            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>📋 Sadržaj materijala</div>
-            {materijal.tip === "Umna mapa" ? (
-              <div style={{ background:C.plumLight, borderRadius:14, padding:16, border:`1.5px solid ${C.plum}33` }}>
-                <div style={{ fontWeight:900, color:C.plum, fontSize:14, marginBottom:12 }}>🗺️ {materijal.lekcija}</div>
-                {(materijal.opis||"").split(/[,.\n]/).filter(s=>s.trim().length>3).map((g,i)=>(
-                  <div key={i} style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:C.plum, flexShrink:0 }} />
-                    <div style={{ color:C.ink, fontSize:13, fontWeight:700 }}>{g.trim()}</div>
-                  </div>
-                ))}
-                <div style={{ marginTop:10, color:C.inkLight, fontSize:11 }}>Za puni pregled, učitaj datoteku pri objavi materijala.</div>
-              </div>
-            ) : (
-              <div style={{ background:C.bgDeep, borderRadius:14, padding:16 }}>
-                <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.8, whiteSpace:"pre-wrap" }}>{materijal.opis}</div>
-                <div style={{ marginTop:12, color:C.inkLight, fontSize:11 }}>Za preuzimanje, autor treba priložiti datoteku pri objavi.</div>
-              </div>
-            )}
+            <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>📋 Sadržaj bilješki</div>
+            <div style={{ background:C.bgDeep, borderRadius:14, padding:16, maxHeight:340, overflowY:"auto" }}>
+              <pre style={{ margin:0, fontFamily:"'Nunito', sans-serif", fontSize:13, color:C.ink, lineHeight:1.8, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{materijal.sadrzaj}</pre>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background:C.bgDeep, borderRadius:14, padding:16 }}>
+            <div style={{ color:C.inkMid, fontSize:13, lineHeight:1.8 }}>{materijal.opis}</div>
           </div>
         )}
       </div>
@@ -1076,7 +1227,7 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
   const [modal, setModal] = useState(false);
   const [pregled, setPregled] = useState(null);
   const [kvizMaterijal, setKvizMaterijal] = useState(null);
-  const [noviBiljezak, setNoviBiljezak] = useState({ predmet:"Matematika", lekcija:"", tip:"Bilješke", opis:"", datoteka:null });
+  const [noviBiljezak, setNoviBiljezak] = useState({ predmet:"Matematika", lekcija:"", tip:"Bilješke", opis:"", sadrzaj:"", datoteka:null });
   const tipovi = ["Svi","Bilješke","Sažetak","Umna mapa"];
   const filtered = materijali.filter(m=>(predFilter==="Svi"||m.predmet===predFilter)&&(tipFilter==="Svi"||m.tip===tipFilter));
   const fileRef = useRef(null);
@@ -1088,13 +1239,15 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
       predmet:noviBiljezak.predmet, lekcija:noviBiljezak.lekcija||"Opće",
       tip:noviBiljezak.tip, ikona:ikone[noviBiljezak.tip]||"📝",
       preuzimanja:0, datum:new Date().toLocaleDateString("hr-HR"),
-      opis:noviBiljezak.opis||"Novi materijal", datoteka:noviBiljezak.datoteka
+      opis:noviBiljezak.opis||"Novi materijal",
+      sadrzaj:noviBiljezak.sadrzaj||null,
+      datoteka:noviBiljezak.datoteka
     };
     setMaterijali(prev=>[novi,...prev]);
     addBodovi(12);
     onNotifikacija({ tekst:`📤 Materijal objavljen! +12 bodova`, boja:C.teal });
     setModal(false);
-    setNoviBiljezak({ predmet:"Matematika", lekcija:"", tip:"Bilješke", opis:"", datoteka:null });
+    setNoviBiljezak({ predmet:"Matematika", lekcija:"", tip:"Bilješke", opis:"", sadrzaj:"", datoteka:null });
   };
 
   return (
@@ -1120,9 +1273,21 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
               ))}
             </div>
             <FInp label="Kratki opis" value={noviBiljezak.opis} onChange={e=>setNoviBiljezak(p=>({...p,opis:e.target.value}))} placeholder="Što je u materijalu..." />
+            <p style={{ margin:"0 0 6px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Sadržaj bilješki (upiši direktno)</p>
+            <textarea
+              rows={6}
+              value={noviBiljezak.sadrzaj}
+              onChange={e=>setNoviBiljezak(p=>({...p,sadrzaj:e.target.value}))}
+              placeholder={noviBiljezak.tip==="Umna mapa"
+                ? "Upiši pojmove i veze, npr.:\nJednadžbe\n  → Linearne: ax + b = 0\n  → Kvadratne: ax² + bx + c = 0\n  → Provjera: uvrstiti x natrag"
+                : noviBiljezak.tip==="Sažetak"
+                ? "Upiši ključne točke, npr.:\nUvod: ...\n\n✅ Signal words:\n- already (već)\n- yet (još)\n\n📊 Primjeri:\n- ..."
+                : "Upiši bilješke, formule i primjere:\n\n1. Zakon inercije — ...\n\nFormule:\nF = m · a\n\nZadatak:\n..."}
+              style={{ width:"100%", background:C.bgDeep, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"10px 12px", fontFamily:"'Nunito', sans-serif", fontSize:13, resize:"vertical", boxSizing:"border-box", marginBottom:12, outline:"none", lineHeight:1.6 }}
+            />
             <input ref={fileRef} type="file" accept="image/*,.pdf,.docx,.txt" style={{ display:"none" }} onChange={e=>{ if (e.target.files[0]) setNoviBiljezak(p=>({...p,datoteka:e.target.files[0]})); }} />
-            <button onClick={()=>fileRef.current?.click()} style={{ width:"100%", padding:14, borderRadius:12, border:`2px dashed ${noviBiljezak.datoteka?C.teal:C.blue}`, background:noviBiljezak.datoteka?C.tealLight:C.blueLight, color:noviBiljezak.datoteka?C.teal:C.blue, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", marginBottom:16 }}>
-              {noviBiljezak.datoteka ? `📎 ${noviBiljezak.datoteka.name}` : "📎 Učitaj datoteku (slika, PDF...)"}
+            <button onClick={()=>fileRef.current?.click()} style={{ width:"100%", padding:14, borderRadius:12, border:`2px dashed ${noviBiljezak.datoteka?C.teal:C.cardBorder}`, background:noviBiljezak.datoteka?C.tealLight:C.bg, color:noviBiljezak.datoteka?C.teal:C.inkLight, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer", marginBottom:16 }}>
+              {noviBiljezak.datoteka ? `📎 ${noviBiljezak.datoteka.name}` : "📎 Ili učitaj datoteku (slika, PDF...)"}
             </button>
             <Btn label="📤 Objavi materijal (+12 bodova)" color={C.teal} full onClick={objavi} />
           </div>
@@ -1159,7 +1324,7 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
                   <span style={{ color:C.inkLight, fontSize:12 }}>⬇ {m.preuzimanja}</span>
                   <span style={{ color:C.inkLight, fontSize:12 }}>📅 {m.datum}</span>
                   <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
-                    <Btn label={m.datoteka?"👁 Pregled":"📥 Info"} small color={m.datoteka?C.teal:C.blue} onClick={()=>setPregled(m)} />
+                    <Btn label="👁 Pregled" small color={m.datoteka||m.sadrzajRich||m.sadrzaj?C.teal:C.blue} onClick={()=>setPregled(m)} />
                     <Btn label="🧠 Kviz" small color={C.plum} onClick={()=>setKvizMaterijal(m)} />
                   </div>
                 </div>
