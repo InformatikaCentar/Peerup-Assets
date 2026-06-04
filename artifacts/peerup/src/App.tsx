@@ -328,11 +328,11 @@ const INIT_IZAZOVI = [
 ];
 
 const VOLONT_PROJEKTI = [
-  { id:1, naslov:"Pomoć u čitanju – 1. razred",   opis:"Pomaži prvašićima da vježbaju čitanje 2x tjedno po 30 min.", ikona:"📖", mjesta:3, prijavljeni:["Luka M.","Ana K."], bodovi:25, organizator:"Učiteljica Petra" },
-  { id:2, naslov:"Školski vrt – sadnja i njega",  opis:"Zalijevaj i brini za školski vrt. Upiši se za jedan dan tjedno.", ikona:"🌱", mjesta:5, prijavljeni:["Tin B."], bodovi:20, organizator:"Ravnatelj Horvat" },
-  { id:3, naslov:"IT pomoć starijim učiteljima",  opis:"Pomozi učiteljima oko računala, tableta i e-dnevnika.", ikona:"💻", mjesta:2, prijavljeni:[], bodovi:20, organizator:"Učiteljica Ivana" },
-  { id:4, naslov:"Zidne novine – uređivanje",     opis:"Svaki tjedan obnoviti oglasnu ploču i zidne novine škole.", ikona:"📰", mjesta:4, prijavljeni:["Sara P."], bodovi:15, organizator:"Učiteljica Petra" },
-  { id:5, naslov:"Prikupljanje igračaka za bolnicu", opis:"Organiziraj prikupljanje igračaka za djecu u bolnici.", ikona:"🧸", mjesta:6, prijavljeni:["Mia L.","Filip G.","Ana K."], bodovi:30, organizator:"Ravnatelica Marić" },
+  { id:1, naslov:"Pomoć u čitanju – 1. razred",   opis:"Pomaži prvašićima da vježbaju čitanje 2x tjedno po 30 min.", ikona:"📖", mjesta:3, prijavljeni:["Luka M.","Ana K."], bodovi:25, organizator:"Učiteljica Petra", datum:"2026-06-10", vrijemeOd:"09:00", vrijemeDo:"10:00", dolaznost:{"Luka M.":true,"Ana K.":false}, nagrade:{} },
+  { id:2, naslov:"Školski vrt – sadnja i njega",  opis:"Zalijevaj i brini za školski vrt. Upiši se za jedan dan tjedno.", ikona:"🌱", mjesta:5, prijavljeni:["Tin B."], bodovi:20, organizator:"Ravnatelj Horvat", datum:"2026-06-12", vrijemeOd:"11:00", vrijemeDo:"12:30", dolaznost:{"Tin B.":false}, nagrade:{} },
+  { id:3, naslov:"IT pomoć starijim učiteljima",  opis:"Pomozi učiteljima oko računala, tableta i e-dnevnika.", ikona:"💻", mjesta:2, prijavljeni:[], bodovi:20, organizator:"Učiteljica Ivana", datum:"2026-06-15", vrijemeOd:"13:00", vrijemeDo:"14:00", dolaznost:{}, nagrade:{} },
+  { id:4, naslov:"Zidne novine – uređivanje",     opis:"Svaki tjedan obnoviti oglasnu ploču i zidne novine škole.", ikona:"📰", mjesta:4, prijavljeni:["Sara P."], bodovi:15, organizator:"Učiteljica Petra", datum:"2026-06-11", vrijemeOd:"12:00", vrijemeDo:"13:00", dolaznost:{"Sara P.":false}, nagrade:{} },
+  { id:5, naslov:"Prikupljanje igračaka za bolnicu", opis:"Organiziraj prikupljanje igračaka za djecu u bolnici.", ikona:"🧸", mjesta:6, prijavljeni:["Mia L.","Filip G.","Ana K."], bodovi:30, organizator:"Ravnatelica Marić", datum:"2026-06-20", vrijemeOd:"10:00", vrijemeDo:"12:00", dolaznost:{"Mia L.":false,"Filip G.":false,"Ana K.":false}, nagrade:{} },
 ];
 
 // ---- REUSABLE COMPONENTS ----
@@ -1815,43 +1815,143 @@ function Kvizovi({ korisnik, addBodovi, onNotifikacija }) {
 
 function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
   const [projekti, setProjekti] = useState(VOLONT_PROJEKTI);
-  const [prijavljen, setPrijavljen] = useState({});
   const [noviModal, setNoviModal] = useState(false);
-  const [noviProjekt, setNoviProjekt] = useState({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20 });
+  const [evidencijaId, setEvidencijaId] = useState(null);
+  const [noviProjekt, setNoviProjekt] = useState({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20, datum:"", vrijemeOd:"", vrijemeDo:"" });
   const jeUcitelj = korisnik.uloga === "ucitelj" || korisnik.uloga === "admin";
   const mojeIme = `${korisnik.ime} ${korisnik.prezime[0]}.`;
+  const evidencijaModal = projekti.find(p => p.id === evidencijaId) || null;
+
+  /* Award bodovi to the logged-in student for confirmed attendance (fires on profile switch or mount) */
+  useEffect(() => {
+    if (korisnik.uloga !== "ucenik") return;
+    const toAward = projekti.filter(p => p.dolaznost?.[mojeIme] === true && !p.nagrade?.[mojeIme]);
+    if (toAward.length === 0) return;
+    toAward.forEach(p => {
+      addBodovi(p.bodovi);
+      onNotifikacija({ tekst:`🎖 Dolaznost potvrđena: "${p.naslov}" — +${p.bodovi} bod.!`, boja:C.orange });
+    });
+    setProjekti(prev => prev.map(p => {
+      if (toAward.some(ta => ta.id === p.id)) return {...p, nagrade:{...(p.nagrade||{}), [mojeIme]:true}};
+      return p;
+    }));
+  }, [korisnik.id]); // eslint-disable-line
 
   const prijavi = (id) => {
     const p = projekti.find(pp=>pp.id===id);
     if (!p) return;
-    setProjekti(prev=>prev.map(pp=>pp.id===id?{...pp,prijavljeni:[...pp.prijavljeni,mojeIme]}:pp));
-    setPrijavljen(prev=>({...prev,[id]:true}));
-    addBodovi(p.bodovi);
-    onNotifikacija({ tekst:`🤝 Prijavili ste se: "${p.naslov}"! +${p.bodovi} bodova`, boja:C.orange });
+    setProjekti(prev=>prev.map(pp=>pp.id===id?{...pp, prijavljeni:[...pp.prijavljeni,mojeIme], dolaznost:{...(pp.dolaznost||{}), [mojeIme]:false}}:pp));
+    onNotifikacija({ tekst:`🤝 Prijavljeni ste na "${p.naslov}". Bodove dobivate po potvrdi dolaznosti od učitelja.`, boja:C.orange });
   };
 
   const dodajProjekt = () => {
-    const novi = { id:Date.now(), naslov:noviProjekt.naslov, opis:noviProjekt.opis, ikona:noviProjekt.ikona, mjesta:noviProjekt.mjesta, prijavljeni:[], bodovi:noviProjekt.bodovi, organizator:`${korisnik.ime} ${korisnik.prezime}` };
+    const novi = { id:Date.now(), naslov:noviProjekt.naslov, opis:noviProjekt.opis, ikona:noviProjekt.ikona, mjesta:noviProjekt.mjesta, prijavljeni:[], bodovi:noviProjekt.bodovi, organizator:`${korisnik.ime} ${korisnik.prezime}`, kreatorId:korisnik.id, datum:noviProjekt.datum, vrijemeOd:noviProjekt.vrijemeOd, vrijemeDo:noviProjekt.vrijemeDo, dolaznost:{}, nagrade:{} };
     setProjekti(prev=>[novi,...prev]);
     onNotifikacija({ tekst:`📢 Objavili ste volonterski projekt "${noviProjekt.naslov}"`, boja:C.orange });
     setNoviModal(false);
-    setNoviProjekt({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20 });
+    setNoviProjekt({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20, datum:"", vrijemeOd:"", vrijemeDo:"" });
   };
 
-  const mojePrijave = projekti.filter(p=>p.prijavljeni.includes(mojeIme) || prijavljen[p.id]);
+  const ukloniProjekt = (id) => {
+    setProjekti(prev=>prev.filter(p=>p.id!==id));
+    onNotifikacija({ tekst:`🗑 Projekt uklonjen s popisa`, boja:C.inkMid });
+  };
+
+  const toggloDolaznost = (projektId, ime) => {
+    setProjekti(prev=>prev.map(p=>p.id===projektId?{...p, dolaznost:{...(p.dolaznost||{}), [ime]:!(p.dolaznost?.[ime])}}:p));
+    setEvidencijaId(projektId);
+  };
+
+  const spremiEvidenciju = () => {
+    if (!evidencijaModal) return;
+    /* Award bodovi to current student if they just got marked as attended */
+    if (korisnik.uloga === "ucenik" && evidencijaModal.dolaznost?.[mojeIme] && !evidencijaModal.nagrade?.[mojeIme]) {
+      addBodovi(evidencijaModal.bodovi);
+      setProjekti(prev=>prev.map(p=>p.id===evidencijaModal.id?{...p, nagrade:{...(p.nagrade||{}), [mojeIme]:true}}:p));
+      onNotifikacija({ tekst:`🎖 Prisustvo potvrđeno: "${evidencijaModal.naslov}" — +${evidencijaModal.bodovi} bod.!`, boja:C.orange });
+    }
+    setEvidencijaId(null);
+  };
+
+  const formatDatum = (d) => {
+    if (!d) return null;
+    try { return new Date(d).toLocaleDateString("hr-HR", { weekday:"short", day:"numeric", month:"long", year:"numeric" }); }
+    catch { return d; }
+  };
+
+  const mojePrijave = projekti.filter(p=>p.prijavljeni.includes(mojeIme));
 
   return (
     <div style={{ padding:"0 16px 20px" }}>
+
+      {/* ---- Evidencija dolaznosti modal (teacher) ---- */}
+      {evidencijaModal && (
+        <div onClick={()=>setEvidencijaId(null)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"88vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>📋 Evidencija dolaznosti</h3>
+              <button onClick={()=>setEvidencijaId(null)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
+            </div>
+            <div style={{ background:C.orangeLight, border:`1.5px solid ${C.orange}44`, borderRadius:12, padding:"10px 14px", marginBottom:16 }}>
+              <div style={{ fontWeight:900, color:C.ink, fontSize:14, marginBottom:2 }}>{evidencijaModal.ikona} {evidencijaModal.naslov}</div>
+              {evidencijaModal.datum && <div style={{ color:C.inkMid, fontSize:12 }}>📅 {formatDatum(evidencijaModal.datum)}{evidencijaModal.vrijemeOd ? ` · ${evidencijaModal.vrijemeOd}–${evidencijaModal.vrijemeDo||"?"}` : ""}</div>}
+              <div style={{ color:C.inkMid, fontSize:12 }}>🏅 Nagrada: {evidencijaModal.bodovi} bodova po učeniku</div>
+            </div>
+            {evidencijaModal.prijavljeni.length === 0 ? (
+              <div style={{ textAlign:"center", padding:24, color:C.inkLight, fontSize:13 }}>Nema prijavljenih učenika.</div>
+            ) : (
+              <div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 60px", gap:6, padding:"7px 12px", background:C.bgDeep, borderRadius:10, marginBottom:8, fontSize:11, color:C.inkLight, fontWeight:800, textTransform:"uppercase", letterSpacing:0.5 }}>
+                  <div>Učenik</div><div style={{ textAlign:"center" }}>Prisutan</div><div style={{ textAlign:"center" }}>Bodovi</div>
+                </div>
+                {evidencijaModal.prijavljeni.map((ime, i) => {
+                  const prisutan = evidencijaModal.dolaznost?.[ime] || false;
+                  const nagraden = evidencijaModal.nagrade?.[ime] || false;
+                  return (
+                    <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 80px 60px", gap:6, padding:"10px 12px", background:prisutan?C.greenLight:C.bg, borderRadius:10, marginBottom:6, alignItems:"center", border:`1.5px solid ${prisutan?C.green:C.cardBorder}`, transition:"all 0.2s" }}>
+                      <div style={{ fontWeight:800, color:C.ink, fontSize:13 }}>{ime}</div>
+                      <button onClick={()=>toggloDolaznost(evidencijaModal.id, ime)} style={{ padding:"5px 10px", borderRadius:8, border:`2px solid ${prisutan?C.green:C.cardBorder}`, background:prisutan?C.green:"transparent", color:prisutan?"#fff":C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, cursor:"pointer", textAlign:"center" }}>
+                        {prisutan ? "✓ Da" : "Ne"}
+                      </button>
+                      <div style={{ fontSize:11, color:nagraden?C.green:prisutan?C.orange:C.inkLight, fontWeight:800, textAlign:"center" }}>
+                        {nagraden ? `✓ +${evidencijaModal.bodovi}` : prisutan ? `+${evidencijaModal.bodovi}` : "—"}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ marginTop:16 }}>
+                  <Btn label="💾 Spremi evidenciju" color={C.orange} textColor={C.card} full onClick={spremiEvidenciju} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ---- Nova aktivnost modal (teacher) ---- */}
       {noviModal && (
         <div onClick={()=>setNoviModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"92vh", overflowY:"auto" }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
-              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>📢 Novi volonterski projekt</h3>
+              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>📢 Nova aktivnost</h3>
               <button onClick={()=>setNoviModal(false)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
             </div>
-            <FInp label="Naziv projekta" value={noviProjekt.naslov} onChange={e=>setNoviProjekt(p=>({...p,naslov:e.target.value}))} placeholder="npr. Pomoć u knjižnici..." />
-            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Opis</p>
-            <textarea rows={3} value={noviProjekt.opis} onChange={e=>setNoviProjekt(p=>({...p,opis:e.target.value}))} placeholder="Što učenici rade, kada, koliko dugo..." style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontSize:13, resize:"none", boxSizing:"border-box", marginBottom:14, outline:"none" }} />
+            <FInp label="Naziv aktivnosti" value={noviProjekt.naslov} onChange={e=>setNoviProjekt(p=>({...p,naslov:e.target.value}))} placeholder="npr. Pomoć u knjižnici..." />
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Opis zadatka</p>
+            <textarea rows={3} value={noviProjekt.opis} onChange={e=>setNoviProjekt(p=>({...p,opis:e.target.value}))} placeholder="Što učenici rade, gdje se nalaze, što trebaju donijeti..." style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontSize:13, resize:"none", boxSizing:"border-box", marginBottom:14, outline:"none" }} />
+            {/* DATE & TIME */}
+            <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>📅 Datum i vrijeme</p>
+            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+              <div style={{ flex:2 }}>
+                <input type="date" value={noviProjekt.datum} onChange={e=>setNoviProjekt(p=>({...p,datum:e.target.value}))} style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${noviProjekt.datum?C.orange:C.cardBorder}`, borderRadius:10, padding:"10px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:13, boxSizing:"border-box", outline:"none" }} />
+              </div>
+              <div style={{ flex:1 }}>
+                <input type="time" value={noviProjekt.vrijemeOd} onChange={e=>setNoviProjekt(p=>({...p,vrijemeOd:e.target.value}))} placeholder="Od" style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${noviProjekt.vrijemeOd?C.orange:C.cardBorder}`, borderRadius:10, padding:"10px 8px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:13, boxSizing:"border-box", outline:"none" }} />
+              </div>
+              <div style={{ flex:1 }}>
+                <input type="time" value={noviProjekt.vrijemeDo} onChange={e=>setNoviProjekt(p=>({...p,vrijemeDo:e.target.value}))} placeholder="Do" style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${noviProjekt.vrijemeDo?C.orange:C.cardBorder}`, borderRadius:10, padding:"10px 8px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:13, boxSizing:"border-box", outline:"none" }} />
+              </div>
+            </div>
             <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Ikona</p>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
               {["🤝","📖","🌱","💻","📰","🧸","🎨","🏫"].map(ik=>(
@@ -1876,7 +1976,7 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
                 </div>
               </div>
             </div>
-            <Btn label="📢 Objavi projekt" color={C.orange} textColor={C.card} full disabled={!noviProjekt.naslov.trim()||!noviProjekt.opis.trim()} onClick={dodajProjekt} />
+            <Btn label="📢 Objavi aktivnost" color={C.orange} textColor={C.card} full disabled={!noviProjekt.naslov.trim()||!noviProjekt.opis.trim()} onClick={dodajProjekt} />
           </div>
         </div>
       )}
@@ -1889,41 +1989,62 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
 
       {jeUcitelj && (
         <div style={{ marginBottom:20 }}>
-          <Btn label="📢 Dodaj volonterski projekt" color={C.orange} textColor={C.card} full onClick={()=>setNoviModal(true)} />
+          <Btn label="📢 Dodaj volontersku aktivnost" color={C.orange} textColor={C.card} full onClick={()=>setNoviModal(true)} />
         </div>
       )}
 
       {!jeUcitelj && mojePrijave.length > 0 && (
         <div style={{ marginBottom:20 }}>
           <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Moje volonterske aktivnosti</div>
-          {mojePrijave.map(p=>(
-            <div key={p.id} style={{ background:C.orangeLight, border:`1.5px solid ${C.orange}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
-              <div style={{ fontSize:24 }}>{p.ikona}</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontWeight:800, fontSize:14, color:C.ink }}>{p.naslov}</div>
-                <div style={{ color:C.inkMid, fontSize:12 }}>{p.organizator}</div>
+          {mojePrijave.map(p=>{
+            const potvrden = p.dolaznost?.[mojeIme] === true;
+            const nagraden = p.nagrade?.[mojeIme] === true;
+            return (
+              <div key={p.id} style={{ background:nagraden?C.greenLight:potvrden?C.orangeLight:C.bgDeep, border:`1.5px solid ${nagraden?C.green:potvrden?C.orange:C.cardBorder}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
+                <div style={{ fontSize:24 }}>{p.ikona}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:800, fontSize:14, color:C.ink }}>{p.naslov}</div>
+                  <div style={{ color:C.inkMid, fontSize:12 }}>{p.organizator}{p.datum ? ` · ${formatDatum(p.datum)}` : ""}</div>
+                </div>
+                {nagraden
+                  ? <Pill label={`✅ +${p.bodovi} bod.`} color={C.green} bg={C.greenLight} />
+                  : potvrden
+                  ? <Pill label="⏳ Potvrđeno" color={C.orange} bg={C.card} />
+                  : <Pill label="⏳ Čeka potvrdu" color={C.inkLight} bg={C.card} />
+                }
               </div>
-              <Pill label={`+${p.bodovi} bod.`} color={C.orange} bg={C.card} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Dostupni projekti</div>
+      <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Dostupne aktivnosti</div>
       {projekti.map(p=>{
         const slobodnoMjesta = p.mjesta - p.prijavljeni.length;
-        const vecPrijavljen = p.prijavljeni.includes(mojeIme) || prijavljen[p.id];
+        const vecPrijavljen = p.prijavljeni.includes(mojeIme);
+        const jeMojProjekt = jeUcitelj && (p.kreatorId === korisnik.id || p.organizator === `${korisnik.ime} ${korisnik.prezime}`);
         return (
           <Card key={p.id} accent={vecPrijavljen?C.green:C.orange}>
             <div style={{ display:"flex", gap:10 }}>
               <div style={{ fontSize:36 }}>{p.ikona}</div>
               <div style={{ flex:1 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-                  <div style={{ fontWeight:900, fontSize:15, color:C.ink, fontFamily:"'Nunito', sans-serif", marginBottom:4 }}>{p.naslov}</div>
-                  <Pill label={`+${p.bodovi} bod.`} color={C.orange} bg={C.orangeLight} />
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                  <div style={{ fontWeight:900, fontSize:15, color:C.ink, fontFamily:"'Nunito', sans-serif", marginBottom:2, flex:1 }}>{p.naslov}</div>
+                  <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+                    <Pill label={`+${p.bodovi} bod.`} color={C.orange} bg={C.orangeLight} />
+                    {jeMojProjekt && (
+                      <button onClick={()=>ukloniProjekt(p.id)} style={{ background:C.roseLight, border:"none", borderRadius:8, padding:"3px 8px", color:C.rose, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:11, cursor:"pointer" }}>🗑</button>
+                    )}
+                  </div>
                 </div>
-                <div style={{ color:C.inkMid, fontSize:12, marginBottom:8, lineHeight:1.5 }}>{p.opis}</div>
-                <div style={{ color:C.inkLight, fontSize:11, marginBottom:8 }}>👤 Organizator: {p.organizator}</div>
+                <div style={{ color:C.inkMid, fontSize:12, marginBottom:6, lineHeight:1.5 }}>{p.opis}</div>
+                {(p.datum || p.vrijemeOd) && (
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:6 }}>
+                    {p.datum && <Pill label={`📅 ${formatDatum(p.datum)}`} color={C.inkMid} bg={C.bgDeep} />}
+                    {p.vrijemeOd && <Pill label={`🕐 ${p.vrijemeOd}–${p.vrijemeDo||"?"}`} color={C.inkMid} bg={C.bgDeep} />}
+                  </div>
+                )}
+                <div style={{ color:C.inkLight, fontSize:11, marginBottom:8 }}>👤 {p.organizator}</div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:11, color:C.inkLight, marginBottom:4 }}>Mjesta: {p.prijavljeni.length}/{p.mjesta}</div>
@@ -1932,9 +2053,7 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
                     </div>
                   </div>
                   {jeUcitelj ? (
-                    p.prijavljeni.length > 0
-                      ? <Pill label={`${p.prijavljeni.length} prijav.`} color={C.teal} bg={C.tealLight} />
-                      : <Pill label="Nema prijava" color={C.inkLight} bg={C.bgDeep} />
+                    <Btn label={`📋 Evidencija (${p.prijavljeni.length})`} small color={p.prijavljeni.length>0?C.teal:C.inkLight} onClick={()=>setEvidencijaId(p.id)} />
                   ) : vecPrijavljen ? (
                     <Pill label="✅ Prijavljen/a" color={C.green} bg={C.greenLight} />
                   ) : slobodnoMjesta > 0 ? (
@@ -1943,18 +2062,6 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
                     <Pill label="Popunjeno" color={C.rose} bg={C.roseLight} />
                   )}
                 </div>
-                {p.prijavljeni.length > 0 && (
-                  <div style={{ marginTop:10, paddingTop:8, borderTop:`1px solid ${C.cardBorder}` }}>
-                    <div style={{ fontSize:11, color:C.inkLight, marginBottom:6, fontWeight:700, textTransform:"uppercase" }}>
-                      {jeUcitelj ? "Prijavljeni učenici" : "Prijavljeni"}:
-                    </div>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-                      {p.prijavljeni.map((ime,i)=>(
-                        <span key={i} style={{ background:C.orangeLight, color:C.orange, borderRadius:99, padding:"2px 10px", fontSize:11, fontWeight:700 }}>{ime}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </Card>
