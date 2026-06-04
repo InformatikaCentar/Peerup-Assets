@@ -180,14 +180,14 @@ const KVIZ_BANKA = {
 };
 
 const INIT_CLANOVI = [
-  { id:1,  ime:"Marko",  prezime:"Horvat",   uloga:"admin",   razred:null, predmeti:[],                     aktivan:true,  kod:"ADMIN001", lozinka:"admin123", avatar:"👨‍💼", bodovi:0,   pokusaji:0, zakljucan:false },
-  { id:2,  ime:"Ivana",  prezime:"Kovač",    uloga:"ucitelj", razred:null, predmeti:["Matematika","Fizika"], aktivan:true,  kod:"UCT-MAT1", lozinka:"ucit123",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false },
-  { id:3,  ime:"Petra",  prezime:"Novak",    uloga:"ucitelj", razred:null, predmeti:["Hrvatski","Likovna"],  aktivan:true,  kod:"UCT-HRV1", lozinka:"ucit456",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false },
-  { id:5,  ime:"Luka",   prezime:"Marić",    uloga:"ucenik",  razred:"7.", predmeti:[],                     aktivan:true,  kod:"UCE-7-01", lozinka:"luka2024", avatar:"🧑‍🎓", bodovi:142, pokusaji:0, zakljucan:false },
-  { id:6,  ime:"Ana",    prezime:"Kolar",    uloga:"ucenik",  razred:"5.", predmeti:[],                     aktivan:true,  kod:"UCE-5-01", lozinka:"ana2024",  avatar:"👩‍🎓", bodovi:98,  pokusaji:0, zakljucan:false },
-  { id:7,  ime:"Tin",    prezime:"Babić",    uloga:"ucenik",  razred:"8.", predmeti:[],                     aktivan:true,  kod:"UCE-8-01", lozinka:"tin2024",  avatar:"🧑",   bodovi:210, pokusaji:0, zakljucan:false },
-  { id:8,  ime:"Sara",   prezime:"Petrić",   uloga:"ucenik",  razred:"3.", predmeti:[],                     aktivan:true,  kod:"UCE-3-01", lozinka:"sara2024", avatar:"👧",   bodovi:55,  pokusaji:0, zakljucan:false },
-  { id:9,  ime:"Mia",    prezime:"Lučić",    uloga:"ucenik",  razred:"6.", predmeti:[],                     aktivan:false, kod:"UCE-6-01", lozinka:"mia2024",  avatar:"👩",   bodovi:74,  pokusaji:0, zakljucan:false },
+  { id:1,  ime:"Biljana", prezime:"Žutelija", uloga:"admin",   razred:null, predmeti:[],                     aktivan:true,  kod:"ADMIN001", lozinka:"admin123", avatar:"👩‍💼", bodovi:0,   pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:2,  ime:"Ivana",   prezime:"Kovač",    uloga:"ucitelj", razred:null, predmeti:["Matematika","Fizika"], aktivan:true,  kod:"UCT-MAT1", lozinka:"ucit123",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:3,  ime:"Petra",   prezime:"Novak",    uloga:"ucitelj", razred:null, predmeti:["Hrvatski","Likovna"],  aktivan:true,  kod:"UCT-HRV1", lozinka:"ucit456",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:5,  ime:"Luka",    prezime:"Marić",    uloga:"ucenik",  razred:"7.", predmeti:[],                     aktivan:true,  kod:"UCE-7-01", lozinka:"luka2024", avatar:"🧑‍🎓", bodovi:142, pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:6,  ime:"Ana",     prezime:"Kolar",    uloga:"ucenik",  razred:"5.", predmeti:[],                     aktivan:true,  kod:"UCE-5-01", lozinka:"ana2024",  avatar:"👩‍🎓", bodovi:98,  pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:7,  ime:"Tin",     prezime:"Babić",    uloga:"ucenik",  razred:"8.", predmeti:[],                     aktivan:true,  kod:"UCE-8-01", lozinka:"tin2024",  avatar:"🧑",   bodovi:210, pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:8,  ime:"Sara",    prezime:"Petrić",   uloga:"ucenik",  razred:"3.", predmeti:[],                     aktivan:true,  kod:"UCE-3-01", lozinka:"sara2024", avatar:"👧",   bodovi:55,  pokusaji:0, zakljucan:false, banan:false, opomene:0 },
+  { id:9,  ime:"Mia",     prezime:"Lučić",    uloga:"ucenik",  razred:"6.", predmeti:[],                     aktivan:false, kod:"UCE-6-01", lozinka:"mia2024",  avatar:"👩",   bodovi:74,  pokusaji:0, zakljucan:false, banan:false, opomene:0 },
 ];
 // ---- POČETNI SKUP PRISTUPNIH KODOVA ----
 function genKod(uloga, razred, n) {
@@ -201,6 +201,11 @@ const genLozinku = () => {
   const nou = ["Kit","Lav","Orao","Vuk","Medvjed","Lisica","Jelen","Kuna","Zec","Delfin"];
   return `${adj[Math.floor(Math.random()*adj.length)]}${nou[Math.floor(Math.random()*nou.length)]}${Math.floor(Math.random()*900+100)}`;
 };
+const getSchoolYear = () => {
+  const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
+  return m >= 8 ? `${y}/${y+1}` : `${y-1}/${y}`;
+};
+const genSessionToken = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 function initKodovi() {
   const kodovi = [];
   let n = 2;
@@ -334,10 +339,10 @@ const INIT_IZAZOVI = [
 
 const VOLONT_PROJEKTI = [
   { id:1, naslov:"Pomoć u čitanju – 1. razred",   opis:"Pomaži prvašićima da vježbaju čitanje 2x tjedno po 30 min.", ikona:"📖", mjesta:3, prijavljeni:["Luka M.","Ana K."], bodovi:25, organizator:"Učiteljica Petra", datum:"2026-06-10", vrijemeOd:"09:00", vrijemeDo:"10:00", dolaznost:{"Luka M.":true,"Ana K.":false}, nagrade:{} },
-  { id:2, naslov:"Školski vrt – sadnja i njega",  opis:"Zalijevaj i brini za školski vrt. Upiši se za jedan dan tjedno.", ikona:"🌱", mjesta:5, prijavljeni:["Tin B."], bodovi:20, organizator:"Ravnatelj Horvat", datum:"2026-06-12", vrijemeOd:"11:00", vrijemeDo:"12:30", dolaznost:{"Tin B.":false}, nagrade:{} },
+  { id:2, naslov:"Školski vrt – sadnja i njega",  opis:"Zalijevaj i brini za školski vrt. Upiši se za jedan dan tjedno.", ikona:"🌱", mjesta:5, prijavljeni:["Tin B."], bodovi:20, organizator:"Ravnateljica Tina Bošković Sertić", datum:"2026-06-12", vrijemeOd:"11:00", vrijemeDo:"12:30", dolaznost:{"Tin B.":false}, nagrade:{} },
   { id:3, naslov:"IT pomoć starijim učiteljima",  opis:"Pomozi učiteljima oko računala, tableta i e-dnevnika.", ikona:"💻", mjesta:2, prijavljeni:[], bodovi:20, organizator:"Učiteljica Ivana", datum:"2026-06-15", vrijemeOd:"13:00", vrijemeDo:"14:00", dolaznost:{}, nagrade:{} },
   { id:4, naslov:"Zidne novine – uređivanje",     opis:"Svaki tjedan obnoviti oglasnu ploču i zidne novine škole.", ikona:"📰", mjesta:4, prijavljeni:["Sara P."], bodovi:15, organizator:"Učiteljica Petra", datum:"2026-06-11", vrijemeOd:"12:00", vrijemeDo:"13:00", dolaznost:{"Sara P.":false}, nagrade:{} },
-  { id:5, naslov:"Prikupljanje igračaka za bolnicu", opis:"Organiziraj prikupljanje igračaka za djecu u bolnici.", ikona:"🧸", mjesta:6, prijavljeni:["Mia L.","Filip G.","Ana K."], bodovi:30, organizator:"Ravnatelica Marić", datum:"2026-06-20", vrijemeOd:"10:00", vrijemeDo:"12:00", dolaznost:{"Mia L.":false,"Filip G.":false,"Ana K.":false}, nagrade:{} },
+  { id:5, naslov:"Prikupljanje igračaka za bolnicu", opis:"Organiziraj prikupljanje igračaka za djecu u bolnici.", ikona:"🧸", mjesta:6, prijavljeni:["Mia L.","Filip G.","Ana K."], bodovi:30, organizator:"Ravnateljica Tina Bošković Sertić", datum:"2026-06-20", vrijemeOd:"10:00", vrijemeDo:"12:00", dolaznost:{"Mia L.":false,"Filip G.":false,"Ana K.":false}, nagrade:{} },
 ];
 
 // ---- REUSABLE COMPONENTS ----
@@ -348,7 +353,7 @@ const Card = ({ children, style={}, accent, onClick }) => (
   <div onClick={onClick} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:16, padding:16, marginBottom:12, borderLeft:accent?`4px solid ${accent}`:undefined, boxShadow:"0 2px 8px #1a16120a", cursor:onClick?"pointer":undefined, ...style }}>{children}</div>
 );
 const Btn = ({ label, color=C.teal, textColor=C.card, onClick=undefined, full=false, disabled=false, outline=false, small=false, style={} }) => (
-  <button onClick={onClick} disabled={disabled} style={{ background:outline?"transparent":disabled?C.bgDeep:color, color:outline?color:disabled?C.inkLight:textColor, border:outline?`2px solid ${color}`:"none", borderRadius:10, padding:small?"6px 12px":"10px 20px", fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:small?12:14, cursor:disabled?"default":"pointer", width:full?"100%":"auto", opacity:disabled?0.6:1, transition:"all 0.15s", ...style }}>{label}</button>
+  <button onClick={onClick} disabled={disabled} style={{ background:outline?"transparent":disabled?C.bgDeep:color, color:outline?color:disabled?C.inkLight:textColor, border:outline?`2px solid ${color}`:"none", borderRadius:999, padding:small?"6px 16px":"11px 24px", fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:small?12:14, cursor:disabled?"default":"pointer", width:full?"100%":"auto", opacity:disabled?0.6:1, transition:"all 0.15s", boxShadow:disabled||outline?"none":`0 3px 12px ${color}44`, letterSpacing:0.2, ...style }}>{label}</button>
 );
 const FInp = ({ label=undefined, type="text", value, onChange, placeholder=undefined, icon=undefined, error=undefined }) => (
   <div style={{ marginBottom:14 }}>
@@ -2509,9 +2514,22 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
                       </div>
                     </div>
                     {/* Credentials row */}
-                    <div style={{ marginTop:8, paddingTop:8, borderTop:`1px dashed ${c.zakljucan?C.rose+"44":C.cardBorder}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                      <span style={{ fontSize:11, color:C.inkLight }}>🔑 Lozinka: <span style={{ fontFamily:"monospace", color:C.ink, fontWeight:800 }}>{c.lozinka}</span></span>
-                      {c.pokusaji > 0 && !c.zakljucan && <span style={{ fontSize:10, color:C.rose, fontWeight:700 }}>⚠ {c.pokusaji}/5 neuspjelih pokušaja</span>}
+                    <div style={{ marginTop:8, paddingTop:8, borderTop:`1px dashed ${c.zakljucan?C.rose+"44":C.cardBorder}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+                        <span style={{ fontSize:11, color:C.inkLight }}>🔑 Lozinka: <span style={{ fontFamily:"monospace", color:C.ink, fontWeight:800 }}>{c.lozinka}</span></span>
+                        {c.pokusaji > 0 && !c.zakljucan && <span style={{ fontSize:10, color:C.rose, fontWeight:700 }}>⚠ {c.pokusaji}/5 pokušaja</span>}
+                        {c.opomene > 0 && <span style={{ fontSize:10, color:C.amber, fontWeight:700 }}>⚠ {c.opomene} opomena</span>}
+                        {c.banan && <span style={{ fontSize:10, background:C.rose, color:C.card, borderRadius:6, padding:"2px 7px", fontWeight:800 }}>🚫 BANAN</span>}
+                      </div>
+                      {c.uloga !== "admin" && (
+                        <div style={{ display:"flex", gap:5 }}>
+                          <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,opomene:(cc.opomene||0)+1}:cc))} style={{ fontSize:10, background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:6, padding:"3px 8px", color:C.amber, fontFamily:"'Nunito',sans-serif", fontWeight:800, cursor:"pointer" }}>⚠ Opomena</button>
+                          {!c.banan
+                            ? <button onClick={()=>{ if(window.confirm(`Banirati ${c.ime} ${c.prezime}? Korisnik više neće moći pristupiti aplikaciji.`)) setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,banan:true,aktivan:false}:cc)); }} style={{ fontSize:10, background:C.roseLight, border:`1.5px solid ${C.rose}44`, borderRadius:6, padding:"3px 8px", color:C.rose, fontFamily:"'Nunito',sans-serif", fontWeight:800, cursor:"pointer" }}>🚫 Baniraj</button>
+                            : <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,banan:false,aktivan:true}:cc))} style={{ fontSize:10, background:C.greenLight, border:`1.5px solid ${C.green}44`, borderRadius:6, padding:"3px 8px", color:C.green, fontFamily:"'Nunito',sans-serif", fontWeight:800, cursor:"pointer" }}>✅ Odbaniraj</button>
+                          }
+                        </div>
+                      )}
                     </div>
                     {odblokovanLoz[c.id] && (
                       <div style={{ marginTop:8, background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:8, padding:"7px 10px", fontSize:12 }}>
@@ -2675,6 +2693,7 @@ function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
 
       if (!clan) { setGreska("Neispravan pristupni kod. Provjeri kod i pokušaj ponovo."); setUcitavam(false); return; }
       if (clan.zakljucan) { setGreska("🔒 Račun je zaključan zbog 5 neuspjelih pokušaja. Obrati se administratoru škole."); setUcitavam(false); return; }
+      if (clan.banan) { setGreska("🚫 Račun je baniran zbog neprimjerenog ponašanja. Obrati se administratoru škole."); setUcitavam(false); return; }
       if (!clan.aktivan) { setGreska("Račun je deaktiviran. Obrati se administratoru."); setUcitavam(false); return; }
 
       if (clan.lozinka !== loz.trim()) {
@@ -2690,9 +2709,12 @@ function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
         setUcitavam(false); return;
       }
 
-      /* Uspješna prijava — resetiraj brojač */
+      /* Uspješna prijava — resetiraj brojač, spremi sesiju */
       setClanovi(prev => prev.map(c => c.id === clan.id ? {...c, pokusaji: 0} : c));
-      onUspjeh(clan);
+      const token = genSessionToken();
+      const schoolYear = getSchoolYear();
+      try { localStorage.setItem('peerup_session', JSON.stringify({ userId: clan.id, token, schoolYear })); } catch {}
+      onUspjeh({ ...clan, pokusaji: 0, sessionToken: token, sessionYear: schoolYear });
     }, 600);
   };
 
@@ -2758,9 +2780,11 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
     if (uloga === "ucitelj" && predmeti.length === 0) { setGreska("Odaberi barem jedan predmet."); return; }
     if (loz.length < 6) { setGreska("Lozinka mora imati barem 6 znakova."); return; }
     if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
-    const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:loz, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0 };
+    const token = genSessionToken(); const schoolYear = getSchoolYear();
+    const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:loz, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0, pokusaji:0, zakljucan:false, banan:false, opomene:0, sessionToken:token, sessionYear:schoolYear };
     setClanovi(c => [...c, noviClan]);
     setKodovi(prev => prev.map(k => k.kod === kod.trim().toUpperCase() ? {...k, koristen:true} : k));
+    try { localStorage.setItem('peerup_session', JSON.stringify({ userId: noviClan.id, token, schoolYear })); } catch {}
     setGotovo(true);
     setTimeout(() => onUspjeh(noviClan), 1800);
   };
@@ -2845,8 +2869,8 @@ function EkranDemo({ clanovi, onUspjeh, onNatrag }) {
         </div>
         <Card>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {[{id:5,label:"🧑‍🎓 Učenik – Luka Marić",sub:"7. razred · 142 boda"},{id:2,label:"👩‍🏫 Učiteljica – Ivana Kovač",sub:"Matematika · Fizika"},{id:1,label:"👨‍💼 Administrator – Marko Horvat",sub:"Upravljačka ploča"}].map(d=>(
-              <button key={d.id} onClick={()=>onUspjeh(clanovi.find(c=>c.id===d.id))} style={{ width:"100%", padding:"13px 16px", borderRadius:12, border:`1.5px solid ${C.cardBorder}`, background:C.bg, fontFamily:"'Nunito', sans-serif", cursor:"pointer", textAlign:"left" }}>
+            {[{id:5,label:"🧑‍🎓 Učenik – Luka Marić",sub:"7. razred · 142 boda"},{id:2,label:"👩‍🏫 Učiteljica – Ivana Kovač",sub:"Matematika · Fizika"},{id:1,label:"👩‍💼 Administratorica – Biljana Žutelija",sub:"Upravljačka ploča"}].map(d=>(
+              <button key={d.id} onClick={()=>onUspjeh({...clanovi.find(c=>c.id===d.id), sessionToken:"demo", sessionYear:getSchoolYear()})} style={{ width:"100%", padding:"13px 16px", borderRadius:12, border:`1.5px solid ${C.cardBorder}`, background:C.bg, fontFamily:"'Nunito', sans-serif", cursor:"pointer", textAlign:"left" }}>
                 <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{d.label}</div>
                 <div style={{ fontWeight:600, color:C.inkLight, fontSize:12, marginTop:2 }}>{d.sub}</div>
               </button>
@@ -2859,7 +2883,7 @@ function EkranDemo({ clanovi, onUspjeh, onNatrag }) {
 }
 
 // ---- MAIN APP ----
-function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava }) {
+function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
   const [aktTab, setAktTab] = useState("ucimo");
   const [ponude, setPonude] = useState(DEMO_PONUDE);
   const [materijali, setMaterijali] = useState(DEMO_MATERIJALI);
@@ -2867,69 +2891,95 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
   const [price, setPrice] = useState(DEMO_PRICE);
   const [izazovi, setIzazovi] = useState(INIT_IZAZOVI);
   const [notifikacije, setNotifikacije] = useState([]);
-  const [bodovi, setBodovi] = useState(korisnik.bodovi);
 
-  const addBodovi = (n) => {
-    setBodovi(prev => prev + n);
-    setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
-  };
+  /* Provjera sesije i školske godine */
+  useEffect(() => {
+    if (korisnik.sessionToken === "demo") return; // demo mode — preskoci provjeru
+    try {
+      const stored = localStorage.getItem('peerup_session');
+      if (!stored) { onOdjava(); return; }
+      const sess = JSON.parse(stored);
+      if (sess.userId !== korisnik.id || sess.token !== korisnik.sessionToken) {
+        alert("Detektirana prijava s drugog uređaja. Molimo prijavi se ponovo.");
+        onOdjava(); return;
+      }
+      const currentYear = getSchoolYear();
+      if (sess.schoolYear !== currentYear) {
+        localStorage.removeItem('peerup_session');
+        alert(`Nova školska godina (${currentYear}). Molimo prijavi se ponovo za ovu školsku godinu.`);
+        onOdjava(); return;
+      }
+    } catch { onOdjava(); }
+  }, []);
+
+  const addBodovi = (n) => setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
   const onNotifikacija = (n) => setNotifikacije(prev => [...prev, {...n, procitana:false, id:Date.now()+Math.random()}]);
   const onProcitaj = (id) => setNotifikacije(prev => prev.map(n => n.id===id ? {...n, procitana:true} : n));
 
   const TABOVI = [
-    { id:"ucimo",       label:"Učimo",      ikona:"🤝" },
-    { id:"biljeske",    label:"Bilješke",   ikona:"📝" },
-    { id:"buvljak",     label:"Buvljak",    ikona:"🎒" },
-    { id:"price",       label:"Priče",      ikona:"💬" },
-    { id:"volontiranje",label:"Volonti.",   ikona:"🤲" },
-    { id:"bodovi",      label:"Bodovi",     ikona:"⭐" },
-    { id:"profil",      label:"Profil",     ikona:"👤" },
+    { id:"ucimo",       label:"Učimo",    ikona:"🤝" },
+    { id:"biljeske",    label:"Bilješke", ikona:"📝" },
+    { id:"buvljak",     label:"Buvljak",  ikona:"🎒" },
+    { id:"price",       label:"Priče",    ikona:"💬" },
+    { id:"volontiranje",label:"Volonti.", ikona:"🤲" },
+    { id:"bodovi",      label:"Bodovi",   ikona:"⭐" },
+    { id:"profil",      label:"Profil",   ikona:"👤" },
+    ...(korisnik.uloga === "admin" ? [{ id:"adminpanel", label:"Panel", ikona:"⚙️" }] : []),
   ];
   const razina = getRazina(korisnik.bodovi);
+  const neprocitane = notifikacije.filter(n=>!n.procitana).length;
+  const jeAdmin = korisnik.uloga === "admin";
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif", maxWidth:430, margin:"0 auto", display:"flex", flexDirection:"column" }}>
       {/* Header */}
-      <div style={{ background:C.card, borderBottom:`1.5px solid ${C.cardBorder}`, padding:"12px 16px 8px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <button onClick={onOdjava} title="Početna stranica" style={{ background:C.bgDeep, border:`1.5px solid ${C.cardBorder}`, borderRadius:9, padding:"5px 8px", fontSize:16, cursor:"pointer", lineHeight:1, color:C.inkMid }}>🏠</button>
+      <div style={{ background:`linear-gradient(135deg, #1a8a72 0%, #0e6b58 100%)`, padding:"12px 16px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 16px #1a8a7233" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={onOdjava} title="Početna stranica" style={{ background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:10, padding:"5px 8px", fontSize:16, cursor:"pointer", lineHeight:1, color:"#fff", backdropFilter:"blur(4px)" }}>🏠</button>
           <div>
-            <div style={{ fontWeight:900, fontSize:16, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>PeerUp</div>
-            <div style={{ fontSize:10, color:C.inkLight }}>🏫 {SKOLA_NAZIV} · {korisnik.ime}</div>
+            <div style={{ fontWeight:900, fontSize:17, color:"#fff", fontFamily:"'Nunito', sans-serif", letterSpacing:-0.5 }}>Peer<span style={{ color:"#a7f3d0" }}>Up</span></div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)" }}>🏫 {SKOLA_NAZIV} · {korisnik.ime}</div>
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ background:razina.boja+"22", border:`1.5px solid ${razina.boja}44`, borderRadius:10, padding:"4px 10px", display:"flex", gap:4, alignItems:"center" }}>
-            <span style={{ fontSize:14 }}>{razina.ikona}</span>
-            <span style={{ fontWeight:900, fontSize:13, color:razina.boja }}>{korisnik.bodovi}</span>
+          <div style={{ background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, padding:"4px 12px", display:"flex", gap:5, alignItems:"center", backdropFilter:"blur(4px)" }}>
+            <span style={{ fontSize:13 }}>{razina.ikona}</span>
+            <span style={{ fontWeight:900, fontSize:13, color:"#fff" }}>{korisnik.bodovi}</span>
           </div>
-          {(() => { const neprocitane = notifikacije.filter(n=>!n.procitana).length; return neprocitane > 0 && (
-            <button onClick={()=>setAktTab("profil")} style={{ position:"relative", background:"none", border:"none", fontSize:22, cursor:"pointer", padding:2 }}>
-              🔔<span style={{ position:"absolute", top:-2, right:-2, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:16, height:16, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>
+          {neprocitane > 0 && (
+            <button onClick={()=>setAktTab("profil")} style={{ position:"relative", background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+              🔔<span style={{ position:"absolute", top:-3, right:-3, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:17, height:17, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>
             </button>
-          ); })()}
+          )}
+          {jeAdmin && (
+            <div style={{ background:"rgba(255,255,255,0.25)", borderRadius:999, padding:"3px 10px", border:"1.5px solid rgba(255,255,255,0.4)" }}>
+              <span style={{ fontSize:11, fontWeight:800, color:"#fff" }}>⚙️ Admin</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div style={{ flex:1, overflowY:"auto", paddingBottom:72 }}>
-        {aktTab==="ucimo"       && <UcimoZajedno korisnik={korisnik} ponude={ponude} setPonude={setPonude} onNotifikacija={onNotifikacija} addBodovi={addBodovi} />}
-        {aktTab==="biljeske"    && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="buvljak"     && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="price"       && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
-        {aktTab==="volontiranje" && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="bodovi"      && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={DEMO_LJESTVICA} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="profil"      && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} />}
+        {aktTab==="ucimo"        && <UcimoZajedno korisnik={korisnik} ponude={ponude} setPonude={setPonude} onNotifikacija={onNotifikacija} addBodovi={addBodovi} />}
+        {aktTab==="biljeske"     && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="buvljak"      && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="price"        && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
+        {aktTab==="volontiranje"  && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="bodovi"       && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={DEMO_LJESTVICA} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="profil"       && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} />}
+        {aktTab==="adminpanel"   && <AdminDashboard clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onOdjava={onOdjava} />}
       </div>
 
       {/* Bottom Nav */}
-      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, background:C.card, borderTop:`1.5px solid ${C.cardBorder}`, display:"flex", zIndex:200, overflowX:"auto" }}>
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, background:"rgba(255,255,255,0.95)", borderTop:`1px solid ${C.cardBorder}`, display:"flex", zIndex:200, overflowX:"auto", backdropFilter:"blur(12px)", boxShadow:"0 -4px 20px #1a16120d" }}>
         {TABOVI.map(t=>(
-          <button key={t.id} onClick={()=>setAktTab(t.id)} style={{ flex:"0 0 auto", minWidth:58, padding:"8px 4px 10px", background:"none", border:"none", display:"flex", flexDirection:"column", alignItems:"center", gap:2, cursor:"pointer", borderTop:`3px solid ${aktTab===t.id?C.teal:"transparent"}` }}>
-            <span style={{ fontSize:18 }}>{t.ikona}</span>
+          <button key={t.id} onClick={()=>setAktTab(t.id)} style={{ flex:"0 0 auto", minWidth:54, padding:"8px 3px 10px", background:"none", border:"none", display:"flex", flexDirection:"column", alignItems:"center", gap:2, cursor:"pointer", position:"relative", transition:"all 0.15s" }}>
+            <span style={{ fontSize:aktTab===t.id?20:17, transition:"font-size 0.15s" }}>{t.ikona}</span>
             <span style={{ fontSize:9, fontWeight:800, color:aktTab===t.id?C.teal:C.inkLight, fontFamily:"'Nunito', sans-serif", whiteSpace:"nowrap" }}>{t.label}</span>
-            {t.id==="profil" && notifikacije.filter(n=>!n.procitana).length>0 && (
-              <span style={{ position:"absolute", top:6, background:C.rose, color:C.card, borderRadius:"50%", fontSize:8, fontWeight:900, width:14, height:14, display:"flex", alignItems:"center", justifyContent:"center" }}>{notifikacije.filter(n=>!n.procitana).length}</span>
+            {aktTab===t.id && <span style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:24, height:3, background:C.teal, borderRadius:"3px 3px 0 0" }} />}
+            {t.id==="profil" && neprocitane > 0 && (
+              <span style={{ position:"absolute", top:4, right:"50%", marginRight:-18, background:C.rose, color:C.card, borderRadius:"50%", fontSize:8, fontWeight:900, width:14, height:14, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>
             )}
           </button>
         ))}
@@ -2944,9 +2994,8 @@ export default function App() {
   const [kodovi, setKodovi]   = useState(INIT_KODOVI);
   const [korisnik, setKorisnik] = useState(null);
 
-  const odjava = () => setKorisnik(null);
+  const odjava = () => { try { localStorage.removeItem('peerup_session'); } catch {} setKorisnik(null); };
 
   if (!korisnik) return <PrijavaSustav clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onPrijava={setKorisnik} />;
-  if (korisnik.uloga === "admin") return <AdminDashboard clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onOdjava={odjava} />;
-  return <GlavnaAplikacija korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} onOdjava={odjava} />;
+  return <GlavnaAplikacija korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onOdjava={odjava} />;
 }
