@@ -2844,14 +2844,6 @@ function EkranPrijava({ clanovi, onUspjeh, onNatrag }) {
           {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
           <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.teal} full disabled={!kod||ucitavam} onClick={prijava} />
         </Card>
-        <div style={{ background:C.bgDeep, border:`1.5px solid ${C.cardBorder}`, borderRadius:14, padding:14, marginTop:16 }}>
-          <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Testni pristupni kodovi</p>
-          {[{lbl:"Admin",kod:"ADMIN001"},{lbl:"Učiteljica Ivana",kod:"UCT-MAT1"},{lbl:"Učenik Luka",kod:"UCE-7-01"}].map(t=>(
-            <button key={t.kod} onClick={()=>setKod(t.kod)} style={{ display:"block", width:"100%", textAlign:"left", background:C.card, border:`1px solid ${C.cardBorder}`, borderRadius:8, padding:"7px 10px", marginBottom:6, cursor:"pointer", fontFamily:"'Nunito', sans-serif", fontSize:12, fontWeight:700, color:C.ink }}>
-              {t.lbl}: <span style={{ fontFamily:"monospace", color:C.teal }}>{t.kod}</span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
