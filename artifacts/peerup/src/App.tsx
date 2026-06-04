@@ -14,7 +14,7 @@ const C = {
   orange:"#ea580c", orangeLight:"#ffedd5",
 };
 
-const PREDMETI = ["Matematika","Hrvatski","Engleski","Priroda","Povijest","Zemljopis","Fizika","Kemija","Biologija","Informatika","Glazbena","Likovna","TZK"];
+const PREDMETI = ["Matematika","Hrvatski","Engleski","Priroda","Povijest","Geografija","Fizika","Kemija","Biologija","Informatika","Glazbena","Likovna","TZK"];
 const RAZREDI  = ["1.","2.","3.","4.","5.","6.","7.","8."];
 const DANI     = ["Pon","Uto","Sri","Čet","Pet"];
 const SATI     = ["8:00","9:00","10:00","11:00","12:00","13:00","14:00"];
@@ -47,7 +47,7 @@ const LEKCIJE = {
   Engleski:["Present Perfect","Past Simple","Conditionals","Vocabulary – travel","Reading comprehension","Future tenses"],
   Priroda:["Biljne stanice","Fotosinteza","Ekosustav","Tlo i voda"],
   Povijest:["Stari Egipat","Antička Grčka","Rimsko Carstvo","Srednji vijek","Hrvatska povijest"],
-  Zemljopis:["Kontinenti","Klima","Reljef Hrvatske","Europa"],
+  Geografija:["Kontinenti","Klima","Reljef Hrvatske","Europa"],
   Fizika:["Sila i gibanje","Energija","Električna struja","Optika","Toplina"],
   Kemija:["Atomi i molekule","Periodni sustav","Kiseline i baze","Kemijske reakcije"],
   Biologija:["Stanica","Nasljeđivanje","Evolucija","Organski sustavi"],
@@ -116,7 +116,7 @@ const KVIZ_BANKA = {
     { tip:"sparivanje", pitanje:"Spoji civilizaciju s rijekom:", parovi:[["Egipat","Nil"],["Mezopotamija","Eufrat"],["Indija","Ind"],["Kina","Huang He"]], objasnjenje:"Prve civilizacije nastale su uz rijeke koje su davale vodu i plodnu zemlju." },
     { tip:"mcq", pitanje:"Što su bile katakombs?", opcije:["Rimski akvedukti","Podzemna grobišta","Trijumfalni lukovi","Arene"], tocno:1, objasnjenje:"Katakombe su podzemne grobnice u kojima su se rani kršćani skrivali i pokapali." },
   ],
-  Zemljopis: [
+  Geografija: [
     { tip:"mcq", pitanje:"Koliko kontinenata ima na Zemlji?", opcije:["5","6","7","8"], tocno:2, objasnjenje:"Na Zemlji ima 7 kontinenata: Europa, Azija, Afrika, Sjeverna Amerika, Južna Amerika, Australija, Antarktika." },
     { tip:"tocno_netocno", pitanje:"Hrvatska izlazi na Jadransko more.", tocno:true, objasnjenje:"Hrvatska ima izlaz na Jadransko more s obalom dugom oko 1800 km." },
     { tip:"mcq", pitanje:"Koji je najviši vrh u Hrvatskoj?", opcije:["Velebit","Risnjak","Dinara","Učka"], tocno:2, objasnjenje:"Dinara (1831 m) je najviši vrh Hrvatske." },
