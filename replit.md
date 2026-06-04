@@ -1,6 +1,6 @@
-# [Project name]
+# PeerUp
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+PeerUp je školska platforma za međuvršnjačku pomoć koja učenicima OŠ Centar u Rijeci omogućuje rezervaciju instrukcija, razmjenu bilješki i školskog materijala te sakupljanje bodova za aktivno sudjelovanje u zajednici.
 
 ## Run & Operate
 
