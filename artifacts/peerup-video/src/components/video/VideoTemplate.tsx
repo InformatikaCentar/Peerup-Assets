@@ -6,15 +6,30 @@ import { Scene2 } from './video_scenes/Scene2';
 import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 import { Scene5 } from './video_scenes/Scene5';
+import { Scene6 } from './video_scenes/Scene6';
+import { Scene7 } from './video_scenes/Scene7';
+import { Scene8 } from './video_scenes/Scene8';
 
-export const SCENE_DURATIONS = { open: 3500, learn: 4000, swap: 4000, points: 4000, close: 3500 };
+export const SCENE_DURATIONS = {
+  intro: 4000,
+  login: 5000,
+  ucimo: 8000,
+  biljeske: 8000,
+  kviz: 7000,
+  buvljak: 6500,
+  bodovi: 7000,
+  outro: 5500,
+};
 
 const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
-  open: Scene1,
-  learn: Scene2,
-  swap: Scene3,
-  points: Scene4,
-  close: Scene5,
+  intro: Scene1,
+  login: Scene2,
+  ucimo: Scene3,
+  biljeske: Scene4,
+  kviz: Scene5,
+  buvljak: Scene6,
+  bodovi: Scene7,
+  outro: Scene8,
 };
 
 const SCENE_START_SEC: Record<string, number> = (() => {
@@ -54,7 +69,7 @@ export default function VideoTemplate({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = 0.45;
+    audio.volume = 0.4;
     const targetTime = SCENE_START_SEC[baseSceneKey] ?? 0;
     if (Math.abs(audio.currentTime - targetTime) > AUDIO_SEEK_EPSILON_SEC) {
       audio.currentTime = targetTime;
@@ -65,38 +80,43 @@ export default function VideoTemplate({
   return (
     <>
       <div className="relative w-full h-screen overflow-hidden bg-[#f7f3ee]">
-        {/* Background Layer (Persistent) */}
+        {/* Background blobs (persistent) */}
         <div className="absolute inset-0 z-0">
           <motion.div
-            className="absolute w-[40vw] h-[40vw] rounded-full blur-[80px] bg-[#1a8a72]/20 top-[-10vw] left-[-10vw]"
-            animate={{ x: ['0vw', '10vw', '0vw'], y: ['0vw', '10vw', '0vw'] }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute w-[45vw] h-[45vw] rounded-full blur-[100px] bg-[#1a8a72]/15 top-[-15vw] left-[-15vw]"
+            animate={{ x: ['0vw', '8vw', '0vw'], y: ['0vw', '12vw', '0vw'] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
-            className="absolute w-[30vw] h-[30vw] rounded-full blur-[60px] bg-[#d97706]/20 bottom-[-5vw] right-[-5vw]"
-            animate={{ x: ['0vw', '-10vw', '0vw'], y: ['0vw', '-10vw', '0vw'] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute w-[35vw] h-[35vw] rounded-full blur-[80px] bg-[#d97706]/15 bottom-[-8vw] right-[-8vw]"
+            animate={{ x: ['0vw', '-10vw', '0vw'], y: ['0vw', '-8vw', '0vw'] }}
+            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute w-[20vw] h-[20vw] rounded-full blur-[60px] bg-[#7c3aed]/10 top-[40%] right-[15%]"
+            animate={{ x: ['0vw', '5vw', '0vw'], y: ['0vw', '-6vw', '0vw'] }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
 
-        {/* Midground Layer (Persistent shapes that transform with scene) */}
+        {/* Floating geometric accents */}
         <motion.div
-          className="absolute w-[6vw] h-[6vw] rounded-2xl bg-[#7c3aed]/30 blur-sm z-10"
+          className="absolute w-[5vw] h-[5vw] rounded-2xl bg-[#7c3aed]/20 blur-sm z-10"
           animate={{
-            x: (['80vw', '15vw', '50vw', '85vw', '20vw'] as string[])[sceneIndex] ?? '50vw',
-            y: (['20vh', '70vh', '15vh', '50vh', '80vh'] as string[])[sceneIndex] ?? '50vh',
-            rotate: ([0, 45, 90, 135, 180] as number[])[sceneIndex] ?? 0,
+            x: (['82vw', '12vw', '55vw', '88vw', '25vw', '70vw', '18vw', '90vw'] as string[])[sceneIndex] ?? '50vw',
+            y: (['18vh', '72vh', '12vh', '55vh', '78vh', '20vh', '60vh', '35vh'] as string[])[sceneIndex] ?? '50vh',
+            rotate: ([0, 45, 90, 135, 180, 225, 270, 315] as number[])[sceneIndex] ?? 0,
           }}
-          transition={{ duration: 1.5, ease: 'easeInOut' }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute w-[8vw] h-[8vw] rounded-full border-4 border-[#e03e5c]/20 z-10"
+          className="absolute w-[7vw] h-[7vw] rounded-full border-4 border-[#e03e5c]/15 z-10"
           animate={{
-            x: (['10vw', '70vw', '20vw', '15vw', '75vw'] as string[])[sceneIndex] ?? '50vw',
-            y: (['60vh', '20vh', '80vh', '30vh', '15vh'] as string[])[sceneIndex] ?? '50vh',
-            scale: ([1, 1.5, 0.8, 1.2, 1] as number[])[sceneIndex] ?? 1,
+            x: (['8vw', '72vw', '18vw', '12vw', '78vw', '40vw', '85vw', '20vw'] as string[])[sceneIndex] ?? '50vw',
+            y: (['62vh', '18vh', '82vh', '28vh', '12vh', '70vh', '30vh', '15vh'] as string[])[sceneIndex] ?? '50vh',
+            scale: ([1, 1.4, 0.8, 1.2, 1.5, 0.9, 1.1, 1] as number[])[sceneIndex] ?? 1,
           }}
-          transition={{ duration: 1.5, ease: 'easeInOut' }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
         />
 
         <AnimatePresence mode="popLayout">
