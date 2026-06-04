@@ -2354,8 +2354,9 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
 
   const ukupnoUcenika = clanovi.filter(c=>c.uloga==="ucenik").length;
   const ukupnoUcitelja = clanovi.filter(c=>c.uloga==="ucitelj").length;
-  const slobodniKodovi = kodovi.filter(k=>!k.koristen).length;
-  const koristeniKodovi = kodovi.filter(k=>k.koristen).length;
+  const tekucaGodina = getSchoolYear();
+  const slobodniKodovi = kodovi.filter(k=>!k.koristen || k.koristenGodina !== tekucaGodina).length;
+  const koristeniKodovi = kodovi.filter(k=>k.koristen && k.koristenGodina === tekucaGodina).length;
 
   const dodajKorisnika = () => {
     const prefix = noviKor.uloga==="ucenik"?"UCE":noviKor.uloga==="ucitelj"?"UCT":"ADM";
@@ -2398,8 +2399,8 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
   const obrisiKod = (id) => setKodovi(prev=>prev.filter(k=>k.id!==id));
 
   const prikazaniKodovi = kodovi.filter(k=>{
-    if (filterKodovi === "slobodni") return !k.koristen;
-    if (filterKodovi === "koristeni") return k.koristen;
+    if (filterKodovi === "slobodni") return !k.koristen || k.koristenGodina !== tekucaGodina;
+    if (filterKodovi === "koristeni") return k.koristen && k.koristenGodina === tekucaGodina;
     if (filterKodovi === "ucenik") return k.uloga==="ucenik";
     if (filterKodovi === "ucitelj") return k.uloga==="ucitelj";
     return true;
@@ -2566,7 +2567,7 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:3 }}>
                     <span style={{ fontFamily:"monospace", fontWeight:900, fontSize:13, color:k.koristen?C.inkMid:C.ink }}>{k.kod}</span>
-                    <span style={{ background:k.koristen?C.bgDeep:C.greenLight, color:k.koristen?C.inkLight:C.green, fontSize:10, fontWeight:700, borderRadius:6, padding:"1px 7px" }}>{k.koristen?"Korišten":"Slobodan"}</span>
+                    <span style={{ background: k.koristen && k.koristenGodina===tekucaGodina ? C.bgDeep : k.koristen ? C.amberLight : C.greenLight, color: k.koristen && k.koristenGodina===tekucaGodina ? C.inkLight : k.koristen ? C.amber : C.green, fontSize:10, fontWeight:700, borderRadius:6, padding:"1px 7px" }}>{k.koristen && k.koristenGodina===tekucaGodina ? `Korišten ${tekucaGodina}` : k.koristen ? `Prošla god.` : "Slobodan"}</span>
                   </div>
                   <div style={{ fontSize:11, color:C.inkLight }}>
                     {k.uloga==="ucenik"?"🧑‍🎓":"👩‍🏫"} {k.uloga==="ucenik"?`${k.razred} razred`:"Učitelj"} · Lozinka: <span style={{ fontFamily:"monospace", color:C.inkMid }}>{k.lozinka}</span>
@@ -2582,7 +2583,7 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
                 </div>
                 <div style={{ display:"flex", gap:5 }}>
                   <button onClick={()=>kopirajKod(k)} style={{ background:kopiran===k.id?C.greenLight:C.bgDeep, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:kopiran===k.id?C.green:C.inkMid }}>{kopiran===k.id?"✅":"📋"}</button>
-                  {!k.koristen && <button onClick={()=>obrisiKod(k.id)} style={{ background:C.roseLight, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:C.rose }}>🗑</button>}
+                  {(!k.koristen || k.koristenGodina !== tekucaGodina) && <button onClick={()=>obrisiKod(k.id)} style={{ background:C.roseLight, border:"none", borderRadius:8, padding:"5px 9px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", color:C.rose }}>🗑</button>}
                 </div>
               </div>
             ))}
@@ -2901,9 +2902,10 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
   const provjeriKod = () => {
     setGreska("");
     const kodT = kod.trim().toUpperCase();
-    if (clanovi.find(c => c.kod === kodT)) { setGreska("Ovaj kod je već iskorišten."); return; }
-    const unos = kodovi.find(k => k.kod === kodT && !k.koristen);
-    if (!unos) { setGreska("Kod nije valjan ili je već iskorišten. Provjeri s administratorom."); return; }
+    const postojeciRacun = clanovi.find(c => c.kod === kodT && c.aktivan && !c.banan);
+    if (postojeciRacun) { setGreska("Korisnički račun s ovim kodom već postoji. Prijavi se direktno s kodom i lozinkom."); return; }
+    const unos = kodovi.find(k => k.kod === kodT);
+    if (!unos) { setGreska("Kod nije valjan. Provjeri s administratorom škole."); return; }
     setUloga(unos.uloga);
     if (unos.razred) setRazred(unos.razred);
     setSkolaKoda(unos.skola || null);
@@ -2920,7 +2922,7 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
     const token = genSessionToken(); const schoolYear = getSchoolYear();
     const noviClan = { id:Date.now(), ime:ime.trim(), prezime:prezime.trim(), uloga, razred:uloga==="ucenik"?razred:null, predmeti:uloga==="ucitelj"?predmeti:[], aktivan:true, kod:kod.trim().toUpperCase(), lozinka:loz, avatar:uloga==="ucenik"?"🧑‍🎓":"👩‍🏫", bodovi:0, pokusaji:0, zakljucan:false, banan:false, opomene:0, sessionToken:token, sessionYear:schoolYear };
     setClanovi(c => [...c, noviClan]);
-    setKodovi(prev => prev.map(k => k.kod === kod.trim().toUpperCase() ? {...k, koristen:true} : k));
+    setKodovi(prev => prev.map(k => k.kod === kod.trim().toUpperCase() ? {...k, koristen:true, koristenGodina:schoolYear} : k));
     try { localStorage.setItem('peerup_session', JSON.stringify({ userId: noviClan.id, token, schoolYear })); } catch {}
     setGotovo(true);
     setTimeout(() => onUspjeh(noviClan), 1800);
@@ -2956,9 +2958,9 @@ function EkranRegistracija({ clanovi, setClanovi, kodovi, setKodovi, onUspjeh, o
         <Card>
           {korak===1 && (
             <>
-              <FInp label="Jednokratni pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-5-01" icon="🪪" />
+              <FInp label="Pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-5-01" icon="🪪" />
               <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}>
-                <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>💡 Kod dobivaš od učitelja/ice ili administratora. Svaki kod se može koristiti samo jednom.</p>
+                <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>💡 Kod dobivaš od učitelja/ice ili administratora. Kod vrijedi cijelu školsku godinu — čuvaj ga.</p>
               </div>
               {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
               <Btn label="Provjeri kod →" color={C.teal} full disabled={!kod} onClick={provjeriKod} />
