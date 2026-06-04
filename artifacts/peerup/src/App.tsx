@@ -2240,7 +2240,7 @@ function Bodovi({ korisnik, izazovi, setIzazovi, ljestvica, addBodovi, onNotifik
   );
 }
 
-function Profil({ korisnik, notifikacije, onOdjaviSe }) {
+function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj }) {
   const razina = getRazina(korisnik.bodovi);
   const sljedeca = getSljedecaRazina(korisnik.bodovi);
   const posto = sljedeca ? Math.round(((korisnik.bodovi - razina.min) / (sljedeca.min - razina.min)) * 100) : 100;
@@ -2249,6 +2249,7 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
   const rezervacije = notifikacije.filter(n=>n.tekst.includes("Rezervira") || n.tekst.includes("rezervira") || n.tekst.includes("🔒"));
   const aktivnosti  = notifikacije.filter(n=>!n.tekst.includes("Rezervira") && !n.tekst.includes("rezervira") && !n.tekst.includes("🔒"));
   const prikazane = inboxTab==="rezervacije" ? rezervacije : inboxTab==="aktivnosti" ? aktivnosti : notifikacije;
+  const ukupnoNeprocitano = notifikacije.filter(n=>!n.procitana).length;
 
   return (
     <div style={{ padding:"0 16px 20px" }}>
@@ -2278,14 +2279,17 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
           <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>
             📬 Inbox
-            {notifikacije.length > 0 && <span style={{ background:C.rose, color:C.card, borderRadius:99, padding:"1px 7px", fontSize:10, marginLeft:6 }}>{notifikacije.length}</span>}
+            {ukupnoNeprocitano > 0 && <span style={{ background:C.rose, color:C.card, borderRadius:99, padding:"1px 7px", fontSize:10, marginLeft:6 }}>{ukupnoNeprocitano} novo</span>}
           </div>
+          {ukupnoNeprocitano > 0 && (
+            <button onClick={()=>notifikacije.forEach(n=>!n.procitana&&onProcitaj(n.id))} style={{ background:"none", border:"none", fontSize:11, color:C.teal, fontFamily:"'Nunito',sans-serif", fontWeight:800, cursor:"pointer", padding:0 }}>Označi sve pročitanim</button>
+          )}
         </div>
         <div style={{ display:"flex", gap:6, marginBottom:12 }}>
-          {[["sve","Sve",notifikacije.length],["rezervacije","🔒 Rezervacije",rezervacije.length],["aktivnosti","⭐ Aktivnosti",aktivnosti.length]].map(([id,label,count])=>(
+          {[["sve","Sve",notifikacije.filter(n=>!n.procitana).length],["rezervacije","🔒 Rezervacije",rezervacije.filter(n=>!n.procitana).length],["aktivnosti","⭐ Aktivnosti",aktivnosti.filter(n=>!n.procitana).length]].map(([id,label,count])=>(
             <button key={id} onClick={()=>setInboxTab(id)} style={{ flex:1, padding:"6px 4px", borderRadius:10, border:`2px solid ${inboxTab===id?C.teal:C.cardBorder}`, background:inboxTab===id?C.tealLight:C.bg, color:inboxTab===id?C.teal:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:11, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
               <span>{label}</span>
-              {count>0 && <span style={{ background:inboxTab===id?C.teal:C.bgDeep, color:inboxTab===id?C.card:C.inkLight, borderRadius:99, padding:"0 6px", fontSize:10, fontWeight:900 }}>{count}</span>}
+              {count>0 && <span style={{ background:C.rose, color:C.card, borderRadius:99, padding:"0 6px", fontSize:10, fontWeight:900 }}>{count}</span>}
             </button>
           ))}
         </div>
@@ -2293,9 +2297,12 @@ function Profil({ korisnik, notifikacije, onOdjaviSe }) {
           <div style={{ background:C.bgDeep, borderRadius:12, padding:16, textAlign:"center", color:C.inkLight, fontSize:13 }}>Nema {inboxTab==="rezervacije"?"rezervacija":inboxTab==="aktivnosti"?"aktivnosti":"obavijesti"}.</div>
         ) : (
           prikazane.slice().reverse().map((n, i) => (
-            <div key={i} style={{ background:n.boja+"18", border:`1.5px solid ${n.boja}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", gap:10 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:n.boja, flexShrink:0, marginTop:4 }} />
-              <div style={{ color:C.ink, fontSize:13, fontWeight:700, lineHeight:1.5 }}>{n.tekst}</div>
+            <div key={n.id||i} onClick={()=>!n.procitana&&onProcitaj(n.id)} style={{ background:n.procitana?C.bg:n.boja+"18", border:`1.5px solid ${n.procitana?C.cardBorder:n.boja+"66"}`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", gap:10, cursor:n.procitana?"default":"pointer", opacity:n.procitana?0.65:1, transition:"all 0.2s" }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:n.procitana?C.inkLight:n.boja, flexShrink:0, marginTop:4, transition:"all 0.2s" }} />
+              <div style={{ flex:1 }}>
+                <div style={{ color:C.ink, fontSize:13, fontWeight:n.procitana?600:800, lineHeight:1.5 }}>{n.tekst}</div>
+                {!n.procitana && <div style={{ fontSize:10, color:n.boja, fontWeight:700, marginTop:2 }}>Tapni za označi pročitanom</div>}
+              </div>
             </div>
           ))
         )}
@@ -2812,7 +2819,8 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
     setBodovi(prev => prev + n);
     setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
   };
-  const onNotifikacija = (n) => setNotifikacije(prev => [...prev, n]);
+  const onNotifikacija = (n) => setNotifikacije(prev => [...prev, {...n, procitana:false, id:Date.now()+Math.random()}]);
+  const onProcitaj = (id) => setNotifikacije(prev => prev.map(n => n.id===id ? {...n, procitana:true} : n));
 
   const TABOVI = [
     { id:"ucimo",       label:"Učimo",      ikona:"🤝" },
@@ -2830,7 +2838,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
       {/* Header */}
       <div style={{ background:C.card, borderBottom:`1.5px solid ${C.cardBorder}`, padding:"12px 16px 8px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ fontSize:24 }}>🎓</div>
+          <button onClick={onOdjava} title="Početna stranica" style={{ background:C.bgDeep, border:`1.5px solid ${C.cardBorder}`, borderRadius:9, padding:"5px 8px", fontSize:16, cursor:"pointer", lineHeight:1, color:C.inkMid }}>🏠</button>
           <div>
             <div style={{ fontWeight:900, fontSize:16, color:C.ink, fontFamily:"'Nunito', sans-serif" }}>PeerUp</div>
             <div style={{ fontSize:10, color:C.inkLight }}>🏫 {SKOLA_NAZIV} · {korisnik.ime}</div>
@@ -2841,11 +2849,11 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
             <span style={{ fontSize:14 }}>{razina.ikona}</span>
             <span style={{ fontWeight:900, fontSize:13, color:razina.boja }}>{korisnik.bodovi}</span>
           </div>
-          {notifikacije.length > 0 && (
+          {(() => { const neprocitane = notifikacije.filter(n=>!n.procitana).length; return neprocitane > 0 && (
             <button onClick={()=>setAktTab("profil")} style={{ position:"relative", background:"none", border:"none", fontSize:22, cursor:"pointer", padding:2 }}>
-              🔔<span style={{ position:"absolute", top:-2, right:-2, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:16, height:16, display:"flex", alignItems:"center", justifyContent:"center" }}>{notifikacije.length}</span>
+              🔔<span style={{ position:"absolute", top:-2, right:-2, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:16, height:16, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>
             </button>
-          )}
+          ); })()}
         </div>
       </div>
 
@@ -2857,7 +2865,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
         {aktTab==="price"       && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
         {aktTab==="volontiranje" && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="bodovi"      && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={DEMO_LJESTVICA} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="profil"      && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} />}
+        {aktTab==="profil"      && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} />}
       </div>
 
       {/* Bottom Nav */}
@@ -2866,8 +2874,8 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, onOdjava
           <button key={t.id} onClick={()=>setAktTab(t.id)} style={{ flex:"0 0 auto", minWidth:58, padding:"8px 4px 10px", background:"none", border:"none", display:"flex", flexDirection:"column", alignItems:"center", gap:2, cursor:"pointer", borderTop:`3px solid ${aktTab===t.id?C.teal:"transparent"}` }}>
             <span style={{ fontSize:18 }}>{t.ikona}</span>
             <span style={{ fontSize:9, fontWeight:800, color:aktTab===t.id?C.teal:C.inkLight, fontFamily:"'Nunito', sans-serif", whiteSpace:"nowrap" }}>{t.label}</span>
-            {t.id==="profil" && notifikacije.length>0 && (
-              <span style={{ position:"absolute", top:6, background:C.rose, color:C.card, borderRadius:"50%", fontSize:8, fontWeight:900, width:14, height:14, display:"flex", alignItems:"center", justifyContent:"center" }}>{notifikacije.length}</span>
+            {t.id==="profil" && notifikacije.filter(n=>!n.procitana).length>0 && (
+              <span style={{ position:"absolute", top:6, background:C.rose, color:C.card, borderRadius:"50%", fontSize:8, fontWeight:900, width:14, height:14, display:"flex", alignItems:"center", justifyContent:"center" }}>{notifikacije.filter(n=>!n.procitana).length}</span>
             )}
           </button>
         ))}
