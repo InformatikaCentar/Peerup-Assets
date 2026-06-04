@@ -1348,10 +1348,47 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
   const [zamjenaZa, setZamjenaZa] = useState(null);
   const [novaStvar, setNovaStvar] = useState({ tip:"Donacija", predmet:"", kat:"Knjige", opis:"", slike:[] });
   const [slika_urls, setSlika_urls] = useState([]);
+  const [lightbox, setLightbox] = useState(null);
   const fileRef = useRef(null);
   const kategFiltri = ["Svi","Knjige","Odjeća","Igračke","Hrana","Ostalo"];
-  const filtered = razmjena.filter(r=>filter==="Svi"||r.kat===filter);
   const mojeIme = `${korisnik.ime} ${korisnik.prezime[0]}.`;
+
+  const parseHrDate = (str) => {
+    const [d, m, y] = str.split(".").map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const add3WorkingDays = (from) => {
+    let d = new Date(from);
+    let added = 0;
+    while (added < 3) {
+      d.setDate(d.getDate() + 1);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6) added++;
+    }
+    return d;
+  };
+
+  useEffect(() => {
+    const danas = new Date();
+    danas.setHours(0, 0, 0, 0);
+    setRazmjena(prev =>
+      prev
+        .filter(r => {
+          if (!r.rezerviran) return true;
+          const exp = parseHrDate(r.rezerviran.do);
+          return !(exp < danas && r.kat === "Hrana");
+        })
+        .map(r => {
+          if (!r.rezerviran) return r;
+          const exp = parseHrDate(r.rezerviran.do);
+          if (exp < danas) return { ...r, rezerviran: null };
+          return r;
+        })
+    );
+  }, []);
+
+  const filtered = razmjena.filter(r=>filter==="Svi"||r.kat===filter);
 
   const handleSlikeChange = (e) => {
     const files = Array.from(e.target.files);
@@ -1378,17 +1415,45 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
 
   const rezerviraj = (r) => {
     if (r.rezerviran || r.korisnik === mojeIme) return;
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 3);
+    const expiry = add3WorkingDays(new Date());
     const expStr = expiry.toLocaleDateString("hr-HR");
     setRazmjena(prev=>prev.map(item=>item.id===r.id ? {...item, rezerviran:{ korisnik:mojeIme, do:expStr }} : item));
-    onNotifikacija({ tekst:`🔒 Rezervirali ste "${r.predmet}" od @${r.korisnik}. Ističe ${expStr}.`, boja:C.blue });
+    onNotifikacija({ tekst:`🔒 Rezervirali ste "${r.predmet}". Preuzimanje do ${expStr} (3 radna dana).`, boja:C.blue });
+  };
+
+  const uruceno = (r) => {
+    setRazmjena(prev => prev.filter(item => item.id !== r.id));
+    addBodovi(15);
+    onNotifikacija({ tekst:`🎁 Predmet "${r.predmet}" uspješno uručen! +15 bodova`, boja:C.teal });
   };
 
   const slobodneZaZamjenu = razmjena.filter(r => r.tip==="Razmjena" && !r.rezerviran && r.korisnik !== mojeIme && zamjenaZa && r.id !== zamjenaZa.id);
 
   return (
     <div>
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={()=>setLightbox(null)} style={{ position:"fixed", inset:0, background:"#000000dd", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <img
+              src={typeof lightbox.slike[lightbox.idx] === "string" ? lightbox.slike[lightbox.idx] : URL.createObjectURL(lightbox.slike[lightbox.idx])}
+              alt=""
+              style={{ maxWidth:"88vw", maxHeight:"80vh", borderRadius:16, objectFit:"contain", display:"block", boxShadow:"0 8px 40px #00000088" }}
+            />
+            <button onClick={()=>setLightbox(null)} style={{ position:"absolute", top:-14, right:-14, width:34, height:34, borderRadius:"50%", background:"#fff", border:"none", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 10px #00000044" }}>✕</button>
+            {lightbox.slike.length > 1 && lightbox.idx > 0 && (
+              <button onClick={e=>{ e.stopPropagation(); setLightbox(p=>({...p,idx:p.idx-1})); }} style={{ position:"absolute", left:-20, top:"50%", transform:"translateY(-50%)", width:38, height:38, borderRadius:"50%", background:"#fff", border:"none", fontSize:22, cursor:"pointer", boxShadow:"0 2px 10px #00000044", display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
+            )}
+            {lightbox.slike.length > 1 && lightbox.idx < lightbox.slike.length - 1 && (
+              <button onClick={e=>{ e.stopPropagation(); setLightbox(p=>({...p,idx:p.idx+1})); }} style={{ position:"absolute", right:-20, top:"50%", transform:"translateY(-50%)", width:38, height:38, borderRadius:"50%", background:"#fff", border:"none", fontSize:22, cursor:"pointer", boxShadow:"0 2px 10px #00000044", display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+            )}
+            {lightbox.slike.length > 1 && (
+              <div style={{ position:"absolute", bottom:-30, left:"50%", transform:"translateX(-50%)", color:"#ffffffcc", fontSize:13, fontFamily:"'Nunito',sans-serif", fontWeight:700 }}>{lightbox.idx+1} / {lightbox.slike.length}</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Nova objava modal */}
       {modal && (
         <div onClick={()=>setModal(false)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:500, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
@@ -1470,9 +1535,20 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
             <Card key={r.id} accent={r.rezerviran ? C.inkLight : r.tip==="Donacija"?C.teal:C.blue}>
               {r.slike && r.slike.length > 0 && (
                 <div style={{ display:"flex", gap:8, marginBottom:12, overflowX:"auto" }}>
-                  {r.slike.map((f,i)=>(
-                    <img key={i} src={typeof f === "string" ? f : URL.createObjectURL(f)} alt="" style={{ width:90, height:90, objectFit:"cover", borderRadius:12, flexShrink:0, border:`1.5px solid ${C.cardBorder}` }} />
-                  ))}
+                  {r.slike.map((f,i)=>{
+                    const src = typeof f === "string" ? f : URL.createObjectURL(f);
+                    return (
+                      <div key={i} onClick={()=>setLightbox({ slike:r.slike, idx:i })} style={{ position:"relative", width:90, height:90, flexShrink:0, cursor:"pointer" }}>
+                        <img src={src} alt="" style={{ width:90, height:90, objectFit:"cover", borderRadius:12, border:`1.5px solid ${C.cardBorder}`, display:"block" }} />
+                        {r.rezerviran && (
+                          <div style={{ position:"absolute", inset:0, borderRadius:12, background:"#00000055", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            <div style={{ background:"#e03e5cdd", color:"#fff", fontSize:8, fontWeight:900, fontFamily:"'Nunito',sans-serif", letterSpacing:0.5, padding:"3px 7px", borderRadius:6, transform:"rotate(-20deg)", textTransform:"uppercase", whiteSpace:"nowrap" }}>Rezervirano</div>
+                          </div>
+                        )}
+                        <div style={{ position:"absolute", bottom:5, right:5, background:"#00000066", borderRadius:"50%", width:20, height:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10 }}>🔍</div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
@@ -1516,8 +1592,9 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
                 </div>
               )}
               {jeVlasnik && r.rezerviran && (
-                <div style={{ marginTop:10 }}>
-                  <Pill label={`📩 Rezervirano od ${r.rezerviran.korisnik}`} color={C.teal} bg={C.tealLight} />
+                <div style={{ marginTop:10, display:"flex", flexWrap:"wrap", gap:8, alignItems:"center" }}>
+                  <Pill label={`📩 ${r.rezerviran.korisnik} · do ${r.rezerviran.do}`} color={C.teal} bg={C.tealLight} />
+                  <Btn label="✅ Označi kao uručeno (+15)" small color={C.teal} onClick={()=>uruceno(r)} />
                 </div>
               )}
             </Card>
