@@ -284,7 +284,7 @@ const DEMO_MATERIJALI = [
       sekcije:[
         { naslov:"👤 Likovi", stavke:["Melkior Tresić — protagonist; prestrašen, intelektualan, moralno nesiguran","Kiklop — metafora za rat i totalitarni sustav koji 'proždire' ljude","Maestro — prijatelj, veseo, kontrast Melkioru","Vivijana — ženska protagonistica, Melkiorova ljubavna čežnja"] },
         { naslov:"🎭 Teme", stavke:["Strah od smrti i rata — osnovna pokretačka sila priče","Moralna odgovornost — može li pojedinac ostati human u ratu?","Groteska i crni humor — Marinković ismijava kukavičluk i apsurd","Alijenacija — Melkior je otuđen od društva i samog sebe"] },
-        { naslov:"✏️ Ključni citati", stavke:['"Smijeh je jedino oružje slabih."','"Strah nije sramota, sramota je ne признati ga."','Kiklop = sve što je monstruozno, neljudsko, ratno'] },
+        { naslov:"✏️ Ključni citati", stavke:['"Smijeh je jedino oružje slabih."','"Strah nije sramota, sramota je ne priznati ga."','Kiklop = sve što je monstruozno, neljudsko, ratno'] },
       ]
     }
   },
