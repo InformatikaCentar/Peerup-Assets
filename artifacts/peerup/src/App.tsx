@@ -1857,6 +1857,24 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
     onNotifikacija({ tekst:`🗑 Projekt uklonjen s popisa`, boja:C.inkMid });
   };
 
+  const mozeSeoOdjaviti = (p) => {
+    if (!p.datum) return true;
+    const eventDate = new Date(p.datum);
+    if (p.vrijemeOd) { const [h,m] = p.vrijemeOd.split(":").map(Number); eventDate.setHours(h,m,0,0); }
+    return new Date() < new Date(eventDate.getTime() - 24*60*60*1000);
+  };
+
+  const odjaviSe = (id) => {
+    const p = projekti.find(pp=>pp.id===id);
+    if (!p) return;
+    setProjekti(prev=>prev.map(pp=>pp.id===id?{
+      ...pp,
+      prijavljeni:pp.prijavljeni.filter(ime=>ime!==mojeIme),
+      dolaznost:Object.fromEntries(Object.entries(pp.dolaznost||{}).filter(([k])=>k!==mojeIme))
+    }:pp));
+    onNotifikacija({ tekst:`❌ Odjavljeni ste s aktivnosti "${p.naslov}"`, boja:C.rose });
+  };
+
   const toggloDolaznost = (projektId, ime) => {
     setProjekti(prev=>prev.map(p=>p.id===projektId?{...p, dolaznost:{...(p.dolaznost||{}), [ime]:!(p.dolaznost?.[ime])}}:p));
     setEvidencijaId(projektId);
@@ -2000,18 +2018,28 @@ function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
             const potvrden = p.dolaznost?.[mojeIme] === true;
             const nagraden = p.nagrade?.[mojeIme] === true;
             return (
-              <div key={p.id} style={{ background:nagraden?C.greenLight:potvrden?C.orangeLight:C.bgDeep, border:`1.5px solid ${nagraden?C.green:potvrden?C.orange:C.cardBorder}44`, borderRadius:12, padding:"10px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
-                <div style={{ fontSize:24 }}>{p.ikona}</div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:800, fontSize:14, color:C.ink }}>{p.naslov}</div>
-                  <div style={{ color:C.inkMid, fontSize:12 }}>{p.organizator}{p.datum ? ` · ${formatDatum(p.datum)}` : ""}</div>
+              <div key={p.id} style={{ background:nagraden?C.greenLight:potvrden?C.orangeLight:C.bgDeep, border:`1.5px solid ${nagraden?C.green:potvrden?C.orange:C.cardBorder}44`, borderRadius:12, padding:"10px 14px", marginBottom:8 }}>
+                <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                  <div style={{ fontSize:24 }}>{p.ikona}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:800, fontSize:14, color:C.ink }}>{p.naslov}</div>
+                    <div style={{ color:C.inkMid, fontSize:12 }}>{p.organizator}{p.datum ? ` · ${formatDatum(p.datum)}` : ""}</div>
+                  </div>
+                  {nagraden
+                    ? <Pill label={`✅ +${p.bodovi} bod.`} color={C.green} bg={C.greenLight} />
+                    : potvrden
+                    ? <Pill label="⏳ Potvrđeno" color={C.orange} bg={C.card} />
+                    : <Pill label="⏳ Čeka potvrdu" color={C.inkLight} bg={C.card} />
+                  }
                 </div>
-                {nagraden
-                  ? <Pill label={`✅ +${p.bodovi} bod.`} color={C.green} bg={C.greenLight} />
-                  : potvrden
-                  ? <Pill label="⏳ Potvrđeno" color={C.orange} bg={C.card} />
-                  : <Pill label="⏳ Čeka potvrdu" color={C.inkLight} bg={C.card} />
-                }
+                {!nagraden && !potvrden && (
+                  <div style={{ marginTop:8, paddingTop:8, borderTop:`1px dashed ${C.cardBorder}` }}>
+                    {mozeSeoOdjaviti(p)
+                      ? <Btn label="✖ Odjavi se" small color={C.rose} onClick={()=>odjaviSe(p.id)} />
+                      : <span style={{ fontSize:11, color:C.inkLight, fontWeight:700 }}>🔒 Odjava nije moguća — manje od 24h do akcije</span>
+                    }
+                  </div>
+                )}
               </div>
             );
           })}
