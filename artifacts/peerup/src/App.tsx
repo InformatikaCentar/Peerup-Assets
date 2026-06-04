@@ -180,14 +180,14 @@ const KVIZ_BANKA = {
 };
 
 const INIT_CLANOVI = [
-  { id:1,  ime:"Marko",  prezime:"Horvat",   uloga:"admin",   razred:null, predmeti:[],                     aktivan:true,  kod:"ADMIN001", lozinka:"admin123", avatar:"👨‍💼", bodovi:0   },
-  { id:2,  ime:"Ivana",  prezime:"Kovač",    uloga:"ucitelj", razred:null, predmeti:["Matematika","Fizika"], aktivan:true,  kod:"UCT-MAT1", lozinka:"ucit123",  avatar:"👩‍🏫", bodovi:0   },
-  { id:3,  ime:"Petra",  prezime:"Novak",    uloga:"ucitelj", razred:null, predmeti:["Hrvatski","Likovna"],  aktivan:true,  kod:"UCT-HRV1", lozinka:"ucit456",  avatar:"👩‍🏫", bodovi:0   },
-  { id:5,  ime:"Luka",   prezime:"Marić",    uloga:"ucenik",  razred:"7.", predmeti:[],                     aktivan:true,  kod:"UCE-7-01", lozinka:"luka2024", avatar:"🧑‍🎓", bodovi:142 },
-  { id:6,  ime:"Ana",    prezime:"Kolar",    uloga:"ucenik",  razred:"5.", predmeti:[],                     aktivan:true,  kod:"UCE-5-01", lozinka:"ana2024",  avatar:"👩‍🎓", bodovi:98  },
-  { id:7,  ime:"Tin",    prezime:"Babić",    uloga:"ucenik",  razred:"8.", predmeti:[],                     aktivan:true,  kod:"UCE-8-01", lozinka:"tin2024",  avatar:"🧑",   bodovi:210 },
-  { id:8,  ime:"Sara",   prezime:"Petrić",   uloga:"ucenik",  razred:"3.", predmeti:[],                     aktivan:true,  kod:"UCE-3-01", lozinka:"sara2024", avatar:"👧",   bodovi:55  },
-  { id:9,  ime:"Mia",    prezime:"Lučić",    uloga:"ucenik",  razred:"6.", predmeti:[],                     aktivan:false, kod:"UCE-6-01", lozinka:"mia2024",  avatar:"👩",   bodovi:74  },
+  { id:1,  ime:"Marko",  prezime:"Horvat",   uloga:"admin",   razred:null, predmeti:[],                     aktivan:true,  kod:"ADMIN001", lozinka:"admin123", avatar:"👨‍💼", bodovi:0,   pokusaji:0, zakljucan:false },
+  { id:2,  ime:"Ivana",  prezime:"Kovač",    uloga:"ucitelj", razred:null, predmeti:["Matematika","Fizika"], aktivan:true,  kod:"UCT-MAT1", lozinka:"ucit123",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false },
+  { id:3,  ime:"Petra",  prezime:"Novak",    uloga:"ucitelj", razred:null, predmeti:["Hrvatski","Likovna"],  aktivan:true,  kod:"UCT-HRV1", lozinka:"ucit456",  avatar:"👩‍🏫", bodovi:0,   pokusaji:0, zakljucan:false },
+  { id:5,  ime:"Luka",   prezime:"Marić",    uloga:"ucenik",  razred:"7.", predmeti:[],                     aktivan:true,  kod:"UCE-7-01", lozinka:"luka2024", avatar:"🧑‍🎓", bodovi:142, pokusaji:0, zakljucan:false },
+  { id:6,  ime:"Ana",    prezime:"Kolar",    uloga:"ucenik",  razred:"5.", predmeti:[],                     aktivan:true,  kod:"UCE-5-01", lozinka:"ana2024",  avatar:"👩‍🎓", bodovi:98,  pokusaji:0, zakljucan:false },
+  { id:7,  ime:"Tin",    prezime:"Babić",    uloga:"ucenik",  razred:"8.", predmeti:[],                     aktivan:true,  kod:"UCE-8-01", lozinka:"tin2024",  avatar:"🧑",   bodovi:210, pokusaji:0, zakljucan:false },
+  { id:8,  ime:"Sara",   prezime:"Petrić",   uloga:"ucenik",  razred:"3.", predmeti:[],                     aktivan:true,  kod:"UCE-3-01", lozinka:"sara2024", avatar:"👧",   bodovi:55,  pokusaji:0, zakljucan:false },
+  { id:9,  ime:"Mia",    prezime:"Lučić",    uloga:"ucenik",  razred:"6.", predmeti:[],                     aktivan:false, kod:"UCE-6-01", lozinka:"mia2024",  avatar:"👩",   bodovi:74,  pokusaji:0, zakljucan:false },
 ];
 // ---- POČETNI SKUP PRISTUPNIH KODOVA ----
 function genKod(uloga, razred, n) {
@@ -196,6 +196,11 @@ function genKod(uloga, razred, n) {
   return `UCT-${predTag}${n}`;
 }
 const LOZINKE_DEMO = ["znanje24","ucenje1","skolica2","pametan3","peerup5","hrvatska6","marko77","ivana88","split99","zagreb00","kljuc12","biljeska3","razred55","kviz777","tablica8"];
+const genLozinku = () => {
+  const adj = ["Plavi","Brzi","Sretni","Mali","Zeleni","Crveni","Mudri","Hrabri","Topli","Mirni"];
+  const nou = ["Kit","Lav","Orao","Vuk","Medvjed","Lisica","Jelen","Kuna","Zec","Delfin"];
+  return `${adj[Math.floor(Math.random()*adj.length)]}${nou[Math.floor(Math.random()*nou.length)]}${Math.floor(Math.random()*900+100)}`;
+};
 function initKodovi() {
   const kodovi = [];
   let n = 2;
@@ -2334,6 +2339,7 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
   const [tab, setTab] = useState("pregled");
   const [noviModal, setNoviModal] = useState(false);
   const [noviKor, setNoviKor] = useState({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", lozinka:"", avatar:"🧑‍🎓" });
+  const [odblokovanLoz, setOdblokovanLoz] = useState({}); // {[userId]: novaLozinka}
   const [genUloga, setGenUloga] = useState("ucenik");
   const [genRazred, setGenRazred] = useState("5.");
   const [genBroj, setGenBroj] = useState(5);
@@ -2348,10 +2354,17 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
 
   const dodajKorisnika = () => {
     const prefix = noviKor.uloga==="ucenik"?"UCE":noviKor.uloga==="ucitelj"?"UCT":"ADM";
-    const novi = { id:Date.now(), ...noviKor, kod:`${prefix}-MAN-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[] };
+    const lozinka = noviKor.lozinka.trim() || genLozinku();
+    const novi = { id:Date.now(), ...noviKor, lozinka, kod:`${prefix}-MAN-${Date.now().toString().slice(-4)}`, aktivan:true, bodovi:0, predmeti:[], pokusaji:0, zakljucan:false };
     setClanovi(prev=>[...prev,novi]);
     setNoviModal(false);
     setNoviKor({ ime:"", prezime:"", uloga:"ucenik", razred:"5.", lozinka:"", avatar:"🧑‍🎓" });
+  };
+
+  const odblokujKorisnika = (id) => {
+    const novaLoz = genLozinku();
+    setClanovi(prev => prev.map(c => c.id===id ? {...c, zakljucan:false, pokusaji:0, lozinka:novaLoz, aktivan:true} : c));
+    setOdblokovanLoz(prev => ({...prev, [id]: novaLoz}));
   };
 
   const generirajKodove = () => {
@@ -2459,8 +2472,17 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
                       <button key={u} onClick={()=>setNoviKor(p=>({...p,uloga:u}))} style={{ flex:1, padding:"9px 0", borderRadius:10, border:`2px solid ${noviKor.uloga===u?C.plum:C.cardBorder}`, background:noviKor.uloga===u?C.plumLight:C.bg, color:noviKor.uloga===u?C.plum:C.inkMid, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>{u==="ucenik"?"🧑‍🎓 Učenik":"👩‍🏫 Učitelj"}</button>
                     ))}
                   </div>
-                  <FInp label="Lozinka" type="password" value={noviKor.lozinka} onChange={e=>setNoviKor(p=>({...p,lozinka:e.target.value}))} />
-                  <Btn label="✅ Dodaj korisnika" color={C.plum} full disabled={!noviKor.ime||!noviKor.prezime||!noviKor.lozinka} onClick={dodajKorisnika} />
+                  <p style={{ margin:"0 0 6px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase" }}>Lozinka (pristupni kod)</p>
+                  <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+                    <input value={noviKor.lozinka} onChange={e=>setNoviKor(p=>({...p,lozinka:e.target.value}))} placeholder="Ostavi prazno za automatsku generaciju" style={{ flex:1, background:C.bg, color:C.ink, border:`1.5px solid ${noviKor.lozinka?C.plum:C.cardBorder}`, borderRadius:10, padding:"10px 12px", fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:13, outline:"none", boxSizing:"border-box" }} />
+                    <button onClick={()=>setNoviKor(p=>({...p,lozinka:genLozinku()}))} style={{ flexShrink:0, background:C.plumLight, border:`1.5px solid ${C.plum}44`, borderRadius:10, padding:"8px 12px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, color:C.plum, cursor:"pointer" }}>🎲 Generiraj</button>
+                  </div>
+                  {noviKor.lozinka && (
+                    <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"8px 12px", marginBottom:14, fontSize:12, color:C.ink }}>
+                      🔑 Pristupni kod: <strong style={{ fontFamily:"monospace", color:C.plum }}>{noviKor.lozinka}</strong> — zabilježi i priopći korisniku!
+                    </div>
+                  )}
+                  <Btn label="✅ Dodaj korisnika" color={C.plum} full disabled={!noviKor.ime||!noviKor.prezime} onClick={dodajKorisnika} />
                 </div>
               </div>
             )}
@@ -2468,20 +2490,34 @@ function AdminDashboard({ clanovi, setClanovi, kodovi, setKodovi, onOdjava }) {
               {clanovi.map(c=>{
                 const ub = ulogaBoja(c.uloga);
                 return (
-                  <div key={c.id} style={{ background:C.card, border:`1.5px solid ${C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8, display:"flex", gap:10, alignItems:"center" }}>
-                    <div style={{ fontSize:28 }}>{c.avatar}</div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{c.ime} {c.prezime}</div>
-                      <div style={{ fontSize:11, color:C.inkLight, fontFamily:"monospace" }}>{c.kod}</div>
-                      {c.razred && <div style={{ fontSize:11, color:C.inkMid }}>{c.razred} razred</div>}
+                  <div key={c.id} style={{ background:c.zakljucan?C.roseLight:C.card, border:`1.5px solid ${c.zakljucan?C.rose+"66":C.cardBorder}`, borderRadius:12, padding:"12px 14px", marginBottom:8 }}>
+                    <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                      <div style={{ fontSize:28 }}>{c.avatar}</div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontWeight:800, color:C.ink, fontSize:14 }}>{c.ime} {c.prezime}</div>
+                        <div style={{ fontSize:11, color:C.inkLight, fontFamily:"monospace" }}>Kod: {c.kod}</div>
+                        {c.razred && <div style={{ fontSize:11, color:C.inkMid }}>{c.razred} razred</div>}
+                        {c.zakljucan && <div style={{ fontSize:11, color:C.rose, fontWeight:800 }}>🔒 Zaključan — previše neuspjelih pokušaja</div>}
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
+                        <Pill label={ub.label} color={ub.color} bg={ub.bg} />
+                        {!c.zakljucan && <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,aktivan:!cc.aktivan}:cc))} style={{ fontSize:10, background:c.aktivan?C.greenLight:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:c.aktivan?C.green:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>{c.aktivan?"✅ Aktivan":"❌ Neaktivan"}</button>}
+                        {c.zakljucan && <button onClick={()=>odblokujKorisnika(c.id)} style={{ fontSize:10, background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:6, padding:"3px 9px", color:C.amber, fontFamily:"'Nunito', sans-serif", fontWeight:800, cursor:"pointer" }}>🔓 Odblokuj</button>}
+                        {c.uloga !== "admin" && !c.zakljucan && (
+                          <button onClick={()=>{ if(window.confirm(`Ukloniti ${c.ime} ${c.prezime}?`)) setClanovi(prev=>prev.filter(cc=>cc.id!==c.id)); }} style={{ fontSize:10, background:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>🗑 Ukloni</button>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
-                      <Pill label={ub.label} color={ub.color} bg={ub.bg} />
-                      <button onClick={()=>setClanovi(prev=>prev.map(cc=>cc.id===c.id?{...cc,aktivan:!cc.aktivan}:cc))} style={{ fontSize:10, background:c.aktivan?C.greenLight:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:c.aktivan?C.green:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>{c.aktivan?"✅ Aktivan":"❌ Neaktivan"}</button>
-                      {c.uloga !== "admin" && (
-                        <button onClick={()=>{ if(window.confirm(`Ukloniti ${c.ime} ${c.prezime}?`)) setClanovi(prev=>prev.filter(cc=>cc.id!==c.id)); }} style={{ fontSize:10, background:C.roseLight, border:"none", borderRadius:6, padding:"2px 8px", color:C.rose, fontFamily:"'Nunito', sans-serif", fontWeight:700, cursor:"pointer" }}>🗑 Ukloni</button>
-                      )}
+                    {/* Credentials row */}
+                    <div style={{ marginTop:8, paddingTop:8, borderTop:`1px dashed ${c.zakljucan?C.rose+"44":C.cardBorder}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                      <span style={{ fontSize:11, color:C.inkLight }}>🔑 Lozinka: <span style={{ fontFamily:"monospace", color:C.ink, fontWeight:800 }}>{c.lozinka}</span></span>
+                      {c.pokusaji > 0 && !c.zakljucan && <span style={{ fontSize:10, color:C.rose, fontWeight:700 }}>⚠ {c.pokusaji}/5 neuspjelih pokušaja</span>}
                     </div>
+                    {odblokovanLoz[c.id] && (
+                      <div style={{ marginTop:8, background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:8, padding:"7px 10px", fontSize:12 }}>
+                        🔑 Nova lozinka: <strong style={{ fontFamily:"monospace", color:C.plum }}>{odblokovanLoz[c.id]}</strong> — priopći korisniku!
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -2586,7 +2622,7 @@ function PrijavaSustav({ clanovi, setClanovi, kodovi, setKodovi, onPrijava }) {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif" }}>
       {ekran==="dobrodoslica" && <EkranDobrodoslica onLogin={()=>setEkran("prijava")} onRegister={()=>setEkran("registracija")} onDemo={()=>setEkran("demo")} />}
-      {ekran==="prijava"      && <EkranPrijava clanovi={clanovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
+      {ekran==="prijava"      && <EkranPrijava clanovi={clanovi} setClanovi={setClanovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
       {ekran==="registracija" && <EkranRegistracija clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
       {ekran==="demo"         && <EkranDemo clanovi={clanovi} onUspjeh={onPrijava} onNatrag={()=>setEkran("dobrodoslica")} />}
     </div>
@@ -2625,7 +2661,7 @@ function EkranDobrodoslica({ onLogin, onRegister, onDemo }) {
   );
 }
 
-function EkranPrijava({ clanovi, onUspjeh, onNatrag }) {
+function EkranPrijava({ clanovi, setClanovi, onUspjeh, onNatrag }) {
   const [kod, setKod] = useState("");
   const [loz, setLoz] = useState("");
   const [greska, setGreska] = useState("");
@@ -2634,9 +2670,28 @@ function EkranPrijava({ clanovi, onUspjeh, onNatrag }) {
   const prijava = () => {
     setGreska(""); setUcitavam(true);
     setTimeout(() => {
-      const clan = clanovi.find(c => c.kod === kod.trim().toUpperCase() && c.lozinka === loz.trim());
-      if (!clan) { setGreska("Neispravan kod ili lozinka."); setUcitavam(false); return; }
+      const kodNorm = kod.trim().toUpperCase();
+      const clan = clanovi.find(c => c.kod === kodNorm);
+
+      if (!clan) { setGreska("Neispravan pristupni kod. Provjeri kod i pokušaj ponovo."); setUcitavam(false); return; }
+      if (clan.zakljucan) { setGreska("🔒 Račun je zaključan zbog 5 neuspjelih pokušaja. Obrati se administratoru škole."); setUcitavam(false); return; }
       if (!clan.aktivan) { setGreska("Račun je deaktiviran. Obrati se administratoru."); setUcitavam(false); return; }
+
+      if (clan.lozinka !== loz.trim()) {
+        const noviPokusaji = (clan.pokusaji || 0) + 1;
+        const zakljucan = noviPokusaji >= 5;
+        setClanovi(prev => prev.map(c => c.id === clan.id ? {...c, pokusaji: noviPokusaji, zakljucan} : c));
+        if (zakljucan) {
+          setGreska("🔒 Račun je zaključan! Previše neuspjelih pokušaja prijave (5/5). Obrati se administratoru škole koji će ti dodijeliti novu lozinku.");
+        } else {
+          const preostalo = 5 - noviPokusaji;
+          setGreska(`Pogrešna lozinka. Preostalo pokušaja: ${preostalo}/5. Nakon ${preostalo} neuspjelih pokušaja račun će biti zaključan.`);
+        }
+        setUcitavam(false); return;
+      }
+
+      /* Uspješna prijava — resetiraj brojač */
+      setClanovi(prev => prev.map(c => c.id === clan.id ? {...c, pokusaji: 0} : c));
       onUspjeh(clan);
     }, 600);
   };
