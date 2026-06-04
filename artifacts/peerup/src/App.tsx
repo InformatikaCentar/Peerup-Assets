@@ -291,11 +291,16 @@ const DEMO_MATERIJALI = [
 ];
 
 const DEMO_RAZMJENA = [
-  { id:301, korisnik:"Mia L.",  tip:"Donacija", predmet:"Harry Potter 1-3", kat:"Knjige",  ikona:"📚", svjezina:null,         opis:"Sve tri knjige u odličnom stanju, čitane jednom. Donacija za ljubitelje čitanja!", slike:[], rezerviran:null },
-  { id:302, korisnik:"Ivo R.",  tip:"Razmjena", predmet:"Zimska jakna, vel. 146", kat:"Odjeća", ikona:"🧥", svjezina:null,   opis:"Tražim u zamjenu sportsku opremu, vel. 146-152. Jakna korištena jednu sezonu.", slike:[], rezerviran:null },
-  { id:303, korisnik:"Ela T.",  tip:"Donacija", predmet:"Domaći kolačići 🍪", kat:"Hrana",  ikona:"🍪", svjezina:"2 dana",   opis:"Mama napravila previše za školski ručak. Tko želi, slobodno uzme do četvrtka!", slike:[], rezerviran:null },
-  { id:304, korisnik:"Noa S.",  tip:"Razmjena", predmet:"Lego City set (komplet)", kat:"Igračke", ikona:"🧩", svjezina:null, opis:"Kompletirani Lego City sa svim dijelovima i uputama. Tražim u zamjenu Lego Technic.", slike:[], rezerviran:null },
-  { id:305, korisnik:"Karlo D.",tip:"Donacija", predmet:"Geografski atlas 2024", kat:"Knjige", ikona:"🗺️", svjezina:null,    opis:"Novo izdanje atlasa, potpuno nov, nisam stigao koristiti jer sam dobio digitalni.", slike:[], rezerviran:null },
+  { id:301, korisnik:"Mia L.",  tip:"Donacija", predmet:"Harry Potter 1-3", kat:"Knjige",  ikona:"📚", svjezina:null,         opis:"Sve tri knjige u odličnom stanju, čitane jednom. Donacija za ljubitelje čitanja!",
+    slike:["https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=240&h=240&fit=crop","https://images.unsplash.com/photo-1512820790803-83ca734da794?w=240&h=240&fit=crop"], rezerviran:null },
+  { id:302, korisnik:"Ivo R.",  tip:"Razmjena", predmet:"Zimska jakna, vel. 146", kat:"Odjeća", ikona:"🧥", svjezina:null,   opis:"Tražim u zamjenu sportsku opremu, vel. 146-152. Jakna korištena jednu sezonu.",
+    slike:["https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=240&h=240&fit=crop","https://images.unsplash.com/photo-1539533018257-51b2451b2c4e?w=240&h=240&fit=crop"], rezerviran:null },
+  { id:303, korisnik:"Ela T.",  tip:"Donacija", predmet:"Domaći kolačići 🍪", kat:"Hrana",  ikona:"🍪", svjezina:"2 dana",   opis:"Mama napravila previše za školski ručak. Tko želi, slobodno uzme do četvrtka!",
+    slike:["https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=240&h=240&fit=crop","https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=240&h=240&fit=crop"], rezerviran:null },
+  { id:304, korisnik:"Noa S.",  tip:"Razmjena", predmet:"Lego City set (komplet)", kat:"Igračke", ikona:"🧩", svjezina:null, opis:"Kompletirani Lego City sa svim dijelovima i uputama. Tražim u zamjenu Lego Technic.",
+    slike:["https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=240&h=240&fit=crop","https://images.unsplash.com/photo-1560961911-ba7ef651a56c?w=240&h=240&fit=crop"], rezerviran:null },
+  { id:305, korisnik:"Karlo D.",tip:"Donacija", predmet:"Geografski atlas 2024", kat:"Knjige", ikona:"🗺️", svjezina:null,    opis:"Novo izdanje atlasa, potpuno nov, nisam stigao koristiti jer sam dobio digitalni.",
+    slike:["https://images.unsplash.com/photo-1524661135-423995f22d0b?w=240&h=240&fit=crop","https://images.unsplash.com/photo-1508921234172-b68ed862d5a5?w=240&h=240&fit=crop"], rezerviran:null },
 ];
 
 const DEMO_PRICE = [
@@ -1464,9 +1469,9 @@ function SkolskiBuvljak({ korisnik, razmjena, setRazmjena, addBodovi, onNotifika
           return (
             <Card key={r.id} accent={r.rezerviran ? C.inkLight : r.tip==="Donacija"?C.teal:C.blue}>
               {r.slike && r.slike.length > 0 && (
-                <div style={{ display:"flex", gap:6, marginBottom:10, overflowX:"auto" }}>
+                <div style={{ display:"flex", gap:8, marginBottom:12, overflowX:"auto" }}>
                   {r.slike.map((f,i)=>(
-                    <img key={i} src={URL.createObjectURL(f)} alt="" style={{ width:80, height:80, objectFit:"cover", borderRadius:10, flexShrink:0 }} />
+                    <img key={i} src={typeof f === "string" ? f : URL.createObjectURL(f)} alt="" style={{ width:90, height:90, objectFit:"cover", borderRadius:12, flexShrink:0, border:`1.5px solid ${C.cardBorder}` }} />
                   ))}
                 </div>
               )}
