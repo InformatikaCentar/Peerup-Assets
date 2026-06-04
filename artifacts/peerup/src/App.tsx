@@ -2301,7 +2301,6 @@ function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj }) {
               <div style={{ width:8, height:8, borderRadius:"50%", background:n.procitana?C.inkLight:n.boja, flexShrink:0, marginTop:4, transition:"all 0.2s" }} />
               <div style={{ flex:1 }}>
                 <div style={{ color:C.ink, fontSize:13, fontWeight:n.procitana?600:800, lineHeight:1.5 }}>{n.tekst}</div>
-                {!n.procitana && <div style={{ fontSize:10, color:n.boja, fontWeight:700, marginTop:2 }}>Tapni za označi pročitanom</div>}
               </div>
             </div>
           ))
