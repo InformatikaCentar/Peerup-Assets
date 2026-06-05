@@ -1098,10 +1098,9 @@ function KvizIgra({ predmet, nacin, onZavrsi, pitanjaOverride }) {
 }
 
 // ---- TABS ----
-function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi, filterPredmet="Svi" }) {
-  const [predFilter, setPredFilter] = useState(filterPredmet);
+function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi }) {
+  const [predFilter, setPredFilter] = useState("Svi");
   const [razFilter, setRazFilter] = useState("Svi");
-  useEffect(()=>{ setPredFilter(filterPredmet); }, [filterPredmet]);
   const [novaModal, setNovaModal] = useState(false);
   const [detaljiModal, setDetaljiModal] = useState(null);
   const filtered = ponude.filter(p=>(predFilter==="Svi"||p.predmet===predFilter)&&(razFilter==="Svi"||p.razred===razFilter));
@@ -1126,10 +1125,12 @@ function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi, 
           </>
         )}
       </div>
-      <div style={{ padding:"0 16px 6px", overflowX:"auto", display:"flex", gap:6, paddingBottom:8, scrollbarWidth:"none" }}>
-        {["Svi",...PREDMETI].map(p=>(
-          <button key={p} onClick={()=>setPredFilter(p)} style={{ background:predFilter===p?C.teal:C.bgDeep, color:predFilter===p?C.card:C.inkMid, border:`1.5px solid ${predFilter===p?C.teal:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer", flexShrink:0 }}>{p}</button>
-        ))}
+      <div style={{ overflowX:"auto", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+        <div style={{ display:"flex", gap:6, padding:"0 16px 8px", minWidth:"max-content" }}>
+          {["Svi",...PREDMETI].map(p=>(
+            <button key={p} onClick={()=>setPredFilter(p)} style={{ background:predFilter===p?C.teal:C.bgDeep, color:predFilter===p?C.card:C.inkMid, border:`1.5px solid ${predFilter===p?C.teal:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{p}</button>
+          ))}
+        </div>
       </div>
       <div style={{ padding:"0 16px 12px", overflowX:"auto", display:"flex", gap:6 }}>
         {["Svi",...RAZREDI].map(r=>(
@@ -1257,10 +1258,9 @@ function KvizModal({ materijal, onClose, addBodovi, onNotifikacija }) {
   );
 }
 
-function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikacija, filterPredmet="Svi" }) {
-  const [predFilter, setPredFilter] = useState(filterPredmet);
+function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikacija }) {
+  const [predFilter, setPredFilter] = useState("Svi");
   const [tipFilter, setTipFilter] = useState("Svi");
-  useEffect(()=>{ setPredFilter(filterPredmet); }, [filterPredmet]);
   const [modal, setModal] = useState(false);
   const [pregled, setPregled] = useState(null);
   const [kvizMaterijal, setKvizMaterijal] = useState(null);
@@ -1333,10 +1333,12 @@ function Biljeske({ korisnik, materijali, setMaterijali, addBodovi, onNotifikaci
       <div style={{ padding:"0 16px 12px" }}>
         <Btn label="➕ Dodaj materijal" color={C.teal} onClick={()=>setModal(true)} />
       </div>
-      <div style={{ padding:"0 16px 8px", display:"flex", gap:6, overflowX:"auto", scrollbarWidth:"none" }}>
-        {["Svi",...PREDMETI].map(p=>(
-          <button key={p} onClick={()=>setPredFilter(p)} style={{ background:predFilter===p?C.teal:C.bgDeep, color:predFilter===p?C.card:C.inkMid, border:`1.5px solid ${predFilter===p?C.teal:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer", flexShrink:0 }}>{p}</button>
-        ))}
+      <div style={{ overflowX:"auto", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+        <div style={{ display:"flex", gap:6, padding:"0 16px 8px", minWidth:"max-content" }}>
+          {["Svi",...PREDMETI].map(p=>(
+            <button key={p} onClick={()=>setPredFilter(p)} style={{ background:predFilter===p?C.teal:C.bgDeep, color:predFilter===p?C.card:C.inkMid, border:`1.5px solid ${predFilter===p?C.teal:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{p}</button>
+          ))}
+        </div>
       </div>
       <div style={{ padding:"0 16px 8px", display:"flex", gap:6 }}>
         {tipovi.map(t=>(
@@ -3204,7 +3206,6 @@ function PostavkeModal({ postavke, onZmijeni, onClose }) {
 // ---- MAIN APP ----
 function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, setKodovi, skola = { naziv: SKOLA_NAZIV, grad: SKOLA_GRAD, mzoKod: "", oib: "" }, setSkola, onOdjava }) {
   const [aktTab, setAktTab] = useState("ucimo");
-  const [filterPredmet, setFilterPredmet] = useState("Svi");
   const [ponude, setPonude] = useState(() => {
     try { const s = localStorage.getItem('peerup_ponude'); return s ? JSON.parse(s) : DEMO_PONUDE; }
     catch { return DEMO_PONUDE; }
@@ -3343,19 +3344,10 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
         </div>
       </div>
 
-      {/* Predmet quick-filter strip */}
-      <div style={{ background:C.card, borderBottom:`1.5px solid ${C.cardBorder}`, overflowX:"auto", scrollbarWidth:"none", msOverflowStyle:"none" }}>
-        <div style={{ display:"flex", gap:6, padding:"7px 12px", minWidth:"max-content" }}>
-          {["Svi",...PREDMETI].map(p=>(
-            <button key={p} onClick={()=>{ setFilterPredmet(p); if(p!=="Svi" && aktTab!=="biljeske") setAktTab("ucimo"); }} style={{ flexShrink:0, padding:"4px 13px", borderRadius:99, background:filterPredmet===p?C.teal:C.bgDeep, color:filterPredmet===p?"#fff":C.inkMid, border:`1.5px solid ${filterPredmet===p?C.teal:C.cardBorder}`, fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>{p}</button>
-          ))}
-        </div>
-      </div>
-
       {/* Content */}
       <div style={{ flex:1, overflowY:"auto", paddingBottom:72, paddingTop:4, zoom:fontZoom }}>
-        {aktTab==="ucimo"        && <UcimoZajedno korisnik={korisnik} ponude={ponude} setPonude={setPonude} onNotifikacija={onNotifikacija} addBodovi={addBodovi} filterPredmet={filterPredmet} />}
-        {aktTab==="biljeske"     && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} filterPredmet={filterPredmet} />}
+        {aktTab==="ucimo"        && <UcimoZajedno korisnik={korisnik} ponude={ponude} setPonude={setPonude} onNotifikacija={onNotifikacija} addBodovi={addBodovi} />}
+        {aktTab==="biljeske"     && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="buvljak"      && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="price"        && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
         {aktTab==="volontiranje"  && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} projekti={projekti} setProjekti={setProjekti} />}
