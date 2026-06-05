@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useVideoScale } from '../VideoTemplate';
 
 const QUESTION = "Što se zbiva u procesu fotosinteze?";
 const ANSWERS = [
@@ -10,6 +11,7 @@ const ANSWERS = [
 ];
 
 export function Scene5() {
+  const { scale: s, isMobile } = useVideoScale();
   const [phase, setPhase] = useState(0);
   useEffect(() => {
     const timers = [
@@ -19,12 +21,12 @@ export function Scene5() {
       setTimeout(() => setPhase(4), 1500),
       setTimeout(() => setPhase(5), 1800),
       setTimeout(() => setPhase(6), 2100),
-      setTimeout(() => setPhase(7), 2900),  // click wrong
-      setTimeout(() => setPhase(8), 3400),  // wrong highlight
-      setTimeout(() => setPhase(9), 4100),  // click correct
-      setTimeout(() => setPhase(10), 4500), // correct highlight
-      setTimeout(() => setPhase(11), 5000), // +3 points
-      setTimeout(() => setPhase(12), 5800), // progress
+      setTimeout(() => setPhase(7), 2900),
+      setTimeout(() => setPhase(8), 3400),
+      setTimeout(() => setPhase(9), 4100),
+      setTimeout(() => setPhase(10), 4500),
+      setTimeout(() => setPhase(11), 5000),
+      setTimeout(() => setPhase(12), 5800),
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
@@ -36,21 +38,23 @@ export function Scene5() {
     return {
       background: correct ? '#dcfce7' : wrong ? '#fee2e2' : '#fff',
       border: `2px solid ${correct ? '#22c55e' : wrong ? '#ef4444' : clicking ? '#d97706' : '#e8e4de'}`,
-      borderRadius: '0.8vw',
-      padding: '0.7vw 0.9vw',
+      borderRadius: `${0.8 * s}vw`,
+      padding: `${0.7 * s}vw ${0.9 * s}vw`,
       display: 'flex',
       alignItems: 'center',
-      gap: '0.7vw',
+      gap: `${0.7 * s}vw`,
       cursor: 'pointer',
       position: 'relative' as const,
       overflow: 'hidden',
-      transform: wrong ? 'scale(1)' : 'scale(1)',
     };
   };
+
+  const cardWidth = isMobile ? '90vw' : '55vw';
 
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center z-20"
+      style={{ padding: isMobile ? `${2 * s}vw` : '0' }}
       initial={{ opacity: 0, y: 60 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -60, filter: 'blur(8px)' }}
@@ -58,32 +62,32 @@ export function Scene5() {
     >
       {/* Scene label */}
       <motion.div
-        className="flex items-center gap-[0.8vw] mb-[2vw]"
+        style={{ display: 'flex', alignItems: 'center', gap: `${0.8 * s}vw`, marginBottom: `${2 * s}vw` }}
         initial={{ opacity: 0, y: -20 }}
         animate={phase >= 1 ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.4 }}
       >
-        <span className="text-[2.5vw]">🎯</span>
-        <span className="text-[2.5vw] font-black text-[#1a1612]">Kviz — Biologija</span>
-        <div className="bg-[#d97706] text-white text-[1.2vw] font-bold px-[1vw] py-[0.3vw] rounded-full">Pitanje 2/5</div>
+        <span style={{ fontSize: `${2.5 * s}vw` }}>🎯</span>
+        <span style={{ fontSize: `${2.5 * s}vw`, fontWeight: 900, color: '#1a1612' }}>Kviz — Biologija</span>
+        <div style={{ background: '#d97706', color: '#fff', fontSize: `${1.2 * s}vw`, fontWeight: 700, padding: `${0.3 * s}vw ${1 * s}vw`, borderRadius: '999px' }}>Pitanje 2/5</div>
       </motion.div>
 
       {/* Main quiz card */}
       <motion.div
-        className="bg-white rounded-[2vw] shadow-2xl border border-[#e8e4de] w-[55vw] overflow-hidden"
+        style={{ background: '#fff', borderRadius: `${2 * s}vw`, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', border: '1px solid #e8e4de', width: cardWidth, overflow: 'hidden' }}
         initial={{ scale: 0.85, opacity: 0 }}
         animate={phase >= 1 ? { scale: 1, opacity: 1 } : {}}
         transition={{ type: 'spring', stiffness: 180, damping: 18 }}
       >
         {/* Progress bar */}
-        <div className="h-[0.5vw] bg-gray-100">
-          <motion.div className="h-full bg-[#d97706]" style={{ width: '40%' }} />
+        <div style={{ height: `${0.5 * s}vw`, background: '#f3f4f6' }}>
+          <motion.div style={{ height: '100%', background: '#d97706', width: '40%' }} />
         </div>
 
-        <div className="p-[2.5vw]">
+        <div style={{ padding: `${2.5 * s}vw` }}>
           {/* Question */}
           <motion.p
-            className="text-[2.2vw] font-black text-[#1a1612] mb-[2.5vw] text-center leading-[1.3]"
+            style={{ fontSize: `${2.2 * s}vw`, fontWeight: 900, color: '#1a1612', marginBottom: `${2.5 * s}vw`, textAlign: 'center', lineHeight: 1.3 }}
             initial={{ opacity: 0, y: 15 }}
             animate={phase >= 2 ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
@@ -92,7 +96,7 @@ export function Scene5() {
           </motion.p>
 
           {/* Answers grid */}
-          <div className="grid grid-cols-2 gap-[0.8vw]">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: `${0.8 * s}vw` }}>
             {ANSWERS.map((a, i) => (
               <motion.div key={i}
                 style={getAnswerStyle(i)}
@@ -100,21 +104,16 @@ export function Scene5() {
                 animate={phase >= (3 + i) ? { opacity: 1, x: 0 } : {}}
                 transition={{ type: 'spring', stiffness: 220, damping: 18 }}
               >
-                {/* Click ripple */}
                 {((i === 0 && phase === 7) || (i === 1 && phase === 9)) && (
-                  <motion.div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.5)', borderRadius: '0.8vw' }}
+                  <motion.div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.5)', borderRadius: `${0.8 * s}vw` }}
                     initial={{ opacity: 0.9, scale: 0.3 }} animate={{ opacity: 0, scale: 2 }} transition={{ duration: 0.4 }} />
                 )}
-
-                {/* Label */}
-                <div style={{ width: '1.8vw', height: '1.8vw', borderRadius: '0.4vw', background: i === 0 && phase >= 8 ? '#ef4444' : i === 1 && phase >= 10 ? '#22c55e' : '#f7f3ee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1vw', fontFamily: 'sans-serif', color: i === 0 && phase >= 8 ? '#fff' : i === 1 && phase >= 10 ? '#fff' : '#1a1612', flexShrink: 0 }}>
+                <div style={{ width: `${1.8 * s}vw`, height: `${1.8 * s}vw`, minWidth: `${1.8 * s}vw`, borderRadius: `${0.4 * s}vw`, background: i === 0 && phase >= 8 ? '#ef4444' : i === 1 && phase >= 10 ? '#22c55e' : '#f7f3ee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: `${1 * s}vw`, fontFamily: 'sans-serif', color: i === 0 && phase >= 8 ? '#fff' : i === 1 && phase >= 10 ? '#fff' : '#1a1612', flexShrink: 0 }}>
                   {i === 0 && phase >= 8 ? '✗' : i === 1 && phase >= 10 ? '✓' : a.label}
                 </div>
-                <span style={{ fontSize: '1.15vw', fontWeight: 700, color: i === 0 && phase >= 8 ? '#991b1b' : i === 1 && phase >= 10 ? '#15803d' : '#1a1612', fontFamily: 'sans-serif' }}>
+                <span style={{ fontSize: `${1.15 * s}vw`, fontWeight: 700, color: i === 0 && phase >= 8 ? '#991b1b' : i === 1 && phase >= 10 ? '#15803d' : '#1a1612', fontFamily: 'sans-serif' }}>
                   {a.text}
                 </span>
-
-                {/* Wrong shake */}
                 {i === 0 && phase >= 8 && (
                   <motion.div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
                     animate={{ x: [-6, 6, -4, 4, 0] }}
@@ -128,13 +127,13 @@ export function Scene5() {
           {/* Explanation */}
           {phase >= 10 && (
             <motion.div
-              className="mt-[1.5vw] bg-[#f0fdf4] border border-[#86efac] rounded-[1vw] p-[1vw] flex items-start gap-[0.7vw]"
+              style={{ marginTop: `${1.5 * s}vw`, background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: `${1 * s}vw`, padding: `${1 * s}vw`, display: 'flex', alignItems: 'flex-start', gap: `${0.7 * s}vw` }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <span className="text-[1.5vw]">💡</span>
-              <p className="text-[1.1vw] font-semibold text-[#15803d]">
+              <span style={{ fontSize: `${1.5 * s}vw` }}>💡</span>
+              <p style={{ fontSize: `${1.1 * s}vw`, fontWeight: 600, color: '#15803d', margin: 0, fontFamily: 'sans-serif' }}>
                 Točno! Fotosinteza je proces u kojem biljke pomoću sunčeve energije pretvaraju CO₂ i H₂O u glukozu i kisik.
               </p>
             </motion.div>
@@ -144,21 +143,21 @@ export function Scene5() {
 
       {/* Points badge */}
       <motion.div
-        className="mt-[1.5vw] flex items-center gap-[1.5vw]"
+        style={{ marginTop: `${1.5 * s}vw`, display: 'flex', alignItems: 'center', gap: `${1.5 * s}vw` }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 11 ? { opacity: 1, y: 0 } : {}}
         transition={{ type: 'spring', stiffness: 300, damping: 16 }}
       >
         <motion.div
-          className="bg-[#1a8a72] text-white px-[2vw] py-[0.7vw] rounded-full font-black text-[1.5vw] shadow-lg"
+          style={{ background: '#1a8a72', color: '#fff', padding: `${0.7 * s}vw ${2 * s}vw`, borderRadius: '999px', fontWeight: 900, fontSize: `${1.5 * s}vw`, boxShadow: '0 4px 16px #1a8a7244' }}
           animate={phase >= 11 ? { scale: [0, 1.2, 1] } : {}}
-          transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 14 }}
         >
           +3 boda 🏅
         </motion.div>
         {phase >= 12 && (
           <motion.div
-            className="text-[1.4vw] font-bold text-[#1a1612]/70"
+            style={{ fontSize: `${1.4 * s}vw`, fontWeight: 700, color: 'rgba(26,22,18,0.7)', fontFamily: 'sans-serif' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >

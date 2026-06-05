@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 const C = {
   bg:"#f7f3ee", bgDeep:"#efe9e0", card:"#ffffff", cardBorder:"#e8e0d5",
@@ -3128,7 +3128,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
     setClanovi(prev => prev.map(c => c.id === korisnik.id ? { ...c, bodovi: c.bodovi + n } : c));
   };
-  const ljestvica = React.useMemo(() => [...clanovi]
+  const ljestvica = useMemo(() => [...clanovi]
     .filter(c => c.aktivan && !c.banan && c.uloga !== 'admin')
     .sort((a, b) => b.bodovi - a.bodovi)
     .map((c, i) => ({

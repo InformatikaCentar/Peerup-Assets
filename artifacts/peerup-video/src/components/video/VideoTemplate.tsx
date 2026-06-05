@@ -1,5 +1,5 @@
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef } from 'react';
 import { useVideoPlayer } from '@/lib/video';
 import { Scene1 } from './video_scenes/Scene1';
 import { Scene2 } from './video_scenes/Scene2';
@@ -44,6 +44,11 @@ const SCENE_START_SEC: Record<string, number> = (() => {
 
 const AUDIO_SEEK_EPSILON_SEC = 0.18;
 
+/* ---- Responsive scale context ---- */
+export interface VideoScaleCtx { scale: number; isMobile: boolean; }
+export const VideoScaleContext = createContext<VideoScaleCtx>({ scale: 1, isMobile: false });
+export function useVideoScale() { return useContext(VideoScaleContext); }
+
 export default function VideoTemplate({
   durations = SCENE_DURATIONS,
   loop = true,
@@ -58,9 +63,21 @@ export default function VideoTemplate({
   const { currentScene, currentSceneKey } = useVideoPlayer({ durations, loop });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  /* Track viewport for responsive scaling */
+  const [videoScale, setVideoScale] = useState<VideoScaleCtx>(() => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 960;
+    return { scale: w < 960 ? 960 / w : 1, isMobile: w < 640 };
+  });
   useEffect(() => {
-    onSceneChange?.(currentSceneKey);
-  }, [currentSceneKey, onSceneChange]);
+    const update = () => {
+      const w = window.innerWidth;
+      setVideoScale({ scale: w < 960 ? 960 / w : 1, isMobile: w < 640 });
+    };
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  useEffect(() => { onSceneChange?.(currentSceneKey); }, [currentSceneKey, onSceneChange]);
 
   const baseSceneKey = currentSceneKey.replace(/_r[12]$/, '');
   const sceneIndex = Object.keys(SCENE_DURATIONS).indexOf(baseSceneKey);
@@ -119,9 +136,11 @@ export default function VideoTemplate({
           transition={{ duration: 1.4, ease: 'easeInOut' }}
         />
 
-        <AnimatePresence mode="popLayout">
-          {SceneComponent && <SceneComponent key={currentSceneKey} />}
-        </AnimatePresence>
+        <VideoScaleContext.Provider value={videoScale}>
+          <AnimatePresence mode="popLayout">
+            {SceneComponent && <SceneComponent key={currentSceneKey} />}
+          </AnimatePresence>
+        </VideoScaleContext.Provider>
       </div>
 
       <audio

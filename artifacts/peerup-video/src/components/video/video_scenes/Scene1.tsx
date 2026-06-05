@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useVideoScale } from '../VideoTemplate';
 
 const FEATURES = [
   { icon: "📚", label: "Učimo zajedno", color: "#1a8a72", delay: 0.1 },
@@ -11,6 +12,7 @@ const FEATURES = [
 ];
 
 export function Scene1() {
+  const { scale: s } = useVideoScale();
   const [phase, setPhase] = useState(0);
   useEffect(() => {
     const timers = [
@@ -25,27 +27,28 @@ export function Scene1() {
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center z-20"
+      style={{ padding: `${2*s}vw` }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.08, filter: 'blur(12px)' }}
       transition={{ duration: 0.7 }}
     >
       {/* Logo */}
-      <motion.div className="flex items-center gap-[1.5vw] mb-[2vw]"
+      <motion.div
+        style={{ display: 'flex', alignItems: 'center', gap: `${1.5*s}vw`, marginBottom: `${2*s}vw` }}
         initial={{ y: -30, opacity: 0 }}
         animate={phase >= 1 ? { y: 0, opacity: 1 } : { y: -30, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 250, damping: 18 }}
       >
         <motion.div
-          className="text-[8vw]"
+          style={{ fontSize: `${8*s}vw` }}
           animate={phase >= 1 ? { rotate: [0, -10, 10, -5, 0] } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
         >🤝</motion.div>
-        <div className="flex">
+        <div style={{ display: 'flex' }}>
           {"PeerUp".split('').map((ch, i) => (
             <motion.span key={i}
-              className="text-[8vw] font-black leading-none"
-              style={{ color: i < 4 ? '#1a1612' : '#1a8a72' }}
+              style={{ fontSize: `${8*s}vw`, fontWeight: 900, lineHeight: 1, color: i < 4 ? '#1a1612' : '#1a8a72' }}
               initial={{ opacity: 0, y: 40, scale: 0.5 }}
               animate={phase >= 1 ? { opacity: 1, y: 0, scale: 1 } : {}}
               transition={{ type: 'spring', stiffness: 350, damping: 16, delay: i * 0.07 + 0.1 }}
@@ -56,7 +59,7 @@ export function Scene1() {
 
       {/* Subtitle */}
       <motion.p
-        className="text-[2.2vw] font-bold text-[#1a1612]/70 mb-[3vw] text-center"
+        style={{ fontSize: `${2.2*s}vw`, fontWeight: 700, color: 'rgba(26,22,18,0.7)', marginBottom: `${3*s}vw`, textAlign: 'center' }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 2 ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5 }}
@@ -65,11 +68,10 @@ export function Scene1() {
       </motion.p>
 
       {/* Feature pills */}
-      <div className="flex flex-wrap gap-[1vw] justify-center max-w-[70vw] mb-[2.5vw]">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${1*s}vw`, justifyContent: 'center', maxWidth: `${70*s}vw`, marginBottom: `${2.5*s}vw` }}>
         {FEATURES.map((f, i) => (
           <motion.div key={i}
-            className="flex items-center gap-[0.5vw] px-[1.4vw] py-[0.6vw] rounded-full text-white font-bold text-[1.3vw] shadow-lg"
-            style={{ background: f.color }}
+            style={{ display: 'flex', alignItems: 'center', gap: `${0.5*s}vw`, padding: `${0.6*s}vw ${1.4*s}vw`, borderRadius: '999px', color: '#fff', fontWeight: 700, fontSize: `${1.3*s}vw`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', background: f.color }}
             initial={{ opacity: 0, scale: 0, y: 20 }}
             animate={phase >= 3 ? { opacity: 1, scale: 1, y: 0 } : {}}
             transition={{ type: 'spring', stiffness: 300, damping: 16, delay: f.delay }}
@@ -81,13 +83,13 @@ export function Scene1() {
 
       {/* School badge */}
       <motion.div
-        className="flex items-center gap-[0.8vw] bg-white/80 backdrop-blur-md px-[2vw] py-[0.8vw] rounded-2xl shadow-xl border border-white/50"
+        style={{ display: 'flex', alignItems: 'center', gap: `${0.8*s}vw`, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', padding: `${0.8*s}vw ${2*s}vw`, borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.5)' }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 4 ? { opacity: 1, y: 0 } : {}}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
       >
-        <span className="text-[2vw]">🏫</span>
-        <span className="text-[1.6vw] font-bold text-[#1a1612]">OŠ Centar, Rijeka</span>
+        <span style={{ fontSize: `${2*s}vw` }}>🏫</span>
+        <span style={{ fontSize: `${1.6*s}vw`, fontWeight: 700, color: '#1a1612' }}>OŠ Centar, Rijeka</span>
       </motion.div>
     </motion.div>
   );

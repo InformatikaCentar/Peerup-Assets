@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useVideoScale } from '../VideoTemplate';
 
 const TABS = [
   { icon: "📚", label: "Učimo zajedno", color: "#1a8a72" },
@@ -11,6 +12,7 @@ const TABS = [
 ];
 
 export function Scene8() {
+  const { scale: s } = useVideoScale();
   const [phase, setPhase] = useState(0);
   useEffect(() => {
     const timers = [
@@ -27,17 +29,17 @@ export function Scene8() {
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center z-20"
+      style={{ padding: `${2 * s}vw` }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.92, filter: 'blur(16px)' }}
       transition={{ duration: 0.8 }}
     >
-      {/* Feature pills arc */}
-      <div className="flex flex-wrap gap-[0.8vw] justify-center max-w-[70vw] mb-[3vw]">
+      {/* Feature pills */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${0.8 * s}vw`, justifyContent: 'center', maxWidth: '90vw', marginBottom: `${3 * s}vw` }}>
         {TABS.map((tab, i) => (
           <motion.div key={i}
-            className="flex items-center gap-[0.5vw] px-[1.4vw] py-[0.7vw] rounded-full text-white font-bold text-[1.3vw] shadow-lg"
-            style={{ background: tab.color }}
+            style={{ display: 'flex', alignItems: 'center', gap: `${0.5 * s}vw`, padding: `${0.7 * s}vw ${1.4 * s}vw`, borderRadius: '999px', color: '#fff', fontWeight: 700, fontSize: `${1.3 * s}vw`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', background: tab.color }}
             initial={{ opacity: 0, y: 30, scale: 0.5 }}
             animate={phase >= 1 ? { opacity: 1, y: 0, scale: 1 } : {}}
             transition={{ type: 'spring', stiffness: 300, damping: 16, delay: i * 0.09 }}
@@ -49,21 +51,20 @@ export function Scene8() {
 
       {/* Logo */}
       <motion.div
-        className="flex items-center gap-[1.5vw] mb-[1.5vw]"
+        style={{ display: 'flex', alignItems: 'center', gap: `${1.5 * s}vw`, marginBottom: `${1.5 * s}vw` }}
         initial={{ opacity: 0, scale: 0.7 }}
         animate={phase >= 2 ? { opacity: 1, scale: 1 } : {}}
         transition={{ type: 'spring', stiffness: 220, damping: 16 }}
       >
         <motion.div
-          className="text-[8vw]"
+          style={{ fontSize: `${8 * s}vw` }}
           animate={phase >= 3 ? { scale: [1, 1.15, 1], rotate: [0, -8, 8, 0] } : {}}
           transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 2 }}
         >🤝</motion.div>
-        <div className="flex">
+        <div style={{ display: 'flex' }}>
           {"PeerUp".split('').map((ch, i) => (
             <motion.span key={i}
-              className="text-[8vw] font-black leading-none"
-              style={{ color: i < 4 ? '#1a1612' : '#1a8a72' }}
+              style={{ fontSize: `${8 * s}vw`, fontWeight: 900, lineHeight: 1, color: i < 4 ? '#1a1612' : '#1a8a72' }}
               initial={{ opacity: 0, y: -20 }}
               animate={phase >= 2 ? { opacity: 1, y: 0 } : {}}
               transition={{ type: 'spring', stiffness: 300, damping: 16, delay: i * 0.05 + 0.1 }}
@@ -74,19 +75,18 @@ export function Scene8() {
 
       {/* School badge */}
       <motion.div
-        className="flex items-center gap-[0.8vw] bg-white/80 backdrop-blur-md px-[2vw] py-[0.8vw] rounded-2xl shadow-xl border border-white/50 mb-[2vw]"
+        style={{ display: 'flex', alignItems: 'center', gap: `${0.8 * s}vw`, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', padding: `${0.8 * s}vw ${2 * s}vw`, borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.5)', marginBottom: `${2 * s}vw` }}
         initial={{ opacity: 0, y: 15 }}
         animate={phase >= 3 ? { opacity: 1, y: 0 } : {}}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
       >
-        <span className="text-[2vw]">🏫</span>
-        <span className="text-[1.6vw] font-bold text-[#1a1612]">OŠ Centar, Rijeka</span>
+        <span style={{ fontSize: `${2 * s}vw` }}>🏫</span>
+        <span style={{ fontSize: `${1.6 * s}vw`, fontWeight: 700, color: '#1a1612' }}>OŠ Centar, Rijeka</span>
       </motion.div>
 
       {/* Tagline */}
       <motion.p
-        className="text-[3vw] font-black mb-[1.5vw]"
-        style={{ color: '#1a8a72' }}
+        style={{ fontSize: `${3 * s}vw`, fontWeight: 900, color: '#1a8a72', marginBottom: `${1.5 * s}vw`, margin: `0 0 ${1.5 * s}vw` }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 4 ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5 }}
@@ -96,13 +96,13 @@ export function Scene8() {
 
       {/* CTA */}
       <motion.div
-        className="flex items-center gap-[2vw]"
+        style={{ display: 'flex', alignItems: 'center', gap: `${2 * s}vw` }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 5 ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="bg-[#1a8a72] text-white px-[3vw] py-[1vw] rounded-full font-black text-[1.6vw] shadow-xl"
+          style={{ background: '#1a8a72', color: '#fff', padding: `${1 * s}vw ${3 * s}vw`, borderRadius: '999px', fontWeight: 900, fontSize: `${1.6 * s}vw`, boxShadow: '0 8px 32px #1a8a7244' }}
           animate={phase >= 5 ? { boxShadow: ['0 4px 16px #1a8a7244', '0 8px 32px #1a8a7266', '0 4px 16px #1a8a7244'] } : {}}
           transition={{ duration: 2, repeat: Infinity }}
         >
@@ -112,7 +112,7 @@ export function Scene8() {
 
       {phase >= 6 && (
         <motion.p
-          className="text-[1.2vw] text-[#1a1612]/50 font-bold mt-[1.5vw]"
+          style={{ fontSize: `${1.2 * s}vw`, color: 'rgba(26,22,18,0.5)', fontWeight: 700, marginTop: `${1.5 * s}vw` }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
