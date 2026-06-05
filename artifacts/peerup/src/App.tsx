@@ -1843,8 +1843,7 @@ function Kvizovi({ korisnik, addBodovi, onNotifikacija }) {
   );
 }
 
-function Volontiranje({ korisnik, addBodovi, onNotifikacija }) {
-  const [projekti, setProjekti] = useState(VOLONT_PROJEKTI);
+function Volontiranje({ korisnik, addBodovi, onNotifikacija, projekti = [], setProjekti }) {
   const [noviModal, setNoviModal] = useState(false);
   const [evidencijaId, setEvidencijaId] = useState(null);
   const [noviProjekt, setNoviProjekt] = useState({ naslov:"", opis:"", ikona:"🤝", mjesta:5, bodovi:20, datum:"", vrijemeOd:"", vrijemeDo:"" });
@@ -2270,11 +2269,33 @@ function Bodovi({ korisnik, izazovi, setIzazovi, ljestvica, addBodovi, onNotifik
   );
 }
 
-function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj }) {
+function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj, projekti = [], setProjekti }) {
   const razina = getRazina(korisnik.bodovi);
   const sljedeca = getSljedecaRazina(korisnik.bodovi);
   const posto = sljedeca ? Math.round(((korisnik.bodovi - razina.min) / (sljedeca.min - razina.min)) * 100) : 100;
   const [inboxTab, setInboxTab] = useState("sve");
+  const [profEvidencijaId, setProfEvidencijaId] = useState(null);
+  const jeUcitelj = korisnik.uloga === "ucitelj" || korisnik.uloga === "admin";
+
+  const moje_aktivnosti = projekti.filter(p =>
+    p.kreatorId === korisnik.id ||
+    (p.organizator && p.organizator.includes(korisnik.ime))
+  );
+  const profEvidencijaModal = projekti.find(p => p.id === profEvidencijaId) || null;
+
+  const profToggloDolaznost = (projektId, ime) => {
+    if (!setProjekti) return;
+    setProjekti(prev => prev.map(p => p.id === projektId
+      ? { ...p, dolaznost: { ...(p.dolaznost || {}), [ime]: !(p.dolaznost?.[ime]) } }
+      : p
+    ));
+  };
+
+  const profFormatDatum = (d) => {
+    if (!d) return null;
+    try { return new Date(d).toLocaleDateString("hr-HR", { weekday:"short", day:"numeric", month:"long" }); }
+    catch { return d; }
+  };
 
   const rezervacije = notifikacije.filter(n=>n.tekst.includes("Rezervira") || n.tekst.includes("rezervira") || n.tekst.includes("🔒"));
   const aktivnosti  = notifikacije.filter(n=>!n.tekst.includes("Rezervira") && !n.tekst.includes("rezervira") && !n.tekst.includes("🔒"));
@@ -2283,6 +2304,51 @@ function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj }) {
 
   return (
     <div style={{ padding:"0 16px 20px" }}>
+
+      {/* ---- Evidencija modal (za učitelje u profilu) ---- */}
+      {profEvidencijaModal && (
+        <div onClick={()=>setProfEvidencijaId(null)} style={{ position:"fixed", inset:0, background:"#1a161288", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:20, width:"100%", maxWidth:430, maxHeight:"88vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+              <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito', sans-serif", fontWeight:900 }}>📋 Evidencija dolaznosti</h3>
+              <button onClick={()=>setProfEvidencijaId(null)} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:C.inkLight }}>✕</button>
+            </div>
+            <div style={{ background:C.orangeLight, border:`1.5px solid ${C.orange}44`, borderRadius:12, padding:"10px 14px", marginBottom:16 }}>
+              <div style={{ fontWeight:900, color:C.ink, fontSize:14, marginBottom:2 }}>{profEvidencijaModal.ikona} {profEvidencijaModal.naslov}</div>
+              {profEvidencijaModal.datum && <div style={{ color:C.inkMid, fontSize:12 }}>📅 {profFormatDatum(profEvidencijaModal.datum)}{profEvidencijaModal.vrijemeOd ? ` · ${profEvidencijaModal.vrijemeOd}–${profEvidencijaModal.vrijemeDo||"?"}` : ""}</div>}
+              <div style={{ color:C.inkMid, fontSize:12 }}>🏅 Nagrada: {profEvidencijaModal.bodovi} bod. po učeniku</div>
+            </div>
+            {profEvidencijaModal.prijavljeni.length === 0 ? (
+              <div style={{ textAlign:"center", padding:24, color:C.inkLight, fontSize:13 }}>Nema prijavljenih učenika.</div>
+            ) : (
+              <div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 60px", gap:6, padding:"7px 12px", background:C.bgDeep, borderRadius:10, marginBottom:8, fontSize:11, color:C.inkLight, fontWeight:800, textTransform:"uppercase", letterSpacing:0.5 }}>
+                  <div>Učenik</div><div style={{ textAlign:"center" }}>Prisutan</div><div style={{ textAlign:"center" }}>Bodovi</div>
+                </div>
+                {profEvidencijaModal.prijavljeni.map((ime, i) => {
+                  const prisutan = profEvidencijaModal.dolaznost?.[ime] || false;
+                  const nagraden = profEvidencijaModal.nagrade?.[ime] || false;
+                  return (
+                    <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 80px 60px", gap:6, padding:"10px 12px", background:prisutan?C.greenLight:C.bg, borderRadius:10, marginBottom:6, alignItems:"center", border:`1.5px solid ${prisutan?C.green:C.cardBorder}`, transition:"all 0.2s" }}>
+                      <div style={{ fontWeight:800, color:C.ink, fontSize:13 }}>{ime}</div>
+                      <button onClick={()=>profToggloDolaznost(profEvidencijaModal.id, ime)} style={{ padding:"5px 10px", borderRadius:8, border:`2px solid ${prisutan?C.green:C.cardBorder}`, background:prisutan?C.green:"transparent", color:prisutan?"#fff":C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, cursor:"pointer", textAlign:"center" }}>
+                        {prisutan ? "✓ Da" : "Ne"}
+                      </button>
+                      <div style={{ fontSize:11, color:nagraden?C.green:prisutan?C.orange:C.inkLight, fontWeight:800, textAlign:"center" }}>
+                        {nagraden ? `✓ +${profEvidencijaModal.bodovi}` : prisutan ? `+${profEvidencijaModal.bodovi}` : "—"}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ marginTop:12, padding:"10px 14px", background:C.bgDeep, borderRadius:12, fontSize:12, color:C.inkMid, fontWeight:700 }}>
+                  💡 Bodovi se automatski dodjeljuju učenicima kad otvore Volontiranje tab.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Avatar & info */}
       <div style={{ background:`linear-gradient(135deg, ${razina.boja}33, ${razina.boja}11)`, border:`2px solid ${razina.boja}44`, borderRadius:20, padding:20, marginBottom:16, textAlign:"center" }}>
         <div style={{ fontSize:72, marginBottom:8 }}>{korisnik.avatar}</div>
@@ -2336,6 +2402,72 @@ function Profil({ korisnik, notifikacije, onOdjaviSe, onProcitaj }) {
           ))
         )}
       </div>
+
+      {/* Moje aktivnosti — samo za učitelje/admin */}
+      {jeUcitelj && (
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>
+            🤝 Moje volonterske aktivnosti
+            <span style={{ background:C.orange, color:"#fff", borderRadius:99, padding:"1px 8px", fontSize:10, marginLeft:8 }}>{moje_aktivnosti.length}</span>
+          </div>
+          {moje_aktivnosti.length === 0 ? (
+            <div style={{ background:C.bgDeep, borderRadius:12, padding:16, textAlign:"center", color:C.inkLight, fontSize:13 }}>
+              Nisi još objavio/la aktivnosti. Idi na Volontiranje tab i dodaj prvu!
+            </div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {moje_aktivnosti.map((p) => {
+                const brojPrijava = (p.prijavljeni || []).length;
+                const brojPrisutnih = Object.values(p.dolaznost || {}).filter(Boolean).length;
+                return (
+                  <div key={p.id} style={{ background:C.card, border:`1.5px solid ${brojPrijava > 0 ? C.orange+"66" : C.cardBorder}`, borderRadius:14, padding:"12px 14px" }}>
+                    <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8, marginBottom:8 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:900, color:C.ink, fontSize:14 }}>{p.ikona} {p.naslov}</div>
+                        {p.datum && <div style={{ fontSize:11, color:C.inkMid, marginTop:2 }}>📅 {profFormatDatum(p.datum)}{p.vrijemeOd ? ` · ${p.vrijemeOd}` : ""}</div>}
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, flexShrink:0 }}>
+                        <div style={{ background:brojPrijava > 0 ? C.orangeLight : C.bgDeep, border:`1px solid ${brojPrijava > 0 ? C.orange : C.cardBorder}`, borderRadius:99, padding:"3px 10px", fontSize:11, fontWeight:900, color:brojPrijava > 0 ? C.orange : C.inkLight }}>
+                          👥 {brojPrijava}/{p.mjesta}
+                        </div>
+                        {brojPrisutnih > 0 && (
+                          <div style={{ background:C.greenLight, border:`1px solid ${C.green}`, borderRadius:99, padding:"3px 10px", fontSize:11, fontWeight:900, color:C.green }}>
+                            ✓ {brojPrisutnih} prisutno
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {brojPrijava > 0 && (
+                      <div>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:8 }}>
+                          {(p.prijavljeni || []).map((ime, i) => {
+                            const prisutan = p.dolaznost?.[ime] || false;
+                            const nagraden = p.nagrade?.[ime] || false;
+                            return (
+                              <div key={i} style={{ display:"flex", alignItems:"center", gap:5, background:nagraden ? C.greenLight : prisutan ? C.tealLight : C.bgDeep, border:`1.5px solid ${nagraden ? C.green : prisutan ? C.teal : C.cardBorder}`, borderRadius:99, padding:"4px 10px", fontSize:12, fontWeight:800, color:nagraden ? C.green : prisutan ? C.teal : C.inkMid }}>
+                                {nagraden ? "✓" : prisutan ? "🟢" : "⬜"} {ime}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <button
+                          onClick={() => setProfEvidencijaId(p.id)}
+                          style={{ width:"100%", padding:"8px 0", borderRadius:10, border:`2px solid ${C.orange}`, background:C.orangeLight, color:C.orange, fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:13, cursor:"pointer" }}
+                        >
+                          📋 Otvori evidenciju ({brojPrijava} učenika)
+                        </button>
+                      </div>
+                    )}
+                    {brojPrijava === 0 && (
+                      <div style={{ fontSize:12, color:C.inkLight, fontStyle:"italic" }}>Još nema prijavljenih učenika.</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Statistike */}
       <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Statistike</div>
@@ -3077,6 +3209,10 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     try { const s = localStorage.getItem('peerup_izazovi'); return s ? JSON.parse(s) : INIT_IZAZOVI; }
     catch { return INIT_IZAZOVI; }
   });
+  const [projekti, setProjekti] = useState(() => {
+    try { const s = localStorage.getItem('peerup_projekti'); return s ? JSON.parse(s) : VOLONT_PROJEKTI; }
+    catch { return VOLONT_PROJEKTI; }
+  });
   const [notifikacije, setNotifikacije] = useState([]);
   const [postavkeModal, setPostavkeModal] = useState(false);
   const [postavke, setPostavke] = useState(() => {
@@ -3094,6 +3230,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
   useEffect(() => { try { localStorage.setItem('peerup_razmjena',  JSON.stringify(razmjena));  } catch {} }, [razmjena]);
   useEffect(() => { try { localStorage.setItem('peerup_price',     JSON.stringify(price));     } catch {} }, [price]);
   useEffect(() => { try { localStorage.setItem('peerup_izazovi',   JSON.stringify(izazovi));   } catch {} }, [izazovi]);
+  useEffect(() => { try { localStorage.setItem('peerup_projekti',  JSON.stringify(projekti));  } catch {} }, [projekti]);
   const zmijeniPostavku = (key, val) => {
     const nove = { ...postavke, [key]: val };
     setPostavke(nove);
@@ -3196,9 +3333,9 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
         {aktTab==="biljeske"     && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="buvljak"      && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="price"        && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
-        {aktTab==="volontiranje"  && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="volontiranje"  && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} projekti={projekti} setProjekti={setProjekti} />}
         {aktTab==="bodovi"       && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={ljestvica} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="profil"       && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} />}
+        {aktTab==="profil"       && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} projekti={projekti} setProjekti={setProjekti} />}
         {aktTab==="adminpanel"   && <AdminDashboard korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} skola={skola} onOdjava={onOdjava} />}
       </div>
 
