@@ -13,6 +13,19 @@ const C = {
   green:"#16a34a", greenLight:"#dcfce7",
   orange:"#ea580c", orangeLight:"#ffedd5",
 };
+const C_INICIAL = { ...C };
+const C_TAMNO = {
+  bg:"#0f1117", bgDeep:"#161b27", card:"#1e2130", cardBorder:"#2e3348",
+  ink:"#e2e8f0", inkMid:"#94a3b8", inkLight:"#596880",
+  teal:"#2dd4bf", tealLight:"#0c3330",
+  amber:"#fbbf24", amberLight:"#2d1e00",
+  rose:"#fb7185", roseLight:"#2e0a14",
+  blue:"#60a5fa", blueLight:"#1a2d4e",
+  plum:"#a78bfa", plumLight:"#1e1040",
+  red:"#f87171", redLight:"#2d0e0e",
+  green:"#4ade80", greenLight:"#082e14",
+  orange:"#fb923c", orangeLight:"#2d1500",
+};
 
 const PREDMETI = ["Matematika","Hrvatski","Engleski","Priroda","Povijest","Geografija","Fizika","Kemija","Biologija","Informatika","Glazbena kultura","Likovna kultura","TZK","Tehnička kultura","Drugi strani jezik","Ostalo"];
 const RAZREDI  = ["1.","2.","3.","4.","5.","6.","7.","8."];
@@ -2989,6 +3002,58 @@ function EkranDemo({ clanovi, onUspjeh, onNatrag }) {
   );
 }
 
+// ---- POSTAVKE MODAL ----
+function PostavkeModal({ postavke, onZmijeni, onClose }) {
+  const btnBase = { fontFamily:"'Nunito',sans-serif", fontWeight:800, cursor:"pointer", borderRadius:12, border:"2px solid", transition:"all .15s" };
+  const sel = (active) => active
+    ? { ...btnBase, background:C.teal, borderColor:C.teal, color:"#fff" }
+    : { ...btnBase, background:C.bg, borderColor:C.cardBorder, color:C.inkMid };
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"#00000055", zIndex:600, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:C.card, borderRadius:"20px 20px 0 0", padding:24, width:"100%", maxWidth:560, boxShadow:"0 -8px 32px #00000022", border:`1.5px solid ${C.cardBorder}` }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <h3 style={{ margin:0, color:C.ink, fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:18 }}>⚙️ Postavke</h3>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:C.inkLight }}>✕</button>
+        </div>
+
+        {/* Tema */}
+        <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Izgled aplikacije</p>
+        <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+          {[{id:"svjetlo",ikona:"☀️",label:"Svjetlo"},{id:"tamno",ikona:"🌙",label:"Tamno"}].map(t=>(
+            <button key={t.id} onClick={()=>onZmijeni("tema",t.id)} style={{ ...sel(postavke.tema===t.id), flex:1, padding:"12px 0", fontSize:14, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+              <span style={{ fontSize:22 }}>{t.ikona}</span>
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tekst */}
+        <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Veličina teksta</p>
+        <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+          {[{id:"mali",label:"A",fs:13,desc:"Mali"},{id:"normalni",label:"A",fs:17,desc:"Normalni"},{id:"veliki",label:"A",fs:22,desc:"Veliki"}].map(t=>(
+            <button key={t.id} onClick={()=>onZmijeni("tekst",t.id)} style={{ ...sel(postavke.tekst===t.id), flex:1, padding:"10px 0", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+              <span style={{ fontSize:t.fs, lineHeight:1 }}>{t.label}</span>
+              <span style={{ fontSize:10 }}>{t.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Sirina */}
+        <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Širina sučelja</p>
+        <div style={{ display:"flex", gap:10, marginBottom:8 }}>
+          {[{id:"auto",ikona:"📱💻",label:"Auto"},{id:"usko",ikona:"📱",label:"Mobitel"},{id:"siroko",ikona:"💻",label:"Desktop"}].map(s=>(
+            <button key={s.id} onClick={()=>onZmijeni("sirina",s.id)} style={{ ...sel(postavke.sirina===s.id), flex:1, padding:"10px 4px", fontSize:12, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+              <span style={{ fontSize:18 }}>{s.ikona}</span>
+              <span>{s.label}</span>
+            </button>
+          ))}
+        </div>
+        <p style={{ margin:"4px 0 0", fontSize:11, color:C.inkLight, fontStyle:"italic", textAlign:"center" }}>Auto — automatski prilagođava širinu ovisno o veličini ekrana</p>
+      </div>
+    </div>
+  );
+}
+
 // ---- MAIN APP ----
 function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, setKodovi, skola = { naziv: SKOLA_NAZIV, grad: SKOLA_GRAD, mzoKod: "", oib: "" }, setSkola, onOdjava }) {
   const [aktTab, setAktTab] = useState("ucimo");
@@ -2998,6 +3063,26 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
   const [price, setPrice] = useState(DEMO_PRICE);
   const [izazovi, setIzazovi] = useState(INIT_IZAZOVI);
   const [notifikacije, setNotifikacije] = useState([]);
+  const [postavkeModal, setPostavkeModal] = useState(false);
+  const [postavke, setPostavke] = useState(() => {
+    try { const s = localStorage.getItem('peerup_postavke'); return s ? JSON.parse(s) : { tema:'svjetlo', tekst:'normalni', sirina:'auto' }; }
+    catch { return { tema:'svjetlo', tekst:'normalni', sirina:'auto' }; }
+  });
+  const [sirinaProzora, setSirinaProzora] = useState(window.innerWidth);
+  useEffect(() => {
+    const h = () => setSirinaProzora(window.innerWidth);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  const zmijeniPostavku = (key, val) => {
+    const nove = { ...postavke, [key]: val };
+    setPostavke(nove);
+    try { localStorage.setItem('peerup_postavke', JSON.stringify(nove)); } catch {}
+  };
+  // Apply theme colors before render
+  Object.assign(C, postavke.tema === 'tamno' ? C_TAMNO : C_INICIAL);
+  const maxSirina = postavke.sirina === 'usko' ? 430 : postavke.sirina === 'siroko' ? 1100 : sirinaProzora > 768 ? 900 : 430;
+  const fontZoom = postavke.tekst === 'mali' ? 0.9 : postavke.tekst === 'veliki' ? 1.12 : 1;
 
   /* Provjera sesije i školske godine */
   useEffect(() => {
@@ -3036,7 +3121,8 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
   const jeAdmin = korisnik.uloga === "admin";
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif", maxWidth:430, margin:"0 auto", display:"flex", flexDirection:"column" }}>
+    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif", maxWidth:maxSirina, margin:"0 auto", display:"flex", flexDirection:"column", transition:"max-width 0.3s ease" }}>
+      {postavkeModal && <PostavkeModal postavke={postavke} onZmijeni={zmijeniPostavku} onClose={()=>setPostavkeModal(false)} />}
       {/* Header */}
       <div style={{ background:`linear-gradient(135deg, #1a8a72 0%, #0e6b58 100%)`, padding:"12px 16px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 16px #1a8a7233" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -3051,23 +3137,26 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
             <span style={{ fontSize:13 }}>{razina.ikona}</span>
             <span style={{ fontWeight:900, fontSize:13, color:"#fff" }}>{korisnik.bodovi}</span>
           </div>
-          <button onClick={()=>setAktTab("profil")} title="Obavijesti" style={{ position:"relative", background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+          <button onClick={()=>setAktTab("profil")} title="Obavijesti" style={{ position:"relative", background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:15 }}>
             🔔
-            {neprocitane > 0 && <span style={{ position:"absolute", top:-3, right:-3, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:17, height:17, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>}
+            {neprocitane > 0 && <span style={{ position:"absolute", top:-3, right:-3, background:C.rose, color:"#fff", borderRadius:"50%", fontSize:9, fontWeight:900, width:16, height:16, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>}
           </button>
-          <button onClick={()=>setAktTab("profil")} title="Profil" style={{ position:"relative", background:aktTab==="profil"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="profil"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+          <button onClick={()=>setAktTab("profil")} title="Profil" style={{ background:aktTab==="profil"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="profil"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:15 }}>
             👤
           </button>
+          <button onClick={()=>setPostavkeModal(true)} title="Postavke" style={{ background:postavkeModal?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${postavkeModal?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:15 }}>
+            ⚙️
+          </button>
           {jeAdmin && (
-            <button onClick={()=>setAktTab("adminpanel")} title="Admin panel" style={{ background:aktTab==="adminpanel"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="adminpanel"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
-              ⚙️
+            <button onClick={()=>setAktTab("adminpanel")} title="Admin panel" style={{ background:aktTab==="adminpanel"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="adminpanel"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:15 }}>
+              🛡️
             </button>
           )}
         </div>
       </div>
 
       {/* Content */}
-      <div style={{ flex:1, overflowY:"auto", paddingBottom:72, paddingTop:4 }}>
+      <div style={{ flex:1, overflowY:"auto", paddingBottom:72, paddingTop:4, zoom:fontZoom }}>
         {aktTab==="ucimo"        && <UcimoZajedno korisnik={korisnik} ponude={ponude} setPonude={setPonude} onNotifikacija={onNotifikacija} addBodovi={addBodovi} />}
         {aktTab==="biljeske"     && <Biljeske korisnik={korisnik} materijali={materijali} setMaterijali={setMaterijali} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="buvljak"      && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
@@ -3079,7 +3168,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
       </div>
 
       {/* Bottom Nav */}
-      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, background:"rgba(255,255,255,0.95)", borderTop:`1px solid ${C.cardBorder}`, display:"flex", zIndex:200, overflowX:"auto", backdropFilter:"blur(12px)", boxShadow:"0 -4px 20px #1a16120d" }}>
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:maxSirina, background:postavke.tema==="tamno"?"rgba(20,23,35,0.97)":"rgba(255,255,255,0.95)", borderTop:`1px solid ${C.cardBorder}`, display:"flex", zIndex:200, overflowX:"auto", backdropFilter:"blur(12px)", boxShadow:"0 -4px 20px #1a16120d" }}>
         {TABOVI.map(t=>(
           <button key={t.id} onClick={()=>setAktTab(t.id)} style={{ flex:"0 0 auto", minWidth:54, padding:"8px 3px 10px", background:"none", border:"none", display:"flex", flexDirection:"column", alignItems:"center", gap:2, cursor:"pointer", position:"relative", transition:"all 0.15s" }}>
             <span style={{ fontSize:aktTab===t.id?20:17, transition:"font-size 0.15s" }}>{t.ikona}</span>
