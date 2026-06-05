@@ -14,10 +14,10 @@ const C = {
   orange:"#ea580c", orangeLight:"#ffedd5",
 };
 
-const PREDMETI = ["Matematika","Hrvatski","Engleski","Priroda","Povijest","Geografija","Fizika","Kemija","Biologija","Informatika","Glazbena","Likovna","TZK"];
+const PREDMETI = ["Matematika","Hrvatski","Engleski","Priroda","Povijest","Geografija","Fizika","Kemija","Biologija","Informatika","Glazbena kultura","Likovna kultura","TZK","Tehnička kultura","Drugi strani jezik","Ostalo"];
 const RAZREDI  = ["1.","2.","3.","4.","5.","6.","7.","8."];
 const DANI     = ["Pon","Uto","Sri","Čet","Pet"];
-const SATI     = ["8:00","9:00","10:00","11:00","12:00","13:00","14:00"];
+const SATI     = ["1. sat (8:00–8:45)","2. sat (8:50–9:35)","3. sat (9:45–10:30)","4. sat (10:40–11:25)","5. sat (11:35–12:20)","6. sat (12:30–13:15)","7. sat (13:20–14:05)"];
 
 const SKOLA_NAZIV = "OŠ Centar";
 const SKOLA_GRAD  = "Rijeka";
@@ -52,8 +52,10 @@ const LEKCIJE = {
   Kemija:["Atomi i molekule","Periodni sustav","Kiseline i baze","Kemijske reakcije"],
   Biologija:["Stanica","Nasljeđivanje","Evolucija","Organski sustavi"],
   Informatika:["Algoritmi","Scratch","micro:bit","Baze podataka","Internetska sigurnost"],
-  Glazbena:["Note i ritam","Instrumenti","Skladatelji"],
-  Likovna:["Perspektiva","Boje","Skulptura"],
+  "Glazbena kultura":["Note i ritam","Instrumenti","Skladatelji","Glazbeni oblici","Vokalna glazba"],
+  "Likovna kultura":["Perspektiva","Boje","Skulptura","Kompozicija","Crtanje i slikanje"],
+  "Tehnička kultura":["Materijali","Električni krug","Mehanizmi","3D modeliranje","Projektiranje"],
+  "Drugi strani jezik":["Osnove govora","Prezent","Rječnik","Konverzacija","Prošlo vrijeme"],
   TZK:["Atletika","Plivanje","Košarka","Gimnastika"],
 };
 
@@ -156,14 +158,14 @@ const KVIZ_BANKA = {
     { tip:"sparivanje", pitanje:"Spoji pojam s definicijom:", parovi:[["CPU","Procesor"],["RAM","Radna memorija"],["HDD","Tvrdi disk"],["GPU","Grafička kartica"]], objasnjenje:"Dijelovi računala imaju specifične uloge u obradi i pohrani podataka." },
     { tip:"mcq", pitanje:"Što je baza podataka?", opcije:["Program za pisanje teksta","Organizirana zbirka podataka","Vrsta mreže","Web preglednik"], tocno:1, objasnjenje:"Baza podataka je organizirana zbirka strukturiranih podataka pohranjena elektronički." },
   ],
-  Glazbena: [
+  "Glazbena kultura": [
     { tip:"mcq", pitanje:"Koliko linija ima glazbeni notni crtovlje?", opcije:["3","4","5","6"], tocno:2, objasnjenje:"Notno crtovlje se sastoji od 5 linija i 4 međuprostora." },
     { tip:"tocno_netocno", pitanje:"Violina je gudački instrument.", tocno:true, objasnjenje:"Violina je gudački instrument – svira se gudalom koje prelazi po žicama." },
     { tip:"mcq", pitanje:"Tko je skladao Mesijin kompleks – 9. simfoniju 'Koral'?", opcije:["Mozart","Beethoven","Bach","Chopin"], tocno:1, objasnjenje:"Beethovenova 9. simfonija u d-molu op. 125 'Koral' jedna je od najpoznatijih simfonija u povijesti glazbe." },
     { tip:"popuni", pitanje:"Nota koja traje cijelu mjeru u 4/4 je ___ nota.", tocno:"cijela", objasnjenje:"Cijela nota traje 4 dobe u 4/4 mjeri." },
     { tip:"mcq", pitanje:"Što znači 'forte' u glazbi?", opcije:["Tiho","Glasno","Polako","Brzo"], tocno:1, objasnjenje:"Forte (f) znači glasno. Piano (p) znači tiho." },
   ],
-  Likovna: [
+  "Likovna kultura": [
     { tip:"mcq", pitanje:"Koje su osnovne boje?", opcije:["Crvena, zelena, plava","Crvena, žuta, plava","Narančasta, zelena, ljubičasta","Bijela, crna, siva"], tocno:1, objasnjenje:"Osnovne (primarne) boje su crvena, žuta i plava – iz njih se miješanjem dobivaju sve ostale boje." },
     { tip:"tocno_netocno", pitanje:"Perspektiva u likovnoj umjetnosti stvara dojam dubine.", tocno:true, objasnjenje:"Perspektiva je tehnika prikazivanja trodimenzionalnog prostora na dvodimenzionalnoj površini." },
     { tip:"mcq", pitanje:"Što je skulptura?", opcije:["Slika na papiru","Trodimenzionalno likovno djelo","Grafički dizajn","Fotografija"], tocno:1, objasnjenje:"Skulptura je trodimenzionalno likovno djelo nastalo kiparskim tehnikama (klesanje, modeliranje)." },
@@ -223,11 +225,11 @@ function initKodovi() {
 const INIT_KODOVI = initKodovi();
 
 const DEMO_PONUDE = [
-  { id:101, ime:"Luka M.",  razred:"7.", predmet:"Matematika", lekcija:"Jednadžbe",        opis:"Mogu objasniti linearne jednadžbe korak po korak. Rješavali smo ih ove godine i super mi ide!", avatar:"🧑‍🎓", bodovi:142, tip:"nudi",  ocjena:4.8, termini:[{dan:"Pon",sat:"10:00",slobodan:true},{dan:"Sri",sat:"11:00",slobodan:false},{dan:"Pet",sat:"13:00",slobodan:true}], prijave:["Ana K.","Sara P."] },
-  { id:102, ime:"Ana K.",   razred:"5.", predmet:"Engleski",   lekcija:"Present Perfect",  opis:"Tečno pričam engleski, živjela sam u Irskoj 2 godine. Mogu pomoći s gramatikom i konverzacijom.", avatar:"👩‍🎓", bodovi:98,  tip:"nudi",  ocjena:4.9, termini:[{dan:"Uto",sat:"12:00",slobodan:true},{dan:"Čet",sat:"9:00",slobodan:true}], prijave:["Tin B."] },
-  { id:103, ime:"Tin B.",   razred:"8.", predmet:"Fizika",     lekcija:"Sila i gibanje",   opis:"Natječem se iz fizike, prošao sam školsko natjecanje. Mogu pomoći s teorijom i zadacima.", avatar:"🧑",   bodovi:210, tip:"nudi",  ocjena:5.0, termini:[{dan:"Pon",sat:"11:00",slobodan:true},{dan:"Sri",sat:"14:00",slobodan:true},{dan:"Pet",sat:"10:00",slobodan:false}], prijave:[] },
-  { id:104, ime:"Sara P.",  razred:"7.", predmet:"Hrvatski",   lekcija:"Glagolska vremena",opis:"Ne razumijem dobro glagolska vremena, posebno aorist i imperfekt. Trebam nekoga da mi objasni.", avatar:"👧",   bodovi:55,  tip:"traži", ocjena:null, termini:[{dan:"Uto",sat:"10:00",slobodan:true},{dan:"Čet",sat:"13:00",slobodan:true}], prijave:["Luka M."] },
-  { id:105, ime:"Mia L.",   razred:"7.", predmet:"Kemija",     lekcija:"Kiseline i baze",  opis:"Trebam pomoć s razumijevanjem pH ljestvice i kemijskih reakcija. Pišemo test za tjedan dana.", avatar:"👩",   bodovi:74,  tip:"traži", ocjena:null, termini:[{dan:"Sri",sat:"9:00",slobodan:true}], prijave:[] },
+  { id:101, ime:"Luka M.",  razred:"7.", predmet:"Matematika", lekcija:"Jednadžbe",        opis:"Mogu objasniti linearne jednadžbe korak po korak. Rješavali smo ih ove godine i super mi ide!", avatar:"🧑‍🎓", bodovi:142, tip:"nudi",  ocjena:4.8, termini:[{dan:"Pon",sat:"3. sat (9:45–10:30)",slobodan:true},{dan:"Sri",sat:"4. sat (10:40–11:25)",slobodan:false},{dan:"Pet",sat:"6. sat (12:30–13:15)",slobodan:true}], prijave:["Ana K.","Sara P."] },
+  { id:102, ime:"Ana K.",   razred:"5.", predmet:"Engleski",   lekcija:"Present Perfect",  opis:"Tečno pričam engleski, živjela sam u Irskoj 2 godine. Mogu pomoći s gramatikom i konverzacijom.", avatar:"👩‍🎓", bodovi:98,  tip:"nudi",  ocjena:4.9, termini:[{dan:"Uto",sat:"5. sat (11:35–12:20)",slobodan:true},{dan:"Čet",sat:"2. sat (8:50–9:35)",slobodan:true}], prijave:["Tin B."] },
+  { id:103, ime:"Tin B.",   razred:"8.", predmet:"Fizika",     lekcija:"Sila i gibanje",   opis:"Natječem se iz fizike, prošao sam školsko natjecanje. Mogu pomoći s teorijom i zadacima.", avatar:"🧑",   bodovi:210, tip:"nudi",  ocjena:5.0, termini:[{dan:"Pon",sat:"4. sat (10:40–11:25)",slobodan:true},{dan:"Sri",sat:"7. sat (13:20–14:05)",slobodan:true},{dan:"Pet",sat:"3. sat (9:45–10:30)",slobodan:false}], prijave:[] },
+  { id:104, ime:"Sara P.",  razred:"7.", predmet:"Hrvatski",   lekcija:"Glagolska vremena",opis:"Ne razumijem dobro glagolska vremena, posebno aorist i imperfekt. Trebam nekoga da mi objasni.", avatar:"👧",   bodovi:55,  tip:"traži", ocjena:null, termini:[{dan:"Uto",sat:"3. sat (9:45–10:30)",slobodan:true},{dan:"Čet",sat:"6. sat (12:30–13:15)",slobodan:true}], prijave:["Luka M."] },
+  { id:105, ime:"Mia L.",   razred:"7.", predmet:"Kemija",     lekcija:"Kiseline i baze",  opis:"Trebam pomoć s razumijevanjem pH ljestvice i kemijskih reakcija. Pišemo test za tjedan dana.", avatar:"👩",   bodovi:74,  tip:"traži", ocjena:null, termini:[{dan:"Sri",sat:"2. sat (8:50–9:35)",slobodan:true}], prijave:[] },
 ];
 
 const DEMO_MATERIJALI = [
@@ -504,6 +506,7 @@ function NovaPonudaModal({ korisnik, onClose, onDodaj }) {
   const [razred, setRazred] = useState(korisnik.razred || "7.");
   const [lekcija, setLekcija] = useState("");
   const [lekcijaRucno, setLekcijaRucno] = useState("");
+  const [predmetRucno, setPredmetRucno] = useState("");
   const [opis, setOpis] = useState("");
   const [odabraniTermini, setOdabraniTermini] = useState([]);
   const [kalModal, setKalModal] = useState(false);
@@ -514,7 +517,8 @@ function NovaPonudaModal({ korisnik, onClose, onDodaj }) {
   };
   const objavi = () => {
     const finLekcija = lekcija==="__ostalo__" ? lekcijaRucno : lekcija;
-    onDodaj({ id:Date.now(), ime:`${korisnik.ime} ${korisnik.prezime[0]}.`, razred, predmet, lekcija:finLekcija, opis, avatar:korisnik.avatar, bodovi:korisnik.bodovi, tip:tipPonude, ocjena:null, termini:odabraniTermini, prijave:[] });
+    const finPredmet = predmet==="Ostalo" ? predmetRucno : predmet;
+    onDodaj({ id:Date.now(), ime:`${korisnik.ime} ${korisnik.prezime[0]}.`, razred, predmet:finPredmet, lekcija:finLekcija, opis, avatar:korisnik.avatar, bodovi:korisnik.bodovi, tip:tipPonude, ocjena:null, termini:odabraniTermini, prijave:[] });
     setGotovo(true);
     setTimeout(onClose, 1800);
   };
@@ -554,10 +558,13 @@ function NovaPonudaModal({ korisnik, onClose, onDodaj }) {
               ))}
             </div>
             <p style={{ margin:"0 0 8px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Predmet</p>
-            <select value={predmet} onChange={e=>{setPredmet(e.target.value);setLekcija("");}} style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, marginBottom:16, outline:"none" }}>
+            <select value={predmet} onChange={e=>{setPredmet(e.target.value);setLekcija("");setPredmetRucno("");}} style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.cardBorder}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, marginBottom:predmet==="Ostalo"?8:16, outline:"none" }}>
               {PREDMETI.map(p=><option key={p}>{p}</option>)}
             </select>
-            <Btn label="Dalje →" color={C.teal} full onClick={()=>setKorak(2)} />
+            {predmet==="Ostalo" && (
+              <input value={predmetRucno} onChange={e=>setPredmetRucno(e.target.value)} placeholder="Upiši naziv predmeta ili područja..." style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${C.teal}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, boxSizing:"border-box", marginBottom:16, outline:"none" }} />
+            )}
+            <Btn label="Dalje →" color={C.teal} full disabled={predmet==="Ostalo"&&!predmetRucno.trim()} onClick={()=>setKorak(2)} />
           </>
         )}
         {korak===2 && (
@@ -2717,7 +2724,7 @@ function EkranRegistracijaSkole({ setClanovi, setKodovi, setSkola, onUspjeh, onN
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 Podaci moraju biti usklađeni s MZOM registrom ustanova. Registraciju može izvršiti samo djelatnik škole.</p>
             </div>
             <FInp label="Naziv i grad ustanove" value={naziv} onChange={e=>setNaziv(e.target.value)} placeholder="npr. OŠ Centar, Rijeka" icon="🏫" />
-            <FInp label="Šifra škole (MZOM)" value={mzoKod} onChange={e=>setMzoKod(e.target.value.replace(/\D/g,""))} placeholder="npr. 0317059 (7 znamenki)" icon="🔢" />
+            <FInp label="Šifra škole (MZOM)" value={mzoKod} onChange={e=>setMzoKod(e.target.value.replace(/\D/g,""))} placeholder="npr. 00-000-000" icon="🔢" />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" />
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
             {provjeravam ? (
@@ -3023,8 +3030,6 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     { id:"price",       label:"Priče",    ikona:"💬" },
     { id:"volontiranje",label:"Volonti.", ikona:"🤲" },
     { id:"bodovi",      label:"Bodovi",   ikona:"⭐" },
-    { id:"profil",      label:"Profil",   ikona:"👤" },
-    ...(korisnik.uloga === "admin" ? [{ id:"adminpanel", label:"Panel", ikona:"⚙️" }] : []),
   ];
   const razina = getRazina(korisnik.bodovi);
   const neprocitane = notifikacije.filter(n=>!n.procitana).length;
@@ -3046,15 +3051,17 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
             <span style={{ fontSize:13 }}>{razina.ikona}</span>
             <span style={{ fontWeight:900, fontSize:13, color:"#fff" }}>{korisnik.bodovi}</span>
           </div>
-          {neprocitane > 0 && (
-            <button onClick={()=>setAktTab("profil")} style={{ position:"relative", background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
-              🔔<span style={{ position:"absolute", top:-3, right:-3, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:17, height:17, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>
-            </button>
-          )}
+          <button onClick={()=>setAktTab("profil")} title="Obavijesti" style={{ position:"relative", background:"rgba(255,255,255,0.2)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+            🔔
+            {neprocitane > 0 && <span style={{ position:"absolute", top:-3, right:-3, background:C.rose, color:C.card, borderRadius:"50%", fontSize:9, fontWeight:900, width:17, height:17, display:"flex", alignItems:"center", justifyContent:"center" }}>{neprocitane}</span>}
+          </button>
+          <button onClick={()=>setAktTab("profil")} title="Profil" style={{ position:"relative", background:aktTab==="profil"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="profil"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+            👤
+          </button>
           {jeAdmin && (
-            <div style={{ background:"rgba(255,255,255,0.25)", borderRadius:999, padding:"3px 10px", border:"1.5px solid rgba(255,255,255,0.4)" }}>
-              <span style={{ fontSize:11, fontWeight:800, color:"#fff" }}>⚙️ Admin</span>
-            </div>
+            <button onClick={()=>setAktTab("adminpanel")} title="Admin panel" style={{ background:aktTab==="adminpanel"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.2)", border:`1.5px solid ${aktTab==="adminpanel"?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)"}`, borderRadius:999, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", fontSize:16 }}>
+              ⚙️
+            </button>
           )}
         </div>
       </div>
