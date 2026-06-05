@@ -2247,7 +2247,7 @@ function Bodovi({ korisnik, izazovi, setIzazovi, ljestvica, addBodovi, onNotifik
       {/* Ljestvica */}
       <div style={{ fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>🏆 Ljestvica škole</div>
       {ljestvica.map(l=>{
-        const jaMojIme = korisnik.ime === l.ime.split(" ")[0];
+        const jaMojIme = l.id === korisnik.id || korisnik.ime === l.ime.split(" ")[0];
         return (
           <div key={l.r} style={{ display:"flex", gap:10, alignItems:"center", background:jaMojIme?`${C.teal}18`:C.card, border:`1.5px solid ${jaMojIme?C.teal:C.cardBorder}`, borderRadius:12, padding:"11px 12px", marginBottom:8 }}>
             <div style={{ fontWeight:900, fontSize:18, color:l.r<=3?C.amber:C.inkLight, width:26, textAlign:"center" }}>{l.bed||l.r}</div>
@@ -3057,11 +3057,26 @@ function PostavkeModal({ postavke, onZmijeni, onClose }) {
 // ---- MAIN APP ----
 function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, setKodovi, skola = { naziv: SKOLA_NAZIV, grad: SKOLA_GRAD, mzoKod: "", oib: "" }, setSkola, onOdjava }) {
   const [aktTab, setAktTab] = useState("ucimo");
-  const [ponude, setPonude] = useState(DEMO_PONUDE);
-  const [materijali, setMaterijali] = useState(DEMO_MATERIJALI);
-  const [razmjena, setRazmjena] = useState(DEMO_RAZMJENA);
-  const [price, setPrice] = useState(DEMO_PRICE);
-  const [izazovi, setIzazovi] = useState(INIT_IZAZOVI);
+  const [ponude, setPonude] = useState(() => {
+    try { const s = localStorage.getItem('peerup_ponude'); return s ? JSON.parse(s) : DEMO_PONUDE; }
+    catch { return DEMO_PONUDE; }
+  });
+  const [materijali, setMaterijali] = useState(() => {
+    try { const s = localStorage.getItem('peerup_materijali'); return s ? JSON.parse(s) : DEMO_MATERIJALI; }
+    catch { return DEMO_MATERIJALI; }
+  });
+  const [razmjena, setRazmjena] = useState(() => {
+    try { const s = localStorage.getItem('peerup_razmjena'); return s ? JSON.parse(s) : DEMO_RAZMJENA; }
+    catch { return DEMO_RAZMJENA; }
+  });
+  const [price, setPrice] = useState(() => {
+    try { const s = localStorage.getItem('peerup_price'); return s ? JSON.parse(s) : DEMO_PRICE; }
+    catch { return DEMO_PRICE; }
+  });
+  const [izazovi, setIzazovi] = useState(() => {
+    try { const s = localStorage.getItem('peerup_izazovi'); return s ? JSON.parse(s) : INIT_IZAZOVI; }
+    catch { return INIT_IZAZOVI; }
+  });
   const [notifikacije, setNotifikacije] = useState([]);
   const [postavkeModal, setPostavkeModal] = useState(false);
   const [postavke, setPostavke] = useState(() => {
@@ -3074,6 +3089,11 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
+  useEffect(() => { try { localStorage.setItem('peerup_ponude',    JSON.stringify(ponude));    } catch {} }, [ponude]);
+  useEffect(() => { try { localStorage.setItem('peerup_materijali',JSON.stringify(materijali));} catch {} }, [materijali]);
+  useEffect(() => { try { localStorage.setItem('peerup_razmjena',  JSON.stringify(razmjena));  } catch {} }, [razmjena]);
+  useEffect(() => { try { localStorage.setItem('peerup_price',     JSON.stringify(price));     } catch {} }, [price]);
+  useEffect(() => { try { localStorage.setItem('peerup_izazovi',   JSON.stringify(izazovi));   } catch {} }, [izazovi]);
   const zmijeniPostavku = (key, val) => {
     const nove = { ...postavke, [key]: val };
     setPostavke(nove);
@@ -3104,7 +3124,22 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     } catch { onOdjava(); }
   }, []);
 
-  const addBodovi = (n) => setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
+  const addBodovi = (n) => {
+    setKorisnik(prev => ({ ...prev, bodovi: prev.bodovi + n }));
+    setClanovi(prev => prev.map(c => c.id === korisnik.id ? { ...c, bodovi: c.bodovi + n } : c));
+  };
+  const ljestvica = React.useMemo(() => [...clanovi]
+    .filter(c => c.aktivan && !c.banan && c.uloga !== 'admin')
+    .sort((a, b) => b.bodovi - a.bodovi)
+    .map((c, i) => ({
+      r: i+1, id: c.id,
+      ime: `${c.ime} ${c.prezime[0]}.`,
+      razred: c.razred ? `${c.razred} r.` : '—',
+      bodovi: c.bodovi, avatar: c.avatar,
+      bed: i===0?'🥇':i===1?'🥈':i===2?'🥉':null,
+      sati: Math.max(0, Math.floor(c.bodovi/12)),
+      donacije: Math.max(0, Math.floor(c.bodovi/30)),
+    })), [clanovi]);
   const onNotifikacija = (n) => setNotifikacije(prev => [...prev, {...n, procitana:false, id:Date.now()+Math.random()}]);
   const onProcitaj = (id) => setNotifikacije(prev => prev.map(n => n.id===id ? {...n, procitana:true} : n));
 
@@ -3162,7 +3197,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
         {aktTab==="buvljak"      && <SkolskiBuvljak korisnik={korisnik} razmjena={razmjena} setRazmjena={setRazmjena} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="price"        && <Price korisnik={korisnik} price={price} setPrice={setPrice} addBodovi={addBodovi} />}
         {aktTab==="volontiranje"  && <Volontiranje korisnik={korisnik} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
-        {aktTab==="bodovi"       && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={DEMO_LJESTVICA} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
+        {aktTab==="bodovi"       && <Bodovi korisnik={korisnik} izazovi={izazovi} setIzazovi={setIzazovi} ljestvica={ljestvica} addBodovi={addBodovi} onNotifikacija={onNotifikacija} />}
         {aktTab==="profil"       && <Profil korisnik={korisnik} notifikacije={notifikacije} onOdjaviSe={onOdjava} onProcitaj={onProcitaj} />}
         {aktTab==="adminpanel"   && <AdminDashboard korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} skola={skola} onOdjava={onOdjava} />}
       </div>
@@ -3186,10 +3221,35 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
 
 // ---- ROOT ----
 export default function App() {
-  const [clanovi, setClanovi] = useState(INIT_CLANOVI);
-  const [kodovi, setKodovi]   = useState(INIT_KODOVI);
-  const [korisnik, setKorisnik] = useState(null);
+  const [clanovi, setClanovi] = useState(() => {
+    try { const s = localStorage.getItem('peerup_clanovi'); return s ? JSON.parse(s) : INIT_CLANOVI; }
+    catch { return INIT_CLANOVI; }
+  });
+  const [kodovi, setKodovi] = useState(() => {
+    try { const s = localStorage.getItem('peerup_kodovi'); return s ? JSON.parse(s) : INIT_KODOVI; }
+    catch { return INIT_KODOVI; }
+  });
+  const [korisnik, setKorisnik] = useState(() => {
+    try {
+      const sess = localStorage.getItem('peerup_session');
+      if (!sess) return null;
+      const { userId, token, schoolYear } = JSON.parse(sess);
+      if (schoolYear !== getSchoolYear()) { localStorage.removeItem('peerup_session'); return null; }
+      const clanoviSaved = localStorage.getItem('peerup_clanovi');
+      const clArr = clanoviSaved ? JSON.parse(clanoviSaved) : INIT_CLANOVI;
+      const clan = clArr.find(c => c.id === userId);
+      if (!clan || !clan.aktivan || clan.banan) { localStorage.removeItem('peerup_session'); return null; }
+      return { ...clan, sessionToken: token, sessionYear: schoolYear };
+    } catch { return null; }
+  });
   const [skola, setSkola] = useState({ naziv: SKOLA_NAZIV, grad: SKOLA_GRAD, mzoKod: "", oib: "" });
+
+  useEffect(() => {
+    try { localStorage.setItem('peerup_clanovi', JSON.stringify(clanovi)); } catch {}
+  }, [clanovi]);
+  useEffect(() => {
+    try { localStorage.setItem('peerup_kodovi', JSON.stringify(kodovi)); } catch {}
+  }, [kodovi]);
 
   const odjava = () => { try { localStorage.removeItem('peerup_session'); } catch {} setKorisnik(null); };
 
