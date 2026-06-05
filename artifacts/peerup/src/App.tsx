@@ -1125,17 +1125,19 @@ function UcimoZajedno({ korisnik, ponude, setPonude, onNotifikacija, addBodovi }
           </>
         )}
       </div>
-      <div style={{ overflowX:"auto", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+      <div className="filter-scroll">
         <div style={{ display:"flex", gap:6, padding:"0 16px 8px", minWidth:"max-content" }}>
           {["Svi",...PREDMETI].map(p=>(
             <button key={p} onClick={()=>setPredFilter(p)} style={{ background:predFilter===p?C.teal:C.bgDeep, color:predFilter===p?C.card:C.inkMid, border:`1.5px solid ${predFilter===p?C.teal:C.cardBorder}`, borderRadius:99, padding:"5px 12px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{p}</button>
           ))}
         </div>
       </div>
-      <div style={{ padding:"0 16px 12px", overflowX:"auto", display:"flex", gap:6 }}>
-        {["Svi",...RAZREDI].map(r=>(
-          <button key={r} onClick={()=>setRazFilter(r)} style={{ background:razFilter===r?C.blue:C.bgDeep, color:razFilter===r?C.card:C.inkMid, border:`1.5px solid ${razFilter===r?C.blue:C.cardBorder}`, borderRadius:99, padding:"5px 11px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{r==="Svi"?"Svi razredi":`${r} razred`}</button>
-        ))}
+      <div className="filter-scroll" style={{ paddingBottom:4 }}>
+        <div style={{ display:"flex", gap:6, padding:"0 16px 8px", minWidth:"max-content" }}>
+          {["Svi",...RAZREDI].map(r=>(
+            <button key={r} onClick={()=>setRazFilter(r)} style={{ background:razFilter===r?C.blue:C.bgDeep, color:razFilter===r?C.card:C.inkMid, border:`1.5px solid ${razFilter===r?C.blue:C.cardBorder}`, borderRadius:99, padding:"5px 11px", whiteSpace:"nowrap", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>{r==="Svi"?"Svi razredi":`${r} razred`}</button>
+          ))}
+        </div>
       </div>
       <div style={{ padding:"0 16px" }}>
         {filtered.length===0 && <div style={{ textAlign:"center", color:C.inkLight, padding:32 }}>Nema rezultata za odabrane filtre.</div>}

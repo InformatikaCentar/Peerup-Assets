@@ -57,4 +57,19 @@
     margin: 0;
     background: #f7f3ee;
   }
+  .filter-scroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #1a8a7244 transparent;
+  }
+  .filter-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+  .filter-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .filter-scroll::-webkit-scrollbar-thumb {
+    background: #1a8a7255;
+    border-radius: 4px;
+  }
 }
