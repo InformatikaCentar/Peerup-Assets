@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/peerup-slides/"
+title = "PeerUp — Prezentacija"
+version = "1.0.0"
+id = "artifacts/peerup-slides"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/peerup-slides/" ]
+localPort = 20848
+
+[services.development]
+run = "pnpm --filter @workspace/peerup-slides run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/peerup-slides", "run", "build" ]
+publicDir = "artifacts/peerup-slides/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20848"
+BASE_PATH = "/peerup-slides/"

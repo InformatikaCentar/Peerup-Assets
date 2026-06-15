@@ -1,0 +1,74 @@
+[
+  {
+    "id": "a1b2c3d4-0001-4000-8000-000000000001",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1Title.tsx",
+    "title": "PeerUp",
+    "description": "Naslovni slajd — PeerUp, skolska platforma za meduvrsnjacku pomoc",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0002-4000-8000-000000000002",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2Problem.tsx",
+    "title": "Problem koji rjesavamo",
+    "description": "Cetiri kljucna problema koje PeerUp rjesava",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0003-4000-8000-000000000003",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3Ucimo.tsx",
+    "title": "Ucimo zajedno",
+    "description": "Trznica meduvrsnjackih instrukcija s bodovnim sustavom",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0004-4000-8000-000000000004",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4Biljezke.tsx",
+    "title": "Biljezke i mape",
+    "description": "Repozitorij edukativnih materijala i kvizovi",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0005-4000-8000-000000000005",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5Buvljak.tsx",
+    "title": "Skolski buvljak",
+    "description": "Razmjena skolskog materijala — zamjena, posudba, dar",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0006-4000-8000-000000000006",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6Zajednica.tsx",
+    "title": "Zajednica i volontiranje",
+    "description": "Skolski feed, price i volonterski projekti",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7Bodovi.tsx",
+    "title": "Bodovi i nagrade",
+    "description": "Gamifikacija — 6 rangova, izazovi i ljestvica",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0008-4000-8000-000000000008",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8Sigurnost.tsx",
+    "title": "Sigurnost i pristup",
+    "description": "Zatvorena zajednica s jednokratnim kodovima i tri uloge",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0009-4000-8000-000000000009",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide9Outro.tsx",
+    "title": "Pokrenimo zajednicu",
+    "description": "Zakljucni slajd — Ucimo zajedno. Rastemo zajedno.",
+    "speakerNotes": ""
+  }
+]
