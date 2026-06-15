@@ -11,20 +11,20 @@ export default function Slide1Title() {
       {/* School badge top-left */}
       <div className="absolute" style={{ top: "5vh", left: "5vw" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: "0.6vw", background: "rgba(255,255,255,0.15)", borderRadius: "99px", padding: "0.6vh 1.4vw", backdropFilter: "blur(4px)" }}>
-          <span style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "2.2vw", color: "#fff", letterSpacing: "-0.01em" }}>OS Centar, Rijeka</span>
+          <span style={{ fontFamily: "Book Antiqua, Palatino Linotype, Palatino, serif", fontWeight: 700, fontSize: "2.2vw", color: "#fff", letterSpacing: "-0.01em" }}>OS Centar, Rijeka</span>
         </div>
       </div>
 
       {/* Main content — left-aligned, vertically centered */}
       <div className="absolute" style={{ top: "50%", left: "7vw", transform: "translateY(-50%)", maxWidth: "55vw" }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: "11vw", color: "#ffffff", lineHeight: 0.95, letterSpacing: "-0.03em", textWrap: "balance" }}>
+        <div style={{ fontFamily: "Book Antiqua, Palatino Linotype, Palatino, serif", fontWeight: 900, fontSize: "11vw", color: "#ffffff", lineHeight: 0.95, letterSpacing: "-0.03em", textWrap: "balance" }}>
           Peer<span style={{ color: "#d97706" }}>Up</span>
         </div>
-        <div style={{ marginTop: "3vh", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "3.4vw", color: "rgba(255,255,255,0.88)", lineHeight: 1.25, textWrap: "balance" }}>
+        <div style={{ marginTop: "3vh", fontFamily: "Book Antiqua, Palatino Linotype, Palatino, serif", fontWeight: 700, fontSize: "3.4vw", color: "rgba(255,255,255,0.88)", lineHeight: 1.25, textWrap: "balance" }}>
           Skolska platforma za meduvrsnjacku pomoc
         </div>
         <div style={{ marginTop: "4vh", width: "6vw", height: "0.5vh", background: "#d97706", borderRadius: "2px" }} />
-        <div style={{ marginTop: "3vh", fontFamily: "Nunito, sans-serif", fontWeight: 400, fontSize: "3vw", color: "rgba(255,255,255,0.72)", lineHeight: 1.5, maxWidth: "48vw", textWrap: "pretty" }}>
+        <div style={{ marginTop: "3vh", fontFamily: "Book Antiqua, Palatino Linotype, Palatino, serif", fontWeight: 400, fontSize: "3vw", color: "rgba(255,255,255,0.72)", lineHeight: 1.5, maxWidth: "48vw", textWrap: "pretty" }}>
           PeerUp nije samo alat za ucenje — to je skolska zajednica koja nagraduje suradnju, solidarnost i angazman.
         </div>
       </div>
@@ -39,7 +39,7 @@ export default function Slide1Title() {
             <path d="M18 28C18 28 22 24 32 24C42 24 46 28 46 28" stroke="white" strokeWidth="3" strokeLinecap="round"/>
           </svg>
         </div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: "2.4vw", color: "rgba(255,255,255,0.9)", textAlign: "center", letterSpacing: "0.05em" }}>
+        <div style={{ fontFamily: "Book Antiqua, Palatino Linotype, Palatino, serif", fontWeight: 800, fontSize: "2.4vw", color: "rgba(255,255,255,0.9)", textAlign: "center", letterSpacing: "0.05em" }}>
           2025./2026.
         </div>
       </div>

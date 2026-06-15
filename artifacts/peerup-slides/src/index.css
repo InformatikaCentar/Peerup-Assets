@@ -22,8 +22,8 @@
   --slide-text: #1a1612;
   --slide-muted: #6b5c4e;
   --slide-card: #ffffff;
-  --font-display-family: "Nunito", sans-serif;
-  --font-body-family: "Nunito", sans-serif;
+  --font-display-family: "Book Antiqua", "Palatino Linotype", Palatino, serif;
+  --font-body-family: "Book Antiqua", "Palatino Linotype", Palatino, serif;
   color-scheme: light;
 }
 

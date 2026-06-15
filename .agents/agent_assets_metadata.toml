@@ -17,3 +17,9 @@ id = "pCmDD7uxtC3ReWBk4tBJ4"
 uri = "file://artifacts/peerup-video/public/audio/bg_music.mp3"
 type = "audio"
 title = "peerup_promo_upbeat"
+
+[[outputs]]
+id = "vLZ2S140SfUnElzy2W1Cj"
+uri = "file://.local/outputs/Peerup-Assets.pptx"
+type = "slides"
+title = "Peerup Assets.pptx"
