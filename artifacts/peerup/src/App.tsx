@@ -3151,7 +3151,7 @@ function EkranPrijava({ onUspjeh, onNatrag }) {
           )}
           {tab==="admin" && (
             <>
-              <FInp label="Email administratora" value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@skola.hr" icon="📧" onKeyDown={e=>e.key==="Enter"&&loz&&prijavaAdmina()} />
+              <FInp label="Email administratora" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" onKeyDown={e=>e.key==="Enter"&&loz&&prijavaAdmina()} />
               <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Vaša lozinka" icon="🔒" onKeyDown={e=>e.key==="Enter"&&email&&prijavaAdmina()} />
               {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
               <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.plum} full disabled={!email||!loz||ucitavam} onClick={prijavaAdmina} />
