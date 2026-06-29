@@ -6,7 +6,7 @@ import { schoolsTable } from "./schools";
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   schoolId: integer("school_id").notNull().references(() => schoolsTable.id),
-  uloga: text("uloga").notNull(), // "admin" | "ucitelj" | "ucenik"
+  uloga: text("uloga").notNull(), // "admin" | "ravnatelj" | "ucitelj" | "ucenik"
   email: text("email").unique(),
   passwordHash: text("password_hash"),
   kod: text("kod").unique(),

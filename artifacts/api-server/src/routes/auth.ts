@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { mzoSchoolsTable, schoolsTable, usersTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logger } from "../lib/logger";
 
@@ -11,10 +11,13 @@ const router = Router();
 // Registracija nove škole — provjerava format OIB-a i šifre škole, korisnik unosi naziv
 router.post("/register-school", async (req, res) => {
   try {
-    const { oib, sifra_skole, naziv_skole, admin_password, admin_ime, admin_prezime, uloga_prikaz } = req.body;
+    const { oib, sifra_skole, naziv_skole, admin_email, admin_password, admin_ime, admin_prezime, uloga_prikaz } = req.body;
 
-    if (!oib || !sifra_skole || !naziv_skole || !admin_password || !admin_ime || !admin_prezime) {
+    if (!oib || !sifra_skole || !naziv_skole || !admin_email || !admin_password || !admin_ime || !admin_prezime) {
       return res.status(400).json({ greska: "Sva polja su obavezna." });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(admin_email.trim())) {
+      return res.status(400).json({ greska: "Unesite valjanu email adresu." });
     }
     if (!/^\d{11}$/.test(oib.trim())) {
       return res.status(400).json({ greska: "OIB mora imati točno 11 znamenki." });
@@ -53,19 +56,20 @@ router.post("/register-school", async (req, res) => {
 
     // Kreiranje admin korisnika
     const adminKod = `ADM-${sifra_skole.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)}`;
+    const dbUloga = (uloga_prikaz === "ravnatelj") ? "ravnatelj" : "admin";
     const [adminKorisnik] = await db
       .insert(usersTable)
       .values({
         schoolId: novaSkola.id,
-        uloga: "admin",
-        email: admin_email ? admin_email.trim().toLowerCase() : null,
+        uloga: dbUloga,
+        email: admin_email.trim().toLowerCase(),
         passwordHash,
         kod: adminKod,
         ime: admin_ime.trim(),
         prezime: admin_prezime.trim(),
         firstLogin: false,
         aktivan: true,
-        avatar: "👨‍💼",
+        avatar: dbUloga === "ravnatelj" ? "🏛️" : "🛡️",
       })
       .returning();
 
@@ -75,7 +79,7 @@ router.post("/register-school", async (req, res) => {
     logger.info({ schoolId: novaSkola.id, uloga_prikaz: uloga_prikaz ?? "ravnatelj", adminKod }, "Nova škola registrirana");
 
     return res.status(201).json({
-      poruka: `Dobrodošli! Škola "${mzoSkola.naziv}" uspješno je registrirana.`,
+      poruka: `Dobrodošli! Škola "${naziv_skole.trim()}" uspješno je registrirana.`,
       korisnik: {
         id: adminKorisnik.id,
         ime: adminKorisnik.ime,
@@ -107,7 +111,10 @@ router.post("/login", async (req, res) => {
     const [korisnik] = await db
       .select()
       .from(usersTable)
-      .where(and(eq(usersTable.email, email.trim().toLowerCase()), eq(usersTable.uloga, "admin")))
+      .where(and(
+        eq(usersTable.email, email.trim().toLowerCase()),
+        or(eq(usersTable.uloga, "admin"), eq(usersTable.uloga, "ravnatelj"))
+      ))
       .limit(1);
 
     if (!korisnik || !korisnik.passwordHash) {

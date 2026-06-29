@@ -2896,7 +2896,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const [adminEmail, setAdminEmail] = useState("");
   const [ime, setIme] = useState("");
   const [prezime, setPrezime] = useState("");
-  const [ulogaPrikaz, setUlogaPrikaz] = useState("ravnatelj");
+  const [ulogaPrikaz, setUlogaPrikaz] = useState("admin");
   const [loz, setLoz] = useState("");
   const [loz2, setLoz2] = useState("");
   const [greska, setGreska] = useState("");
@@ -2935,7 +2935,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
     if (loz.length < 8) { setGreska("Lozinka mora imati barem 8 znakova."); return; }
     if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
-    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), naziv_skole: skolaNazivApi, admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
+    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), naziv_skole: skolaNazivApi, admin_email: adminEmail.trim().toLowerCase(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
     setUcitavam(false);
     if (!ok) { setGreska(data.greska || "Greška pri registraciji."); return; }
     const k = data.korisnik;
@@ -3027,9 +3027,18 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             <div style={{ marginBottom:14 }}>
               <p style={{ margin:"0 0 8px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Uloga</p>
               <div style={{ display:"flex", gap:10 }}>
-                <BtnToggle val="ucitelj" label="👨‍🏫 Učitelj/ica" />
+                <BtnToggle val="admin" label="🛡️ Admin" />
                 <BtnToggle val="ravnatelj" label="🏛️ Ravnatelj/ica" />
               </div>
+            </div>
+
+            <div style={{ marginBottom:4 }}>
+              <FInp label="Email za prijavu" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" />
+              {ime && prezime && !adminEmail && (
+                <p style={{ margin:"-6px 0 10px", fontSize:11, color:C.teal, fontWeight:700 }}>
+                  💡 Prijedlog: {`${ime.toLowerCase().replace(/\s+/g,"")}.${prezime.toLowerCase().replace(/\s+/g,"")}@skole.hr`}
+                </p>
+              )}
             </div>
 
             <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 8 znakova" icon="🔒" />
@@ -3037,7 +3046,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
 
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
 
-            <Btn label={ucitavam?"Aktiviram...":"Aktiviraj PeerUp za moju školu →"} color={C.teal} full disabled={!ime||!prezime||loz.length<8||loz!==loz2||ucitavam} onClick={registriraj} />
+            <Btn label={ucitavam?"Aktiviram...":"Aktiviraj PeerUp za moju školu →"} color={C.teal} full disabled={!ime||!prezime||!adminEmail||loz.length<8||loz!==loz2||ucitavam} onClick={registriraj} />
           </Card>
         )}
       </div>
