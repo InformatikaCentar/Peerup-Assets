@@ -8,27 +8,22 @@ import { logger } from "../lib/logger";
 const router = Router();
 
 // POST /api/auth/register-school
-// Registracija nove škole — provjerava OIB i šifru škole u mzo_schools tablici
+// Registracija nove škole — provjerava format OIB-a i šifre škole, korisnik unosi naziv
 router.post("/register-school", async (req, res) => {
   try {
-    const { oib, sifra_skole, admin_email, admin_password, admin_ime, admin_prezime, uloga_prikaz } = req.body;
+    const { oib, sifra_skole, naziv_skole, admin_password, admin_ime, admin_prezime, uloga_prikaz } = req.body;
 
-    if (!oib || !sifra_skole || !admin_password || !admin_ime || !admin_prezime) {
+    if (!oib || !sifra_skole || !naziv_skole || !admin_password || !admin_ime || !admin_prezime) {
       return res.status(400).json({ greska: "Sva polja su obavezna." });
+    }
+    if (!/^\d{11}$/.test(oib.trim())) {
+      return res.status(400).json({ greska: "OIB mora imati točno 11 znamenki." });
+    }
+    if (!/^\d{2}-\d{3}-\d{3}$/.test(sifra_skole.trim())) {
+      return res.status(400).json({ greska: "Šifra škole mora biti u obliku 00-000-000." });
     }
     if (admin_password.length < 8) {
       return res.status(400).json({ greska: "Lozinka mora imati najmanje 8 znakova." });
-    }
-
-    // Provjera OIB-a i šifre škole u MZO bazi
-    const [mzoSkola] = await db
-      .select()
-      .from(mzoSchoolsTable)
-      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim())))
-      .limit(1);
-
-    if (!mzoSkola) {
-      return res.status(404).json({ greska: "Škola nije pronađena u MZO evidenciji. Provjerite OIB i šifru škole." });
     }
 
     // Provjera je li škola već registrirana
@@ -42,13 +37,13 @@ router.post("/register-school", async (req, res) => {
       return res.status(409).json({ greska: "Ova škola je već registrirana u sustavu." });
     }
 
-    // Kreiranje škole
+    // Kreiranje škole s korisničkim podatcima
     const [novaSkola] = await db
       .insert(schoolsTable)
       .values({
         oib: oib.trim(),
         sifraSkole: sifra_skole.trim(),
-        naziv: mzoSkola.naziv,
+        naziv: naziv_skole.trim(),
         verified: true,
       })
       .returning();
@@ -302,22 +297,18 @@ router.get("/me", async (req, res) => {
 });
 
 // POST /api/auth/check-school
-// Provjera OIB-a i šifre škole u MZO evidenciji (bez registracije)
+// Provjera formata OIB-a i šifre škole, te je li škola već registrirana
 router.post("/check-school", async (req, res) => {
   try {
     const { oib, sifra_skole } = req.body;
     if (!oib || !sifra_skole) {
       return res.status(400).json({ greska: "OIB i šifra škole su obavezni." });
     }
-
-    const [mzoSkola] = await db
-      .select()
-      .from(mzoSchoolsTable)
-      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim())))
-      .limit(1);
-
-    if (!mzoSkola) {
-      return res.status(404).json({ greska: "Škola nije pronađena u MZO evidenciji. Provjerite OIB i šifru škole." });
+    if (!/^\d{11}$/.test(oib.trim())) {
+      return res.status(400).json({ greska: "OIB mora imati točno 11 znamenki." });
+    }
+    if (!/^\d{2}-\d{3}-\d{3}$/.test(sifra_skole.trim())) {
+      return res.status(400).json({ greska: "Šifra škole mora biti u obliku 00-000-000." });
     }
 
     // Provjera je li škola već registrirana
@@ -331,7 +322,7 @@ router.post("/check-school", async (req, res) => {
       return res.status(409).json({ greska: "Ova škola je već registrirana. Prijavite se kao administrator." });
     }
 
-    return res.json({ naziv: mzoSkola.naziv, oib: mzoSkola.oib, sifraSkole: mzoSkola.sifraSkole });
+    return res.json({ oib: oib.trim(), sifraSkole: sifra_skole.trim() });
   } catch (err) {
     logger.error(err, "Greška pri provjeri škole");
     return res.status(500).json({ greska: "Interna greška servera." });

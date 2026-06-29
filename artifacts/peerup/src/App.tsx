@@ -2892,6 +2892,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const [skolaNazivApi, setSkolaNazivApi] = useState("");
   const [sifraSkole, setSifraSkole] = useState("");
   const [oib, setOib] = useState("");
+  const [nazivSkole, setNazivSkole] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [ime, setIme] = useState("");
   const [prezime, setPrezime] = useState("");
@@ -2913,7 +2914,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const provjeriSkolu = async () => {
     setGreska("");
     setSkolaVecRegistrirana(false);
-    if (!sifraSkole.trim() || !oib.trim()) { setGreska("OIB i šifra škole su obavezni."); return; }
+    if (!sifraSkole.trim() || !oib.trim() || !nazivSkole.trim()) { setGreska("Sva polja su obavezna."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
     if (!/^\d{2}-\d{3}-\d{3}$/.test(sifraSkole.trim())) { setGreska("Šifra škole mora biti u obliku 00-000-000."); return; }
     setUcitavam(true);
@@ -2924,7 +2925,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
       setGreska(data.greska || "Škola nije pronađena u MZO evidenciji.");
       return;
     }
-    setSkolaNazivApi(data.naziv || "");
+    setSkolaNazivApi(nazivSkole.trim());
     setKorak(2);
   };
 
@@ -2934,7 +2935,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
     if (loz.length < 8) { setGreska("Lozinka mora imati barem 8 znakova."); return; }
     if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
-    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), admin_email: adminEmail.trim(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
+    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), naziv_skole: skolaNazivApi, admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
     setUcitavam(false);
     if (!ok) { setGreska(data.greska || "Greška pri registraciji."); return; }
     const k = data.korisnik;
@@ -2978,15 +2979,8 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
 
         {korak===1 && (
           <Card>
-            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:12 }}>
-              <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 OIB i šifra škole provjeravaju se u MZO evidenciji. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
-            </div>
-            <div style={{ background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
-              <p style={{ margin:"0 0 6px", fontSize:11, color:"#166534", fontWeight:800, textTransform:"uppercase", letterSpacing:0.8 }}>🧪 Testni podatci (demo)</p>
-              <div style={{ fontSize:11, color:"#166534", lineHeight:1.7 }}>
-                <div><b>OŠ Brod, Zagreb</b> — OIB: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>11111111111</code> · Šifra: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>01-002-001</code></div>
-                <div><b>OŠ IGK, Split</b> — OIB: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>22222222222</code> · Šifra: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>02-001-001</code></div>
-              </div>
+            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
+              <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 Unesite stvarne podatke škole iz MZO evidencije. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
             </div>
 
             {skolaVecRegistrirana && (
@@ -2999,6 +2993,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
               </div>
             )}
 
+            <FInp label="Naziv škole" value={nazivSkole} onChange={e=>setNazivSkole(e.target.value)} placeholder="npr. OŠ Centar, Rijeka" icon="🏫" />
             <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" maxLength={11} />
 
@@ -3010,7 +3005,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
                 <p style={{ color:C.teal, fontWeight:800, fontSize:14, margin:"8px 0 4px" }}>Provjera u MZO evidenciji...</p>
               </div>
             ) : (
-              <Btn label="Provjeri u MZO evidenciji →" color={C.teal} full disabled={!sifraSkole||!oib||ucitavam} onClick={provjeriSkolu} />
+              <Btn label="Provjeri i nastavi →" color={C.teal} full disabled={!sifraSkole||!oib||!nazivSkole||ucitavam} onClick={provjeriSkolu} />
             )}
           </Card>
         )}
