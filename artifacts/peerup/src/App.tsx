@@ -2972,7 +2972,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 OIB i šifra škole provjeravaju se u MZO evidenciji. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
             </div>
-            <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={9} />
+            <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" />
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
             {ucitavam ? (
