@@ -2978,8 +2978,15 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
 
         {korak===1 && (
           <Card>
-            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
+            <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:12 }}>
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 OIB i šifra škole provjeravaju se u MZO evidenciji. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
+            </div>
+            <div style={{ background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
+              <p style={{ margin:"0 0 6px", fontSize:11, color:"#166534", fontWeight:800, textTransform:"uppercase", letterSpacing:0.8 }}>🧪 Testni podatci (demo)</p>
+              <div style={{ fontSize:11, color:"#166534", lineHeight:1.7 }}>
+                <div><b>OŠ Brod, Zagreb</b> — OIB: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>11111111111</code> · Šifra: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>01-002-001</code></div>
+                <div><b>OŠ IGK, Split</b> — OIB: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>22222222222</code> · Šifra: <code style={{background:"#dcfce7",padding:"1px 4px",borderRadius:4}}>02-001-001</code></div>
+              </div>
             </div>
 
             {skolaVecRegistrirana && (
