@@ -1,0 +1,1 @@
+- [PeerUp auth session store](peerup-auth-session.md) — connect-pg-simple needs manual table creation + shared pool to avoid SSL issues
