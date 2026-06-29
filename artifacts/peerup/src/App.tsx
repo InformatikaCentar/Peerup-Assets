@@ -2889,18 +2889,19 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
 // ---- AUTH ----
 function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const [korak, setKorak] = useState(1);
-  const [skolaNazivApi, setSkolaNazivApi] = useState(""); // iz API-ja
+  const [skolaNazivApi, setSkolaNazivApi] = useState("");
   const [sifraSkole, setSifraSkole] = useState("");
   const [oib, setOib] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [ime, setIme] = useState("");
   const [prezime, setPrezime] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
+  const [ulogaPrikaz, setUlogaPrikaz] = useState("ravnatelj");
   const [loz, setLoz] = useState("");
   const [loz2, setLoz2] = useState("");
   const [greska, setGreska] = useState("");
   const [ucitavam, setUcitavam] = useState(false);
   const [gotovo, setGotovo] = useState(false);
-  const [adminKod, setAdminKod] = useState("");
+  const [skolaVecRegistrirana, setSkolaVecRegistrirana] = useState(false);
 
   const formatSifraSkole = (raw) => {
     const digits = raw.replace(/\D/g, "").slice(0, 8);
@@ -2911,13 +2912,19 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
 
   const provjeriSkolu = async () => {
     setGreska("");
-    if (!oib.trim() || !sifraSkole.trim()) { setGreska("OIB i šifra škole su obavezni."); return; }
+    setSkolaVecRegistrirana(false);
+    if (!sifraSkole.trim() || !oib.trim()) { setGreska("OIB i šifra škole su obavezni."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
     if (!/^\d{2}-\d{3}-\d{3}$/.test(sifraSkole.trim())) { setGreska("Šifra škole mora biti u obliku 00-000-000."); return; }
+    if (!adminEmail.trim().includes("@")) { setGreska("Upiši valjanu email adresu administratora."); return; }
     setUcitavam(true);
-    const { ok, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim() } });
+    const { ok, status, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim() } });
     setUcitavam(false);
-    if (!ok) { setGreska(data.greska || "Škola nije pronađena u MZO evidenciji."); return; }
+    if (!ok) {
+      if (status === 409) { setSkolaVecRegistrirana(true); return; }
+      setGreska(data.greska || "Škola nije pronađena u MZO evidenciji.");
+      return;
+    }
     setSkolaNazivApi(data.naziv || "");
     setKorak(2);
   };
@@ -2925,44 +2932,50 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const registriraj = async () => {
     setGreska("");
     if (!ime.trim() || !prezime.trim()) { setGreska("Upiši ime i prezime."); return; }
-    if (!adminEmail.includes("@")) { setGreska("Upiši valjanu email adresu."); return; }
     if (loz.length < 8) { setGreska("Lozinka mora imati barem 8 znakova."); return; }
     if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
-    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), admin_email: adminEmail.trim(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim() } });
+    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), admin_email: adminEmail.trim(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
     setUcitavam(false);
     if (!ok) { setGreska(data.greska || "Greška pri registraciji."); return; }
     const k = data.korisnik;
-    setAdminKod(k.kod || "");
     if (setSkola) setSkola({ naziv: k.skolaNaziv || skolaNazivApi, grad: "" });
     setGotovo(true);
-    setTimeout(() => onUspjeh(mapApiKorisnik(k)), 3000);
+    setTimeout(() => onUspjeh(mapApiKorisnik(k)), 3500);
   };
 
   if (gotovo) return (
     <div style={{ minHeight:"100vh", background:`linear-gradient(135deg, #1a8a72, #0e6b58)`, display:"flex", alignItems:"center", justifyContent:"center", padding:24, textAlign:"center" }}>
-      <div>
+      <div style={{ maxWidth:360 }}>
         <div style={{ fontSize:80, marginBottom:16 }}>🏫</div>
-        <h2 style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, color:"#fff", margin:"0 0 10px", fontSize:28 }}>Dobrodošli, {ime}!</h2>
-        <p style={{ color:"rgba(255,255,255,0.85)", fontSize:15, margin:"0 0 20px", maxWidth:320 }}>PeerUp je aktiviran za školu <strong>{skolaNazivApi}</strong>.</p>
-        <div style={{ background:"rgba(255,255,255,0.15)", border:"1.5px solid rgba(255,255,255,0.3)", borderRadius:16, padding:"16px 24px", display:"inline-block", marginBottom:16 }}>
-          <div style={{ color:"rgba(255,255,255,0.7)", fontSize:12, fontWeight:700, marginBottom:4 }}>VAŠ ADMIN KOD</div>
-          <div style={{ fontFamily:"monospace", fontSize:22, fontWeight:900, color:"#fff", letterSpacing:2 }}>{adminKod}</div>
+        <h2 style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, color:"#fff", margin:"0 0 10px", fontSize:26 }}>PeerUp aktiviran!</h2>
+        <p style={{ color:"rgba(255,255,255,0.85)", fontSize:15, margin:"0 0 20px" }}>Dobrodošli, <strong>{ime} {prezime}</strong>!</p>
+        <div style={{ background:"rgba(255,255,255,0.15)", border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:14, padding:"14px 20px", marginBottom:16, textAlign:"left" }}>
+          <p style={{ margin:"0 0 6px", color:"rgba(255,255,255,0.7)", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Pristupni podatci poslani na</p>
+          <p style={{ margin:0, color:"#fff", fontWeight:900, fontSize:14 }}>📧 {adminEmail}</p>
         </div>
         <p style={{ color:"rgba(255,255,255,0.6)", fontSize:12 }}>Ulaz u aplikaciju...</p>
       </div>
     </div>
   );
 
+  const BtnToggle = ({ val, label }) => (
+    <button onClick={()=>setUlogaPrikaz(val)} style={{ flex:1, padding:"10px 8px", borderRadius:10, border:`2px solid ${ulogaPrikaz===val?C.teal:C.cardBorder}`, background:ulogaPrikaz===val?C.tealLight:"#fff", color:ulogaPrikaz===val?C.teal:C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer", transition:"all 0.15s" }}>
+      {label}
+    </button>
+  );
+
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
       <div style={{ width:"100%", maxWidth:420 }}>
         <button onClick={korak===1?onNatrag:()=>setKorak(1)} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:20 }}>← Natrag</button>
-        <div style={{ textAlign:"center", marginBottom:20 }}>
+
+        <div style={{ textAlign:"center", marginBottom:16 }}>
           <div style={{ fontSize:44 }}>🏫</div>
-          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:24, color:C.ink }}>Registracija škole</h2>
-          <p style={{ margin:0, color:C.inkLight, fontSize:12 }}>Samo za djelatnike škole · korak {korak}/2</p>
+          <h2 style={{ margin:"8px 0 2px", fontFamily:"'Nunito',sans-serif", fontWeight:900, fontSize:24, color:C.ink }}>Registracija škole</h2>
+          <p style={{ margin:0, color:C.inkLight, fontSize:12, fontWeight:600 }}>Samo za djelatnike škole · {korak}/2</p>
         </div>
+
         <div style={{ display:"flex", gap:6, marginBottom:20 }}>
           {[1,2].map(k=><div key={k} style={{ flex:1, height:4, borderRadius:99, background:k<=korak?C.teal:C.cardBorder, transition:"background 0.3s" }} />)}
         </div>
@@ -2972,36 +2985,62 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 OIB i šifra škole provjeravaju se u MZO evidenciji. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
             </div>
+
+            {skolaVecRegistrirana && (
+              <div style={{ background:"#eff6ff", border:"1.5px solid #3b82f6", borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+                <p style={{ margin:"0 0 6px", fontWeight:800, fontSize:14, color:"#1d4ed8" }}>🏫 Škola je već registrirana</p>
+                <p style={{ margin:"0 0 10px", fontSize:13, color:"#374151" }}>Ova škola je već aktivirana u PeerUp sustavu. Prijavite se kao administrator škole.</p>
+                <button onClick={onNatrag} style={{ background:"#1d4ed8", color:"#fff", border:"none", borderRadius:8, padding:"7px 16px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>
+                  Idi na prijavu →
+                </button>
+              </div>
+            )}
+
             <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
-            <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" />
+            <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" maxLength={11} />
+            <FInp label="Email administratora" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="ravnatelj@skola.hr" icon="📧" type="email" />
+
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
+
             {ucitavam ? (
               <div style={{ textAlign:"center", padding:"16px 0" }}>
                 <div style={{ fontSize:28 }}>🔍</div>
                 <p style={{ color:C.teal, fontWeight:800, fontSize:14, margin:"8px 0 4px" }}>Provjera u MZO evidenciji...</p>
               </div>
             ) : (
-              <Btn label="Provjeri u MZO evidenciji →" color={C.teal} full disabled={!sifraSkole||!oib||ucitavam} onClick={provjeriSkolu} />
+              <Btn label="Provjeri u MZO evidenciji →" color={C.teal} full disabled={!sifraSkole||!oib||!adminEmail||ucitavam} onClick={provjeriSkolu} />
             )}
           </Card>
         )}
 
         {korak===2 && (
           <Card>
-            <div style={{ background:C.tealLight, border:`1.5px solid ${C.teal}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
-              <p style={{ margin:0, fontSize:12, color:C.teal, fontWeight:800 }}>✅ Pronađena škola: <strong>{skolaNazivApi}</strong></p>
-              <p style={{ margin:"4px 0 0", fontSize:11, color:C.teal }}>Šifra: {sifraSkole} · OIB: {oib}</p>
+            <div style={{ background:C.tealLight, border:`2px solid ${C.teal}55`, borderRadius:12, padding:"12px 16px", marginBottom:20 }}>
+              <p style={{ margin:"0 0 3px", fontSize:13, color:C.teal, fontWeight:900 }}>✅ Škola verificirana: <strong>{skolaNazivApi},</strong></p>
+              <p style={{ margin:0, fontSize:11, color:C.teal, fontWeight:700 }}>MZO: {sifraSkole} · OIB: {oib}</p>
             </div>
-            <p style={{ margin:"0 0 12px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Podaci administratora</p>
+
+            <p style={{ margin:"0 0 12px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Podaci administratora</p>
+
             <div style={{ display:"flex", gap:10 }}>
               <div style={{ flex:1 }}><FInp label="Ime" value={ime} onChange={e=>setIme(e.target.value)} placeholder="Ime" /></div>
               <div style={{ flex:1 }}><FInp label="Prezime" value={prezime} onChange={e=>setPrezime(e.target.value)} placeholder="Prezime" /></div>
             </div>
-            <FInp label="Email" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="admin@skola.hr" icon="📧" type="email" />
+
+            <div style={{ marginBottom:14 }}>
+              <p style={{ margin:"0 0 8px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Uloga</p>
+              <div style={{ display:"flex", gap:10 }}>
+                <BtnToggle val="ucitelj" label="👨‍🏫 Učitelj/ica" />
+                <BtnToggle val="ravnatelj" label="🏛️ Ravnatelj/ica" />
+              </div>
+            </div>
+
             <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 8 znakova" icon="🔒" />
             <FInp label="Ponovi lozinku" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
+
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
-            <Btn label={ucitavam?"Registriram...":"Aktiviraj PeerUp za ovu školu →"} color={C.teal} full disabled={!ime||!prezime||!adminEmail||loz.length<8||loz!==loz2||ucitavam} onClick={registriraj} />
+
+            <Btn label={ucitavam?"Aktiviram...":"Aktiviraj PeerUp za moju školu →"} color={C.teal} full disabled={!ime||!prezime||loz.length<8||loz!==loz2||ucitavam} onClick={registriraj} />
           </Card>
         )}
       </div>
