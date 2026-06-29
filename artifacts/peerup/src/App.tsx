@@ -3032,10 +3032,21 @@ function EkranDobrodoslica({ onLogin, onRegister, onDemo, onRegistracijaSkole })
           ))}
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          <button onClick={onDemo} style={{ width:"100%", background:`linear-gradient(135deg,${C.amber},#f59e0b)`, color:C.card, border:"none", borderRadius:999, padding:"16px 20px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:16, cursor:"pointer", boxShadow:`0 4px 20px ${C.amber}55`, letterSpacing:0.2 }}>
+          <Btn label="🔑 Prijava" color={C.teal} full onClick={onLogin} />
+          <Btn label="✏️ Registracija korisnika" color={C.ink} full onClick={onRegister} />
+          <div style={{ display:"flex", alignItems:"center", gap:10, margin:"2px 0" }}>
+            <div style={{ flex:1, height:1, background:C.cardBorder }} />
+            <span style={{ color:C.inkLight, fontSize:12, fontWeight:700 }}>ili</span>
+            <div style={{ flex:1, height:1, background:C.cardBorder }} />
+          </div>
+          <button onClick={onRegistracijaSkole} style={{ width:"100%", background:`linear-gradient(135deg,${C.plum},#5b21b6)`, color:"#fff", border:"none", borderRadius:999, padding:"13px 20px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:14, cursor:"pointer", boxShadow:`0 4px 16px ${C.plum}44`, letterSpacing:0.2 }}>
+            🏫 Registracija škole (za djelatnike)
+          </button>
+          <button onClick={onDemo} style={{ width:"100%", background:`linear-gradient(135deg,${C.amber},#f59e0b)`, color:C.card, border:"none", borderRadius:999, padding:"13px 20px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:14, cursor:"pointer", boxShadow:`0 4px 16px ${C.amber}44`, letterSpacing:0.2 }}>
             🎭 Demo prikaz (bez prijave)
           </button>
         </div>
+        <p style={{ marginTop:20, fontSize:11, color:C.inkLight, lineHeight:1.6 }}>Za prijavu trebaš kod koji ti daje učitelj/ica ili administrator škole.</p>
       </div>
     </div>
   );
