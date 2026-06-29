@@ -2987,9 +2987,14 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
               <div style={{ background:"#eff6ff", border:"1.5px solid #3b82f6", borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
                 <p style={{ margin:"0 0 6px", fontWeight:800, fontSize:14, color:"#1d4ed8" }}>🏫 Škola je već registrirana</p>
                 <p style={{ margin:"0 0 10px", fontSize:13, color:"#374151" }}>Ova škola je već aktivirana u PeerUp sustavu. Prijavite se kao administrator škole.</p>
-                <button onClick={onNatrag} style={{ background:"#1d4ed8", color:"#fff", border:"none", borderRadius:8, padding:"7px 16px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>
-                  Idi na prijavu →
-                </button>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                  <button onClick={onNatrag} style={{ background:"#1d4ed8", color:"#fff", border:"none", borderRadius:8, padding:"7px 16px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>
+                    Idi na prijavu →
+                  </button>
+                  <button onClick={()=>{ setSkolaNazivApi(nazivSkole.trim()||"Vaša škola"); setKorak(2); }} style={{ background:"#fff", color:"#1d4ed8", border:"2px solid #1d4ed8", borderRadius:8, padding:"7px 16px", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:13, cursor:"pointer" }}>
+                    👁️ Pogledaj korak 2
+                  </button>
+                </div>
               </div>
             )}
 
