@@ -13,7 +13,7 @@ router.post("/register-school", async (req, res) => {
   try {
     const { oib, sifra_skole, admin_email, admin_password, admin_ime, admin_prezime, uloga_prikaz } = req.body;
 
-    if (!oib || !sifra_skole || !admin_email || !admin_password || !admin_ime || !admin_prezime) {
+    if (!oib || !sifra_skole || !admin_password || !admin_ime || !admin_prezime) {
       return res.status(400).json({ greska: "Sva polja su obavezna." });
     }
     if (admin_password.length < 8) {
@@ -42,17 +42,6 @@ router.post("/register-school", async (req, res) => {
       return res.status(409).json({ greska: "Ova škola je već registrirana u sustavu." });
     }
 
-    // Provjera emaila
-    const [postojeciKorisnik] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, admin_email.trim().toLowerCase()))
-      .limit(1);
-
-    if (postojeciKorisnik) {
-      return res.status(409).json({ greska: "Korisnik s ovim emailom već postoji." });
-    }
-
     // Kreiranje škole
     const [novaSkola] = await db
       .insert(schoolsTable)
@@ -74,7 +63,7 @@ router.post("/register-school", async (req, res) => {
       .values({
         schoolId: novaSkola.id,
         uloga: "admin",
-        email: admin_email.trim().toLowerCase(),
+        email: admin_email ? admin_email.trim().toLowerCase() : null,
         passwordHash,
         kod: adminKod,
         ime: admin_ime.trim(),
@@ -88,12 +77,7 @@ router.post("/register-school", async (req, res) => {
     req.session.userId = adminKorisnik.id;
     req.session.schoolId = novaSkola.id;
 
-    logger.info({ schoolId: novaSkola.id, email: admin_email, uloga_prikaz: uloga_prikaz ?? "ravnatelj" }, "Nova škola registrirana");
-    logger.info({
-      to: admin_email,
-      subject: `PeerUp — Pristupni podatci za ${mzoSkola.naziv}`,
-      body: `Poštovani ${admin_ime} ${admin_prezime}, vaša škola ${mzoSkola.naziv} uspješno je registrirana u PeerUp sustavu. Email: ${admin_email}, Admin kod: ${adminKod}. Prijavite se na platformu.`,
-    }, "[EMAIL SIMULIRAN] Pristupni podatci poslani administratoru");
+    logger.info({ schoolId: novaSkola.id, uloga_prikaz: uloga_prikaz ?? "ravnatelj", adminKod }, "Nova škola registrirana");
 
     return res.status(201).json({
       poruka: `Dobrodošli! Škola "${mzoSkola.naziv}" uspješno je registrirana.`,

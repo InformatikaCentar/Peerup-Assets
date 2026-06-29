@@ -2916,7 +2916,6 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
     if (!sifraSkole.trim() || !oib.trim()) { setGreska("OIB i šifra škole su obavezni."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
     if (!/^\d{2}-\d{3}-\d{3}$/.test(sifraSkole.trim())) { setGreska("Šifra škole mora biti u obliku 00-000-000."); return; }
-    if (!adminEmail.trim().includes("@")) { setGreska("Upiši valjanu email adresu administratora."); return; }
     setUcitavam(true);
     const { ok, status, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim() } });
     setUcitavam(false);
@@ -2950,10 +2949,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
         <div style={{ fontSize:80, marginBottom:16 }}>🏫</div>
         <h2 style={{ fontFamily:"'Nunito',sans-serif", fontWeight:900, color:"#fff", margin:"0 0 10px", fontSize:26 }}>PeerUp aktiviran!</h2>
         <p style={{ color:"rgba(255,255,255,0.85)", fontSize:15, margin:"0 0 20px" }}>Dobrodošli, <strong>{ime} {prezime}</strong>!</p>
-        <div style={{ background:"rgba(255,255,255,0.15)", border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:14, padding:"14px 20px", marginBottom:16, textAlign:"left" }}>
-          <p style={{ margin:"0 0 6px", color:"rgba(255,255,255,0.7)", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Pristupni podatci poslani na</p>
-          <p style={{ margin:0, color:"#fff", fontWeight:900, fontSize:14 }}>📧 {adminEmail}</p>
-        </div>
+        <p style={{ color:"rgba(255,255,255,0.7)", fontSize:13, margin:"0 0 8px" }}>Škola <strong>{skolaNazivApi}</strong> uspješno je registrirana.</p>
         <p style={{ color:"rgba(255,255,255,0.6)", fontSize:12 }}>Ulaz u aplikaciju...</p>
       </div>
     </div>
@@ -2998,7 +2994,6 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
 
             <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" maxLength={11} />
-            <FInp label="Email administratora" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="ravnatelj@skola.hr" icon="📧" type="email" />
 
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
 
@@ -3008,7 +3003,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
                 <p style={{ color:C.teal, fontWeight:800, fontSize:14, margin:"8px 0 4px" }}>Provjera u MZO evidenciji...</p>
               </div>
             ) : (
-              <Btn label="Provjeri u MZO evidenciji →" color={C.teal} full disabled={!sifraSkole||!oib||!adminEmail||ucitavam} onClick={provjeriSkolu} />
+              <Btn label="Provjeri u MZO evidenciji →" color={C.teal} full disabled={!sifraSkole||!oib||ucitavam} onClick={provjeriSkolu} />
             )}
           </Card>
         )}
@@ -3078,7 +3073,6 @@ function EkranDobrodoslica({ onLogin, onRegister, onDemo, onRegistracijaSkole })
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
           <Btn label="🔑 Prijava" color={C.teal} full onClick={onLogin} />
-          <Btn label="✏️ Registracija korisnika" color={C.ink} full onClick={onRegister} />
           <div style={{ display:"flex", alignItems:"center", gap:10, margin:"2px 0" }}>
             <div style={{ flex:1, height:1, background:C.cardBorder }} />
             <span style={{ color:C.inkLight, fontSize:12, fontWeight:700 }}>ili</span>
