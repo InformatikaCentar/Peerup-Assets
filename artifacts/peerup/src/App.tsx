@@ -409,12 +409,12 @@ const Card = ({ children, style={}, accent, onClick }) => (
 const Btn = ({ label, color=C.teal, textColor=C.card, onClick=undefined, full=false, disabled=false, outline=false, small=false, style={} }) => (
   <button onClick={onClick} disabled={disabled} style={{ background:outline?"transparent":disabled?C.bgDeep:color, color:outline?color:disabled?C.inkLight:textColor, border:outline?`2px solid ${color}`:"none", borderRadius:999, padding:small?"6px 16px":"11px 24px", fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:small?12:14, cursor:disabled?"default":"pointer", width:full?"100%":"auto", opacity:disabled?0.6:1, transition:"all 0.15s", boxShadow:disabled||outline?"none":`0 3px 12px ${color}44`, letterSpacing:0.2, ...style }}>{label}</button>
 );
-const FInp = ({ label=undefined, type="text", value, onChange, placeholder=undefined, icon=undefined, error=undefined, onKeyDown=undefined }) => (
+const FInp = ({ label=undefined, type="text", value, onChange, placeholder=undefined, icon=undefined, error=undefined, onKeyDown=undefined, maxLength=undefined }) => (
   <div style={{ marginBottom:14 }}>
     {label && <p style={{ margin:"0 0 6px", fontSize:12, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>{label}</p>}
     <div style={{ position:"relative" }}>
       {icon && <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:18 }}>{icon}</span>}
-      <input type={type} value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder} style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${error?C.red:value?C.teal:C.cardBorder}`, borderRadius:10, padding:icon?"10px 12px 10px 42px":"10px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, boxSizing:"border-box", outline:"none" }} />
+      <input type={type} value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder} maxLength={maxLength} style={{ width:"100%", background:C.bg, color:C.ink, border:`1.5px solid ${error?C.red:value?C.teal:C.cardBorder}`, borderRadius:10, padding:icon?"10px 12px 10px 42px":"10px 12px", fontFamily:"'Nunito', sans-serif", fontWeight:700, fontSize:14, boxSizing:"border-box", outline:"none" }} />
     </div>
     {error && <p style={{ margin:"4px 0 0", fontSize:11, color:C.red, fontWeight:700 }}>⚠ {error}</p>}
   </div>
@@ -2902,14 +2902,20 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const [gotovo, setGotovo] = useState(false);
   const [adminKod, setAdminKod] = useState("");
 
+  const formatSifraSkole = (raw) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 5) return `${digits.slice(0,2)}-${digits.slice(2)}`;
+    return `${digits.slice(0,2)}-${digits.slice(2,5)}-${digits.slice(5)}`;
+  };
+
   const provjeriSkolu = async () => {
     setGreska("");
     if (!oib.trim() || !sifraSkole.trim()) { setGreska("OIB i šifra škole su obavezni."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
+    if (!/^\d{2}-\d{3}-\d{3}$/.test(sifraSkole.trim())) { setGreska("Šifra škole mora biti u obliku 00-000-000."); return; }
     setUcitavam(true);
-    // Provjera postoji li škola u MZO evidenciji (šaljemo na backend koji provjerava)
-    // Koristimo privremeni endpoint za provjeru — vraća naziv ako postoji
-    const { ok, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim().toUpperCase() } });
+    const { ok, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim() } });
     setUcitavam(false);
     if (!ok) { setGreska(data.greska || "Škola nije pronađena u MZO evidenciji."); return; }
     setSkolaNazivApi(data.naziv || "");
@@ -2923,7 +2929,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
     if (loz.length < 8) { setGreska("Lozinka mora imati barem 8 znakova."); return; }
     if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
-    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim().toUpperCase(), admin_email: adminEmail.trim(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim() } });
+    const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), admin_email: adminEmail.trim(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim() } });
     setUcitavam(false);
     if (!ok) { setGreska(data.greska || "Greška pri registraciji."); return; }
     const k = data.korisnik;
@@ -2966,7 +2972,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
               <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 OIB i šifra škole provjeravaju se u MZO evidenciji. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
             </div>
-            <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(e.target.value)} placeholder="npr. OS-CENT-RI-001" icon="🔢" />
+            <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={9} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" />
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
             {ucitavam ? (

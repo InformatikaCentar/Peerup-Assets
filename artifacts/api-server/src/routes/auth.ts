@@ -24,7 +24,7 @@ router.post("/register-school", async (req, res) => {
     const [mzoSkola] = await db
       .select()
       .from(mzoSchoolsTable)
-      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim().toUpperCase())))
+      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim())))
       .limit(1);
 
     if (!mzoSkola) {
@@ -58,7 +58,7 @@ router.post("/register-school", async (req, res) => {
       .insert(schoolsTable)
       .values({
         oib: oib.trim(),
-        sifraSkole: sifra_skole.trim().toUpperCase(),
+        sifraSkole: sifra_skole.trim(),
         naziv: mzoSkola.naziv,
         verified: true,
       })
@@ -324,7 +324,7 @@ router.post("/check-school", async (req, res) => {
     const [mzoSkola] = await db
       .select()
       .from(mzoSchoolsTable)
-      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim().toUpperCase())))
+      .where(and(eq(mzoSchoolsTable.oib, oib.trim()), eq(mzoSchoolsTable.sifraSkole, sifra_skole.trim())))
       .limit(1);
 
     if (!mzoSkola) {
