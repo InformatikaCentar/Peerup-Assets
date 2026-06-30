@@ -2914,9 +2914,12 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const provjeriSkolu = async () => {
     setGreska("");
     setSkolaVecRegistrirana(false);
-    if (!sifraSkole.trim() || !oib.trim() || !nazivSkole.trim()) { setGreska("Sva polja su obavezna."); return; }
+    if (!sifraSkole.trim() || !oib.trim() || !nazivSkole.trim() || !adminEmail.trim()) { setGreska("Sva polja su obavezna."); return; }
     if (!/^\d{11}$/.test(oib.trim())) { setGreska("OIB škole mora imati točno 11 znamenki."); return; }
     if (!/^\d{2}-\d{3}-\d{3}$/.test(sifraSkole.trim())) { setGreska("Šifra škole mora biti u obliku 00-000-000."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail.trim())) { setGreska("Unesite valjanu email adresu (npr. ime.prezime@skole.hr)."); return; }
+    if (loz.length < 8) { setGreska("Lozinka mora imati najmanje 8 znakova."); return; }
+    if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
     const { ok, status, data } = await apiFetch("/auth/check-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim() } });
     setUcitavam(false);
@@ -2932,8 +2935,6 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
   const registriraj = async () => {
     setGreska("");
     if (!ime.trim() || !prezime.trim()) { setGreska("Upiši ime i prezime."); return; }
-    if (loz.length < 8) { setGreska("Lozinka mora imati barem 8 znakova."); return; }
-    if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
     setUcitavam(true);
     const { ok, data } = await apiFetch("/auth/register-school", { method:"POST", body:{ oib: oib.trim(), sifra_skole: sifraSkole.trim(), naziv_skole: skolaNazivApi, admin_email: adminEmail.trim().toLowerCase(), admin_password: loz, admin_ime: ime.trim(), admin_prezime: prezime.trim(), uloga_prikaz: ulogaPrikaz } });
     setUcitavam(false);
@@ -3002,15 +3003,24 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" maxLength={11} />
 
+            <div style={{ height:1, background:C.cardBorder, margin:"6px 0 14px" }} />
+            <p style={{ margin:"0 0 10px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Vaši podatci za prijavu</p>
+
+            <div style={{ marginBottom:4 }}>
+              <FInp label="Email administratora" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" />
+            </div>
+            <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 8 znakova" icon="🔒" />
+            <FInp label="Potvrda lozinke" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
+
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
 
             {ucitavam ? (
               <div style={{ textAlign:"center", padding:"16px 0" }}>
                 <div style={{ fontSize:28 }}>🔍</div>
-                <p style={{ color:C.teal, fontWeight:800, fontSize:14, margin:"8px 0 4px" }}>Provjera u MZO evidenciji...</p>
+                <p style={{ color:C.teal, fontWeight:800, fontSize:14, margin:"8px 0 4px" }}>Provjera podataka...</p>
               </div>
             ) : (
-              <Btn label="Provjeri i nastavi →" color={C.teal} full disabled={!sifraSkole||!oib||!nazivSkole||ucitavam} onClick={provjeriSkolu} />
+              <Btn label="Provjeri i nastavi →" color={C.teal} full disabled={!sifraSkole||!oib||!nazivSkole||!adminEmail||!loz||!loz2||ucitavam} onClick={provjeriSkolu} />
             )}
           </Card>
         )}
@@ -3022,7 +3032,12 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
               <p style={{ margin:0, fontSize:11, color:C.teal, fontWeight:700 }}>MZO: {sifraSkole} · OIB: {oib}</p>
             </div>
 
-            <p style={{ margin:"0 0 12px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Podaci administratora</p>
+            <div style={{ background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:10, padding:"10px 14px", marginBottom:14 }}>
+              <p style={{ margin:"0 0 2px", fontSize:12, color:"#166534", fontWeight:800 }}>📧 Email za prijavu</p>
+              <p style={{ margin:0, fontSize:13, color:"#166534", fontWeight:700 }}>{adminEmail}</p>
+            </div>
+
+            <p style={{ margin:"0 0 12px", fontSize:11, color:C.inkLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Vaši podaci</p>
 
             <div style={{ display:"flex", gap:10 }}>
               <div style={{ flex:1 }}><FInp label="Ime" value={ime} onChange={e=>setIme(e.target.value)} placeholder="Ime" /></div>
@@ -3037,21 +3052,9 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
               </div>
             </div>
 
-            <div style={{ marginBottom:4 }}>
-              <FInp label="Email za prijavu" value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" />
-              {ime && prezime && !adminEmail && (
-                <p style={{ margin:"-6px 0 10px", fontSize:11, color:C.teal, fontWeight:700 }}>
-                  💡 Prijedlog: {`${ime.toLowerCase().replace(/\s+/g,"")}.${prezime.toLowerCase().replace(/\s+/g,"")}@skole.hr`}
-                </p>
-              )}
-            </div>
-
-            <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 8 znakova" icon="🔒" />
-            <FInp label="Ponovi lozinku" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
-
             {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
 
-            <Btn label={ucitavam?"Aktiviram...":"Aktiviraj PeerUp za moju školu →"} color={C.teal} full disabled={!ime||!prezime||!adminEmail||loz.length<8||loz!==loz2||ucitavam} onClick={registriraj} />
+            <Btn label={ucitavam?"Aktiviram...":"Aktiviraj PeerUp za moju školu →"} color={C.teal} full disabled={!ime||!prezime||ucitavam} onClick={registriraj} />
           </Card>
         )}
       </div>
