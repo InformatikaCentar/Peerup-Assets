@@ -3114,17 +3114,38 @@ function EkranPrijava({ onUspjeh, onNatrag }) {
   const [tab, setTab] = useState("kod"); // "kod" | "admin"
   // Kod prijava (učenik/učitelj)
   const [kod, setKod] = useState("");
+  const [prviLogin, setPrviLogin] = useState(false); // true = treba unijeti ime/prezime
+  const [skolaNaziv, setSkolaNaziv] = useState("");
+  const [ime, setIme] = useState("");
+  const [prezime, setPrezime] = useState("");
   // Admin prijava
   const [email, setEmail] = useState("");
   const [loz, setLoz] = useState("");
   const [greska, setGreska] = useState("");
   const [ucitavam, setUcitavam] = useState(false);
 
+  // Korak 1: provjeri kod
   const prijavaKodom = async () => {
     setGreska(""); setUcitavam(true);
     const { ok, data } = await apiFetch("/auth/login-code", { method:"POST", body:{ kod: kod.trim() } });
-    if (!ok) { setGreska(data.greska || "Neispravan kod."); setUcitavam(false); return; }
-    if (data.firstLogin) { setGreska("⚠ Ovo je tvoj prvi login. Koristi 'Registracija korisnika' za postavljanje profila."); setUcitavam(false); return; }
+    setUcitavam(false);
+    if (!ok) { setGreska(data.greska || "Neispravan kod."); return; }
+    if (data.firstLogin) {
+      // Prvi put — prikaži polja za ime/prezime
+      setSkolaNaziv(data.skolaNaziv || "");
+      setPrviLogin(true);
+      return;
+    }
+    onUspjeh(mapApiKorisnik(data.korisnik));
+  };
+
+  // Korak 2 (samo prvi login): postavi ime i prezime
+  const postaviProfil = async () => {
+    if (!ime.trim() || !prezime.trim()) { setGreska("Upiši ime i prezime."); return; }
+    setGreska(""); setUcitavam(true);
+    const { ok, data } = await apiFetch("/auth/login-code", { method:"POST", body:{ kod: kod.trim(), ime: ime.trim(), prezime: prezime.trim() } });
+    setUcitavam(false);
+    if (!ok) { setGreska(data.greska || "Greška pri postavljanju profila."); return; }
     onUspjeh(mapApiKorisnik(data.korisnik));
   };
 
@@ -3138,25 +3159,47 @@ function EkranPrijava({ onUspjeh, onNatrag }) {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
       <div style={{ width:"100%", maxWidth:400 }}>
-        <button onClick={onNatrag} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:24 }}>← Natrag</button>
+        <button onClick={prviLogin ? ()=>{ setPrviLogin(false); setGreska(""); } : onNatrag} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito', sans-serif", fontWeight:800, fontSize:14, cursor:"pointer", padding:0, marginBottom:24 }}>← Natrag</button>
         <div style={{ textAlign:"center", marginBottom:20 }}>
-          <div style={{ fontSize:48 }}>🔑</div>
-          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Prijava</h2>
+          <div style={{ fontSize:48 }}>{prviLogin ? "✏️" : "🔑"}</div>
+          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>{prviLogin ? "Postavi profil" : "Prijava"}</h2>
+          {prviLogin && skolaNaziv && <p style={{ margin:0, fontSize:12, color:C.plum, fontWeight:700 }}>🏫 {skolaNaziv}</p>}
         </div>
-        <div style={{ display:"flex", gap:6, marginBottom:16 }}>
-          {[["kod","🪪 S kodom"],["admin","👨‍💼 Administrator"]].map(([k,l])=>(
-            <button key={k} onClick={()=>{setTab(k);setGreska("");}} style={{ flex:1, padding:"9px 8px", borderRadius:12, border:`2px solid ${tab===k?C.teal:C.cardBorder}`, background:tab===k?C.tealLight:C.bg, color:tab===k?C.teal:C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, cursor:"pointer" }}>{l}</button>
-          ))}
-        </div>
+
+        {!prviLogin && (
+          <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+            {[["kod","🪪 S kodom"],["admin","👨‍💼 Administrator"]].map(([k,l])=>(
+              <button key={k} onClick={()=>{setTab(k);setGreska("");}} style={{ flex:1, padding:"9px 8px", borderRadius:12, border:`2px solid ${tab===k?C.teal:C.cardBorder}`, background:tab===k?C.tealLight:C.bg, color:tab===k?C.teal:C.inkMid, fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:12, cursor:"pointer" }}>{l}</button>
+            ))}
+          </div>
+        )}
+
         <Card>
-          {tab==="kod" && (
+          {/* ── S kodom: unos koda (korak 1) ── */}
+          {tab==="kod" && !prviLogin && (
             <>
               <FInp label="Pristupni kod" value={kod} onChange={e=>setKod(e.target.value)} placeholder="npr. UCE-7-01" icon="🪪" onKeyDown={e=>e.key==="Enter"&&kod&&prijavaKodom()} />
               <p style={{ margin:"0 0 14px", fontSize:12, color:C.inkLight }}>Kod dobivaš od administratora škole. Upiši ga i prijavi se.</p>
               {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
-              <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.teal} full disabled={!kod||ucitavam} onClick={prijavaKodom} />
+              <Btn label={ucitavam ? "Provjeravam..." : "Prijavi se →"} color={C.teal} full disabled={!kod||ucitavam} onClick={prijavaKodom} />
             </>
           )}
+
+          {/* ── S kodom: prvi login — unos imena i prezimena (korak 2) ── */}
+          {tab==="kod" && prviLogin && (
+            <>
+              <div style={{ background:C.tealLight, border:`1.5px solid ${C.teal}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}>
+                <p style={{ margin:0, fontSize:12, color:C.teal, fontWeight:800 }}>✅ Kod je valjan! Dobrodošao/la prvi put — upiši ime i prezime.</p>
+              </div>
+              <div style={{ display:"flex", gap:10 }}>
+                <div style={{ flex:1 }}><FInp label="Ime" value={ime} onChange={e=>setIme(e.target.value)} placeholder="Ime" onKeyDown={e=>e.key==="Enter"&&ime&&prezime&&postaviProfil()} /></div>
+                <div style={{ flex:1 }}><FInp label="Prezime" value={prezime} onChange={e=>setPrezime(e.target.value)} placeholder="Prezime" onKeyDown={e=>e.key==="Enter"&&ime&&prezime&&postaviProfil()} /></div>
+              </div>
+              {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
+              <Btn label={ucitavam ? "Postavljam profil..." : "Postavi profil →"} color={C.teal} full disabled={!ime||!prezime||ucitavam} onClick={postaviProfil} />
+            </>
+          )}
+
           {tab==="admin" && (
             <>
               <FInp label="Email administratora" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" onKeyDown={e=>e.key==="Enter"&&loz&&prijavaAdmina()} />
