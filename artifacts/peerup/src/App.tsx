@@ -3397,6 +3397,7 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
   /* Provjera sesije i školske godine */
   useEffect(() => {
     if (korisnik.sessionToken === "demo") return; // demo mode — preskoci provjeru
+    if (korisnik.sessionToken === "api-session") return; // API korisnici — sesija je na serveru
     try {
       const stored = localStorage.getItem('peerup_session');
       if (!stored) { onOdjava(); return; }
