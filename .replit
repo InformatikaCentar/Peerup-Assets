@@ -45,5 +45,3 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
-SMTP_HOST = "smtp.office365.com"
-SMTP_PORT = "587"
