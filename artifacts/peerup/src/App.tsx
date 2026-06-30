@@ -2565,7 +2565,7 @@ function AdminDashboard({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, se
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (jeApiKorisnik) ucitajApiKorisnike();
   }, [jeApiKorisnik]);
 
