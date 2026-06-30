@@ -3163,8 +3163,14 @@ function EkranPrijava({ onUspjeh, onNatrag }) {
               <FInp label="Lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Vaša lozinka" icon="🔒" onKeyDown={e=>e.key==="Enter"&&email&&prijavaAdmina()} />
               {greska && <div style={{ background:C.redLight, border:`1.5px solid ${C.red}44`, borderRadius:10, padding:"10px 12px", marginBottom:14 }}><p style={{ margin:0, color:C.red, fontSize:13, fontWeight:700 }}>⚠ {greska}</p></div>}
               <Btn label={ucitavam ? "Prijavljujem..." : "Prijavi se →"} color={C.plum} full disabled={!email||!loz||ucitavam} onClick={prijavaAdmina} />
+              <div style={{ textAlign:"center", marginTop:12 }}>
+                <button onClick={()=>setTab("zaboravljena")} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", textDecoration:"underline" }}>
+                  Zaboravili ste lozinku?
+                </button>
+              </div>
             </>
           )}
+          {tab==="zaboravljena" && <EkranZaboravljenaLozinka onNatrag={()=>setTab("admin")} />}
         </Card>
       </div>
     </div>
@@ -3504,6 +3510,91 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
 }
 
 // ---- ROOT ----
+function EkranZaboravljenaLozinka({ onNatrag }) {
+  const [email, setEmail] = useState("");
+  const [poslano, setPoslano] = useState(false);
+  const [greska, setGreska] = useState("");
+  const [ucitavam, setUcitavam] = useState(false);
+
+  const posalji = async () => {
+    setGreska(""); setUcitavam(true);
+    const { ok, data } = await apiFetch("/auth/forgot-password", { method:"POST", body:{ email: email.trim().toLowerCase() } });
+    setUcitavam(false);
+    if (!ok) { setGreska(data.greska || "Greška. Pokušajte ponovo."); return; }
+    setPoslano(true);
+  };
+
+  if (poslano) return (
+    <div style={{ textAlign:"center", padding:"8px 0" }}>
+      <div style={{ fontSize:48, marginBottom:8 }}>📬</div>
+      <p style={{ fontWeight:800, fontSize:15, color:C.ink, margin:"0 0 6px" }}>Provjerite email!</p>
+      <p style={{ fontSize:13, color:C.inkLight, margin:"0 0 16px", lineHeight:1.6 }}>Ako email postoji u sustavu, poslali smo link za resetiranje lozinke. Vrijedi 60 minuta.</p>
+      <button onClick={onNatrag} style={{ background:"none", border:"none", color:C.teal, fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", textDecoration:"underline" }}>← Natrag na prijavu</button>
+    </div>
+  );
+
+  return (
+    <div style={{ padding:"4px 0" }}>
+      <p style={{ margin:"0 0 4px", fontWeight:800, fontSize:15, color:C.ink }}>🔑 Zaboravili ste lozinku?</p>
+      <p style={{ margin:"0 0 14px", fontSize:13, color:C.inkLight, lineHeight:1.5 }}>Unesite email administratorskog računa — poslat ćemo link za resetiranje.</p>
+      <FInp label="Email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ime.prezime@skole.hr" icon="📧" onKeyDown={e=>e.key==="Enter"&&email&&posalji()} />
+      {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
+      <Btn label={ucitavam?"Šaljem...":"Pošalji reset link →"} color={C.teal} full disabled={!email||ucitavam} onClick={posalji} />
+      <div style={{ textAlign:"center", marginTop:10 }}>
+        <button onClick={onNatrag} style={{ background:"none", border:"none", color:C.inkLight, fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:12, cursor:"pointer" }}>← Natrag</button>
+      </div>
+    </div>
+  );
+}
+
+function EkranResetLozinke({ token, onUspjeh }) {
+  const [loz, setLoz] = useState("");
+  const [loz2, setLoz2] = useState("");
+  const [greska, setGreska] = useState("");
+  const [ucitavam, setUcitavam] = useState(false);
+  const [gotovo, setGotovo] = useState(false);
+
+  const resetiraj = async () => {
+    setGreska("");
+    if (loz.length < 8) { setGreska("Lozinka mora imati najmanje 8 znakova."); return; }
+    if (loz !== loz2) { setGreska("Lozinke se ne podudaraju."); return; }
+    setUcitavam(true);
+    const { ok, data } = await apiFetch("/auth/reset-password", { method:"POST", body:{ token, nova_lozinka: loz } });
+    setUcitavam(false);
+    if (!ok) { setGreska(data.greska || "Greška. Link je možda istekao."); return; }
+    setGotovo(true);
+    setTimeout(onUspjeh, 2500);
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ width:"100%", maxWidth:400 }}>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
+          <div style={{ fontSize:52 }}>🔐</div>
+          <h2 style={{ margin:"8px 0 4px", fontFamily:"'Nunito', sans-serif", fontWeight:900, fontSize:26, color:C.ink }}>Nova lozinka</h2>
+          <p style={{ margin:0, color:C.inkLight, fontSize:13 }}>Unesite svoju novu lozinku</p>
+        </div>
+        <Card>
+          {gotovo ? (
+            <div style={{ textAlign:"center", padding:"8px 0" }}>
+              <div style={{ fontSize:48, marginBottom:8 }}>✅</div>
+              <p style={{ fontWeight:800, fontSize:15, color:C.teal, margin:"0 0 6px" }}>Lozinka promijenjena!</p>
+              <p style={{ fontSize:13, color:C.inkLight }}>Preusmjeravam na prijavu...</p>
+            </div>
+          ) : (
+            <>
+              <FInp label="Nova lozinka" type="password" value={loz} onChange={e=>setLoz(e.target.value)} placeholder="Min. 8 znakova" icon="🔒" />
+              <FInp label="Potvrda lozinke" type="password" value={loz2} onChange={e=>setLoz2(e.target.value)} placeholder="Ista lozinka" icon="🔒" error={loz2&&loz!==loz2?"Lozinke se ne podudaraju":""} />
+              {greska && <p style={{ color:C.red, fontSize:13, fontWeight:700, marginBottom:10 }}>⚠ {greska}</p>}
+              <Btn label={ucitavam?"Spremate...":"Spremi novu lozinku →"} color={C.teal} full disabled={!loz||!loz2||ucitavam} onClick={resetiraj} />
+            </>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [clanovi, setClanovi] = useState(() => {
     try { const s = localStorage.getItem('peerup_clanovi'); return s ? JSON.parse(s) : INIT_CLANOVI; }
@@ -3540,6 +3631,10 @@ export default function App() {
     await apiFetch("/auth/logout", { method: "POST" }).catch(() => {});
     setKorisnik(null);
   };
+
+  // Detekcija reset tokena u URL-u (?reset=TOKEN)
+  const resetToken = new URLSearchParams(window.location.search).get("reset");
+  if (resetToken) return <EkranResetLozinke token={resetToken} onUspjeh={() => { window.history.replaceState({}, "", "/"); }} />;
 
   if (!korisnik) return <PrijavaSustav clanovi={clanovi} onPrijava={setKorisnik} skola={skola} setSkola={setSkola} />;
   return <GlavnaAplikacija korisnik={korisnik} setKorisnik={setKorisnik} clanovi={clanovi} setClanovi={setClanovi} kodovi={kodovi} setKodovi={setKodovi} skola={skola} setSkola={setSkola} onOdjava={odjava} />;

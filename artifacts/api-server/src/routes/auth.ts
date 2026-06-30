@@ -3,7 +3,10 @@ import { db } from "@workspace/db";
 import { mzoSchoolsTable, schoolsTable, usersTable } from "@workspace/db";
 import { eq, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { pool } from "@workspace/db";
 import { logger } from "../lib/logger";
+import { sendResetEmail } from "../lib/mailer";
 
 const router = Router();
 
@@ -332,6 +335,84 @@ router.post("/check-school", async (req, res) => {
     return res.json({ oib: oib.trim(), sifraSkole: sifra_skole.trim() });
   } catch (err) {
     logger.error(err, "Greška pri provjeri škole");
+    return res.status(500).json({ greska: "Interna greška servera." });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ greska: "Email je obavezan." });
+
+    const [korisnik] = await db
+      .select()
+      .from(usersTable)
+      .where(and(
+        eq(usersTable.email, email.trim().toLowerCase()),
+        or(eq(usersTable.uloga, "admin"), eq(usersTable.uloga, "ravnatelj"))
+      ))
+      .limit(1);
+
+    // Uvijek vrati OK (ne otkrivamo postoji li email)
+    if (!korisnik) {
+      return res.json({ poruka: "Ako email postoji u sustavu, poslali smo link za resetiranje." });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 sat
+
+    await pool.query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)
+       ON CONFLICT DO NOTHING`,
+      [korisnik.id, token, expiresAt]
+    );
+
+    const domains = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost:80";
+    const resetUrl = `https://${domains}/?reset=${token}`;
+
+    const emailSent = await sendResetEmail(korisnik.email!, resetUrl, korisnik.ime || "Korisnik");
+
+    logger.info({ userId: korisnik.id, emailSent }, "Zahtjev za reset lozinke");
+    return res.json({ poruka: "Ako email postoji u sustavu, poslali smo link za resetiranje." });
+  } catch (err) {
+    logger.error(err, "Greška pri forgot-password");
+    return res.status(500).json({ greska: "Interna greška servera." });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, nova_lozinka } = req.body;
+    if (!token || !nova_lozinka) return res.status(400).json({ greska: "Token i nova lozinka su obavezni." });
+    if (nova_lozinka.length < 8) return res.status(400).json({ greska: "Lozinka mora imati najmanje 8 znakova." });
+
+    const { rows } = await pool.query(
+      `SELECT * FROM password_reset_tokens WHERE token = $1 AND used = FALSE AND expires_at > NOW()`,
+      [token]
+    );
+
+    if (!rows.length) {
+      return res.status(400).json({ greska: "Link za resetiranje je istekao ili je već iskorišten." });
+    }
+
+    const resetRow = rows[0];
+    const hash = await bcrypt.hash(nova_lozinka, 12);
+
+    await db.update(usersTable)
+      .set({ passwordHash: hash })
+      .where(eq(usersTable.id, resetRow.user_id));
+
+    await pool.query(
+      `UPDATE password_reset_tokens SET used = TRUE WHERE id = $1`,
+      [resetRow.id]
+    );
+
+    logger.info({ userId: resetRow.user_id }, "Lozinka resetirana");
+    return res.json({ poruka: "Lozinka je uspješno promijenjena. Možete se prijaviti." });
+  } catch (err) {
+    logger.error(err, "Greška pri reset-password");
     return res.status(500).json({ greska: "Interna greška servera." });
   }
 });
