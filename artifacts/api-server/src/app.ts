@@ -31,9 +31,24 @@ app.use(
   }),
 );
 
+const ALLOWED_ORIGINS = [
+  /^https?:\/\/localhost(:\d+)?$/,
+  /^https:\/\/.*\.vercel\.app$/,
+  /^https:\/\/.*\.railway\.app$/,
+  /^https:\/\/.*\.replit\.app$/,
+  /^https:\/\/.*\.replit\.dev$/,
+];
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      }
+      logger.warn({ origin }, "CORS blocked");
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
