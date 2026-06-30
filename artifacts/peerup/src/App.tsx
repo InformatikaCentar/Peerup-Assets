@@ -2925,7 +2925,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
     setUcitavam(false);
     if (!ok) {
       if (status === 409) { setSkolaVecRegistrirana(true); return; }
-      setGreska(data.greska || "Škola nije pronađena u MZO evidenciji.");
+      setGreska(data.greska || "Greška pri provjeri podataka škole.");
       return;
     }
     setSkolaNazivApi(nazivSkole.trim());
@@ -2981,7 +2981,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
         {korak===1 && (
           <Card>
             <div style={{ background:C.amberLight, border:`1.5px solid ${C.amber}44`, borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
-              <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 Unesite stvarne podatke škole iz MZO evidencije. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
+              <p style={{ margin:0, fontSize:12, color:C.amber, fontWeight:700 }}>📋 Unesite podatke škole. Registraciju može izvršiti samo ovlašteni djelatnik.</p>
             </div>
 
             {skolaVecRegistrirana && (
@@ -3000,7 +3000,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
             )}
 
             <FInp label="Naziv škole" value={nazivSkole} onChange={e=>setNazivSkole(e.target.value)} placeholder="npr. OŠ Centar, Rijeka" icon="🏫" />
-            <FInp label="Šifra škole (MZO)" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
+            <FInp label="Šifra škole" value={sifraSkole} onChange={e=>setSifraSkole(formatSifraSkole(e.target.value))} placeholder="npr. 01-001-001" icon="🔢" maxLength={10} />
             <FInp label="OIB škole" value={oib} onChange={e=>setOib(e.target.value.replace(/\D/g,""))} placeholder="11 znamenki" icon="🪪" maxLength={11} />
 
             <div style={{ height:1, background:C.cardBorder, margin:"6px 0 14px" }} />
@@ -3029,7 +3029,7 @@ function EkranRegistracijaSkole({ setSkola, onUspjeh, onNatrag }) {
           <Card>
             <div style={{ background:C.tealLight, border:`2px solid ${C.teal}55`, borderRadius:12, padding:"12px 16px", marginBottom:20 }}>
               <p style={{ margin:"0 0 3px", fontSize:13, color:C.teal, fontWeight:900 }}>✅ Škola verificirana: <strong>{skolaNazivApi},</strong></p>
-              <p style={{ margin:0, fontSize:11, color:C.teal, fontWeight:700 }}>MZO: {sifraSkole} · OIB: {oib}</p>
+              <p style={{ margin:0, fontSize:11, color:C.teal, fontWeight:700 }}>Šifra: {sifraSkole} · OIB: {oib}</p>
             </div>
 
             <div style={{ background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:10, padding:"10px 14px", marginBottom:14 }}>
