@@ -314,38 +314,6 @@ router.get("/me", async (req, res) => {
   }
 });
 
-// POST /api/auth/check-school
-// Provjera formata OIB-a i šifre škole, te je li škola već registrirana
-router.post("/check-school", async (req, res) => {
-  try {
-    const { oib, sifra_skole } = req.body;
-    if (!oib || !sifra_skole) {
-      return res.status(400).json({ greska: "OIB i šifra škole su obavezni." });
-    }
-    if (!/^\d{11}$/.test(oib.trim())) {
-      return res.status(400).json({ greska: "OIB mora imati točno 11 znamenki." });
-    }
-    if (!/^\d{2}-\d{3}-\d{3}$/.test(sifra_skole.trim())) {
-      return res.status(400).json({ greska: "Šifra škole mora biti u obliku 00-000-000." });
-    }
-
-    // Provjera je li škola već registrirana
-    const [postojecaSkola] = await db
-      .select()
-      .from(schoolsTable)
-      .where(eq(schoolsTable.oib, oib.trim()))
-      .limit(1);
-
-    if (postojecaSkola) {
-      return res.status(409).json({ greska: "Ova škola je već registrirana. Prijavite se kao administrator." });
-    }
-
-    return res.json({ oib: oib.trim(), sifraSkole: sifra_skole.trim() });
-  } catch (err) {
-    logger.error(err, "Greška pri provjeri škole");
-    return res.status(500).json({ greska: "Interna greška servera." });
-  }
-});
 
 // POST /api/auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
