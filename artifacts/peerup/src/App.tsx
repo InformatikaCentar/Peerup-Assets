@@ -3378,6 +3378,56 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
+
+  /* ── Automatska odjava nakon 15 min neaktivnosti ── */
+  const [pokaziUpozorenje, setPokaziUpozorenje] = useState(false);
+  const [odjavZa, setOdjavZa] = useState(60);
+  const warnTimerRef   = useRef(null);
+  const logoutTimerRef = useRef(null);
+  const countdownRef   = useRef(null);
+  const ostaniRef      = useRef(null);
+
+  useEffect(() => {
+    if (korisnik.sessionToken === "demo") return;
+
+    const NEAKTIVAN_MS = 14 * 60 * 1000; // 14 min → upozorenje
+    const ODJAVA_MS    =  1 * 60 * 1000; // + 1 min → odjava
+
+    const resetTimer = () => {
+      clearTimeout(warnTimerRef.current);
+      clearTimeout(logoutTimerRef.current);
+      clearInterval(countdownRef.current);
+      setPokaziUpozorenje(false);
+      setOdjavZa(60);
+
+      warnTimerRef.current = setTimeout(() => {
+        setPokaziUpozorenje(true);
+        let sec = 60;
+        setOdjavZa(sec);
+        countdownRef.current = setInterval(() => {
+          sec -= 1;
+          setOdjavZa(sec);
+          if (sec <= 0) clearInterval(countdownRef.current);
+        }, 1000);
+        logoutTimerRef.current = setTimeout(() => {
+          onOdjava();
+        }, ODJAVA_MS);
+      }, NEAKTIVAN_MS);
+    };
+
+    ostaniRef.current = resetTimer;
+
+    const DOGADAJI = ["mousemove","keydown","click","scroll","touchstart","pointerdown"];
+    DOGADAJI.forEach(e => document.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      DOGADAJI.forEach(e => document.removeEventListener(e, resetTimer));
+      clearTimeout(warnTimerRef.current);
+      clearTimeout(logoutTimerRef.current);
+      clearInterval(countdownRef.current);
+    };
+  }, []);
   useEffect(() => { try { localStorage.setItem('peerup_ponude',    JSON.stringify(ponude));    } catch {} }, [ponude]);
   useEffect(() => { try { localStorage.setItem('peerup_materijali',JSON.stringify(materijali));} catch {} }, [materijali]);
   useEffect(() => { try { localStorage.setItem('peerup_razmjena',  JSON.stringify(razmjena));  } catch {} }, [razmjena]);
@@ -3449,6 +3499,36 @@ function GlavnaAplikacija({ korisnik, setKorisnik, clanovi, setClanovi, kodovi, 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"'Nunito', sans-serif", maxWidth:maxSirina, margin:"0 auto", display:"flex", flexDirection:"column", transition:"max-width 0.3s ease" }}>
       {postavkeModal && <PostavkeModal postavke={postavke} onZmijeni={zmijeniPostavku} onClose={()=>setPostavkeModal(false)} />}
+
+      {/* Modal neaktivnosti */}
+      {pokaziUpozorenje && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:99999, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Nunito',sans-serif" }}>
+          <div style={{ background:"#fff", borderRadius:20, padding:"32px 28px", maxWidth:340, width:"90%", textAlign:"center", boxShadow:"0 8px 40px rgba(0,0,0,0.25)" }}>
+            <div style={{ fontSize:52, marginBottom:8 }}>⏱️</div>
+            <h3 style={{ margin:"0 0 6px", fontWeight:900, fontSize:20, color:"#1a1a2e" }}>Još ste tu?</h3>
+            <p style={{ margin:"0 0 6px", color:"#666", fontSize:14, lineHeight:1.5 }}>
+              Niste bili aktivni duže vrijeme.<br/>
+              Automatska odjava za:
+            </p>
+            <div style={{ fontSize:42, fontWeight:900, color: odjavZa <= 10 ? "#e03e5c" : "#d97706", margin:"8px 0 20px", letterSpacing:-1 }}>
+              {odjavZa}s
+            </div>
+            <button
+              onClick={() => ostaniRef.current?.()}
+              style={{ width:"100%", padding:"12px 0", borderRadius:12, border:"none", background:"#1a8a72", color:"#fff", fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:16, cursor:"pointer" }}
+            >
+              Ostani prijavljen →
+            </button>
+            <button
+              onClick={onOdjava}
+              style={{ marginTop:10, width:"100%", padding:"10px 0", borderRadius:12, border:"1.5px solid #e5e0d8", background:"transparent", color:"#888", fontFamily:"'Nunito',sans-serif", fontWeight:700, fontSize:14, cursor:"pointer" }}
+            >
+              Odjavi me
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ background:`linear-gradient(135deg, #1a8a72 0%, #0e6b58 100%)`, padding:"12px 16px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 16px #1a8a7233" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
