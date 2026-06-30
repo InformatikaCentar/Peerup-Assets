@@ -40,10 +40,10 @@ router.post("/generate-codes", requireAdmin, async (req, res) => {
     const [admin] = await db
       .select()
       .from(usersTable)
-      .where(and(eq(usersTable.id, req.session.userId!), eq(usersTable.schoolId, schoolId!), eq(usersTable.uloga, "admin")))
+      .where(and(eq(usersTable.id, req.session.userId!), eq(usersTable.schoolId, schoolId!)))
       .limit(1);
 
-    if (!admin) {
+    if (!admin || (admin.uloga !== "admin" && admin.uloga !== "ravnatelj")) {
       return res.status(403).json({ greska: "Nemate ovlasti za ovu akciju." });
     }
 

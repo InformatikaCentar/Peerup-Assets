@@ -190,7 +190,15 @@ router.post("/login-code", async (req, res) => {
     // Ako je prvi login — korisnik mora unijeti ime i prezime
     if (korisnik.firstLogin) {
       if (!ime || !prezime) {
-        return res.status(200).json({ firstLogin: true, kod: kodNorm, poruka: "Molimo unesite ime i prezime za postavljanje profila." });
+        const [skolaInfo] = await db.select().from(schoolsTable).where(eq(schoolsTable.id, korisnik.schoolId)).limit(1);
+        return res.status(200).json({
+          firstLogin: true,
+          kod: kodNorm,
+          uloga: korisnik.uloga,
+          razred: korisnik.razred,
+          skolaNaziv: skolaInfo?.naziv ?? "",
+          poruka: "Molimo unesite ime i prezime za postavljanje profila.",
+        });
       }
 
       // Postavi ime i prezime te označi firstLogin = false
