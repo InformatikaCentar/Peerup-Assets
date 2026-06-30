@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { mzoSchoolsTable, schoolsTable, usersTable } from "@workspace/db";
+import { schoolsTable, usersTable } from "@workspace/db";
 import { eq, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
